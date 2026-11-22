@@ -158,18 +158,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
         </section>
     </main>
 
-    <style>
-        .grupo-wrap { display:flex; flex-direction:column; gap:4px; margin-bottom:6px; }
-        .grupo-docentes { margin: 0 6px 6px; font-size: 0.85rem; color:#475569; }
-        .grupo-docentes summary { cursor:pointer; color:#0f766e; font-weight:600; padding:4px 6px; }
-        .grupo-docentes ul { list-style:none; margin:6px 0; padding:0 0 0 10px; }
-        .grupo-docentes li { padding:3px 0; }
-        .grupo-docentes li i { color:#0d9488; margin-right:6px; }
-        .grupo-docentes p { margin:6px 10px; color:#94a3b8; }
-        .grupo-docentes a { display:inline-block; margin:4px 10px 6px; font-weight:600; color:#0ea5e9; text-decoration:none; }
-        .tag-asignado { font-size:0.68rem; font-weight:700; color:#0f766e; background:#ccfbf1; padding:3px 8px; border-radius:20px; margin-left:auto; margin-right:8px; }
-        .item-docente.bloqueado { opacity:0.65; cursor:not-allowed; }
-    </style>
+    <link rel="stylesheet" href="css/asignacion_masiva.css?v=1">
     <script>
         const ASIGNADOS = <?php echo json_encode(array_map(fn($l) => array_column($l, 'id'), $asignados_por_grupo)); ?>;
 

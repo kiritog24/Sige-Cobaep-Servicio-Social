@@ -1,0 +1,44 @@
+/* Estilos de error.php (antes estaban dentro del PHP) */
+* { box-sizing: border-box; }
+body {
+    margin: 0; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column;
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; color: #10251d;
+    background: radial-gradient(circle at 12% 10%, rgba(22, 160, 93, .14), transparent 32rem),
+                radial-gradient(circle at 90% 90%, rgba(6, 63, 43, .12), transparent 30rem), #f4f8f6;
+}
+header { display: flex; align-items: center; gap: 12px; padding: 18px 28px; }
+header img { height: 40px; width: auto; object-fit: contain; }
+header strong { font-size: 1.05rem; color: #063f2b; }
+header strong span { color: #16a05d; }
+header small { display: block; color: #6d7f77; font-size: .75rem; }
+main { flex: 1; display: grid; place-items: center; padding: 16px 16px 40px; }
+.tarjeta {
+    width: 100%; max-width: 620px; background: #fff; border: 1px solid #e4ece8; border-radius: 28px;
+    padding: 44px 40px 36px; text-align: center; box-shadow: 0 24px 60px rgba(9, 48, 32, .08);
+}
+.ilustracion { position: relative; width: 132px; height: 132px; margin: 0 auto 18px; }
+.ilustracion .circulo { position: absolute; inset: 0; border-radius: 50%; background: linear-gradient(145deg, #063f2b, #16a05d); display: grid; place-items: center; color: #fff; font-size: 3rem; box-shadow: 0 16px 34px rgba(22, 160, 93, .3); }
+.ilustracion .anillo { position: absolute; inset: -12px; border-radius: 50%; border: 2px dashed rgba(22, 160, 93, .35); animation: girar 18s linear infinite; }
+@keyframes girar { to { transform: rotate(360deg); } }
+.codigo { font-size: clamp(3.2rem, 12vw, 5.2rem); font-weight: 900; line-height: 1; letter-spacing: -.04em; margin: 4px 0 6px;
+          background: linear-gradient(135deg, #063f2b, #16a05d); -webkit-background-clip: text; background-clip: text; color: transparent; }
+h1 { margin: 0 0 10px; font-size: clamp(1.25rem, 4vw, 1.6rem); }
+p { margin: 0 auto; max-width: 440px; color: #5b6b64; line-height: 1.6; font-size: .97rem; }
+.ruta { display: inline-block; max-width: 100%; margin-top: 14px; padding: 6px 12px; border-radius: 10px; background: #f1f5f3; color: #64748b; font-size: .78rem; font-family: Consolas, monospace; overflow-wrap: anywhere; }
+.acciones { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 28px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 13px 22px; border-radius: 14px; font-weight: 700; font-size: .95rem; text-decoration: none; border: none; cursor: pointer; font-family: inherit; transition: transform .15s, box-shadow .15s, background .15s; }
+.btn:hover { transform: translateY(-1px); }
+.btn.principal { background: #16a05d; color: #fff; box-shadow: 0 10px 22px rgba(22, 160, 93, .28); }
+.btn.principal:hover { background: #12804b; }
+.btn.sec { background: #fff; color: #10251d; border: 1px solid #d5e2dc; }
+.btn.sec:hover { background: #f4f8f6; }
+.ayuda { margin-top: 26px; padding-top: 20px; border-top: 1px solid #edf2ef; font-size: .82rem; color: #7b8b84; }
+footer { text-align: center; padding: 16px; font-size: .78rem; color: #8a9a93; }
+@media (max-width: 520px) {
+    header { padding: 14px 16px; }
+    .tarjeta { padding: 32px 20px 26px; border-radius: 22px; }
+    .ilustracion { width: 104px; height: 104px; }
+    .ilustracion .circulo { font-size: 2.4rem; }
+    .btn { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .ilustracion .anillo { animation: none; } }

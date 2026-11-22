@@ -14,28 +14,7 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'prefectos') {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #032b1e; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .header h1 { font-size: 1.8rem; margin: 0 0 5px 0; color: #10b981; }
-        .header p { color: #94a3b8; font-size: 0.9rem; }
-        
-        .reader-container { width: 100%; max-width: 500px; background: #ffffff; border-radius: 16px; padding: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
-        #reader { width: 100%; border-radius: 12px; overflow: hidden; border: 2px solid #e2e8f0; }
-        
-        /* Caja de Resultados Mejorada */
-        #resultado { text-align: center; margin-top: 20px; font-weight: 700; font-size: 1.1rem; min-height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 10px; transition: all 0.3s ease; padding: 10px; background: #f8fafc; color: #475569; border: 2px dashed #cbd5e1; }
-        
-        .status-success { background: #dcfce7 !important; color: #166534 !important; border: 2px solid #22c55e !important; }
-        .status-warning { background: #fef3c7 !important; color: #92400e !important; border: 2px solid #f59e0b !important; }
-        .status-error { background: #fee2e2 !important; color: #b91c1c !important; border: 2px solid #ef4444 !important; }
-        .status-suspendido { background: #7f1d1d !important; color: #fecaca !important; border: 2px solid #dc2626 !important; animation: parpadeo 1s infinite; }
-
-        .btn-volver { margin-top: 30px; background: #10b981; color: #ffffff; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; border: none; }
-        .btn-volver:hover { background: #059669; transform: translateY(-2px); }
-
-        @keyframes parpadeo { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
-    </style>
+    <link rel="stylesheet" href="css/escaner_qr.css?v=1">
     <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body data-sin-inactividad>

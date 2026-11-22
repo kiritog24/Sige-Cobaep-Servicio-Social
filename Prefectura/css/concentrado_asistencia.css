@@ -1,0 +1,33 @@
+/* Estilos de Prefectura/concentrado_asistencia.php (antes estaban dentro del PHP) */
+.ca-card { background: #fff; border: 1px solid #e5ece8; border-radius: 18px; padding: 20px; box-shadow: 0 4px 14px rgba(6, 63, 43, .04); margin-bottom: 18px; }
+.ca-filtros { display: grid; grid-template-columns: 1.4fr 1.2fr 1fr 1fr auto; gap: 12px; align-items: end; }
+.ca-filtros label { display: block; font-size: .78rem; font-weight: 700; color: #475569; margin-bottom: 6px; }
+.ca-filtros select, .ca-filtros input { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-family: inherit; font-size: .9rem; background: #fff; box-sizing: border-box; }
+.ca-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; border-radius: 10px; border: none; font-weight: 700; font-family: inherit; cursor: pointer; text-decoration: none; font-size: .88rem; }
+.ca-btn.verde { background: #16a05d; color: #fff; } .ca-btn.excel { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; } .ca-btn.pdf { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+.ca-resumen { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 16px; }
+.ca-resumen div { background: #f6faf8; border-radius: 12px; padding: 12px; text-align: center; }
+.ca-resumen strong { display: block; font-size: 1.4rem; color: #10231a; }
+.ca-resumen span { font-size: .72rem; color: #64748b; font-weight: 600; }
+.ca-encabezado { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.ca-encabezado h2 { margin: 0; font-size: 1.1rem; color: #10231a; }
+.ca-encabezado p { margin: 2px 0 0; color: #64748b; font-size: .85rem; }
+.ca-tabla { width: 100%; border-collapse: collapse; font-size: .86rem; }
+.ca-tabla th { background: #f8fafc; color: #475569; font-weight: 700; text-align: center; padding: 9px 8px; border-bottom: 2px solid #e2e8f0; font-size: .74rem; text-transform: uppercase; }
+.ca-tabla th:nth-child(2), .ca-tabla td:nth-child(2) { text-align: left; }
+.ca-tabla td { padding: 8px; border-bottom: 1px solid #f1f5f9; text-align: center; }
+.ca-pct { font-weight: 800; border-radius: 8px; padding: 3px 8px; display: inline-block; }
+.ca-pct.ok { background: #ecfdf5; color: #047857; } .ca-pct.medio { background: #fffbeb; color: #b45309; } .ca-pct.bajo { background: #fef2f2; color: #b91c1c; }
+.ca-nota { font-size: .78rem; color: #64748b; margin-top: 12px; line-height: 1.5; }
+.ca-solo-print { display: none; }
+@media (max-width: 1000px) { .ca-filtros { grid-template-columns: 1fr 1fr; } .ca-resumen { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 560px) { .ca-filtros { grid-template-columns: 1fr; } .ca-resumen { grid-template-columns: repeat(2, 1fr); } }
+@media print {
+    @page { size: landscape; margin: 10mm; }
+    .sidebar, .sidebar-overlay, .topbar, .ca-filtros-card, .ca-acciones, .collapse-toggle { display: none !important; }
+    .main-content { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+    .ca-card { box-shadow: none; border: none; padding: 0; }
+    .ca-solo-print { display: block; }
+    .ca-tabla { font-size: 10px; } .ca-tabla th, .ca-tabla td { padding: 4px; border: 1px solid #ccc; }
+    body { background: #fff !important; }
+}

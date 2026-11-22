@@ -118,76 +118,7 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="style_dashboard_docente.css?v=<?php echo time(); ?>">
-    <style>
-        .ra-cabecera { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 20px 22px; box-shadow: var(--shadow-sm); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
-        .ra-cabecera .ra-icono { width: 52px; height: 52px; border-radius: 16px; background: var(--green-soft); color: var(--green); display: grid; place-items: center; font-size: 1.3rem; flex-shrink: 0; }
-        .ra-cabecera h2 { margin: 0 0 4px; font-size: 1.2rem; color: var(--ink); }
-        .ra-meta { display: flex; gap: 8px; flex-wrap: wrap; }
-        .ra-chip { font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #f1f5f9; color: #475569; display: inline-flex; gap: 6px; align-items: center; }
-        .ra-chip.ok { background: #dcfce7; color: #166534; } .ra-chip.no { background: #fee2e2; color: #991b1b; } .ra-chip.warn { background: #fef3c7; color: #92400e; }
-        .ra-acciones { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
-        .ra-btn { border: 1px solid var(--line); background: #fff; color: var(--ink); padding: 10px 14px; border-radius: 11px; font: 700 0.82rem 'Inter', sans-serif; text-decoration: none; display: inline-flex; gap: 7px; align-items: center; cursor: pointer; }
-        .ra-btn:hover { border-color: var(--green); color: var(--green); }
-        .ra-btn.primario { background: var(--green); border-color: var(--green); color: #fff; }
-        .ra-btn.primario:hover { background: var(--green-800); color: #fff; }
-        .ra-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
-        /* Teléfono: 2 por fila; la última, si queda sola, ocupa todo el ancho y en una sola línea */
-        @media (max-width: 640px) {
-            .ra-stats { grid-template-columns: 1fr 1fr; gap: 10px; }
-            .ra-stats .ra-stat:last-child:nth-child(odd) { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 10px; }
-        }
-        .ra-stat { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; }
-        .ra-stat strong { display: block; font-size: 1.5rem; color: var(--ink); }
-        .ra-stat span { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
-        .ra-barra { height: 6px; background: #e2e8f0; border-radius: 6px; margin-top: 8px; overflow: hidden; }
-        .ra-barra span { display: block; height: 100%; background: var(--green); }
-        .ra-card { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 18px; box-shadow: var(--shadow-sm); }
-        .ra-filtros { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
-        .ra-buscar { flex: 1 1 240px; position: relative; display: block; min-width: 0; margin: 0; }
-        /* En teléfono los filtros van uno debajo de otro: sin esto los 240px se volvían alto y sobraba espacio */
-        @media (max-width: 640px) { .ra-filtros { flex-direction: column; } .ra-buscar, .ra-filtros .ra-select { flex: 0 0 auto; width: 100%; } }
-        .ra-buscar i { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-        .ra-buscar input, .ra-select { width: 100%; padding: 11px 13px; border: 1px solid #d5dfdb; border-radius: 11px; font: 0.88rem 'Inter', sans-serif; outline: none; background: #fff; }
-        .ra-buscar input { padding-left: 38px; }
-        .ra-select { width: auto; }
-        .ra-buscar input:focus, .ra-select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(22,160,93,.12); }
-        .ra-segmento { display: flex; background: #f1f5f4; border-radius: 11px; padding: 4px; gap: 4px; flex-wrap: wrap; }
-        .ra-segmento button { border: none; background: transparent; padding: 7px 12px; border-radius: 8px; font: 700 0.78rem 'Inter', sans-serif; color: var(--muted); cursor: pointer; }
-        .ra-segmento button.activo { background: #fff; color: var(--ink); box-shadow: 0 2px 6px rgba(0,0,0,.06); }
-        .ra-tabla-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; }
-        .ra-tabla { width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 760px; }
-        .ra-tabla th { background: #f8fafc; text-align: left; padding: 11px 14px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); border-bottom: 1px solid var(--line); }
-        .ra-tabla td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; color: var(--ink); }
-        .ra-tabla tr:last-child td { border-bottom: none; }
-        .ra-tabla tr.pendiente td { background: #fffdfa; }
-        .ra-tabla td small { display: block; color: var(--muted); font-size: 0.75rem; }
-        .ra-num { color: #94a3b8; font-weight: 700; width: 40px; }
-        .ra-estado { display: inline-flex; gap: 6px; align-items: center; padding: 5px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
-        .ra-estado.tiempo { background: #dcfce7; color: #166534; }
-        .ra-estado.tarde { background: #ffedd5; color: #c2410c; }
-        .ra-estado.pendiente { background: #fee2e2; color: #991b1b; }
-        .ra-hora strong { display: block; }
-        .ra-archivo { color: var(--blue); text-decoration: none; font-weight: 600; font-size: 0.82rem; }
-        .ra-archivo:hover { text-decoration: underline; }
-        .ra-calif { display: flex; gap: 6px; }
-        .ra-calif input { width: 64px; padding: 7px; border: 1px solid #cbd5e1; border-radius: 8px; text-align: center; font-family: inherit; }
-        .ra-calif button { width: 34px; border: none; border-radius: 8px; background: var(--green); color: #fff; cursor: pointer; }
-        .ra-vacio { text-align: center; padding: 36px 16px; color: var(--muted); }
-        .ra-vacio i { display: block; font-size: 1.8rem; color: #94a3b8; margin-bottom: 8px; }
-        .ra-alerta { padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-weight: 600; font-size: 0.88rem; }
-        .ra-alerta.exito { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
-        .ra-alerta.error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
-        .ra-solo-print { display: none; }
-        @media print {
-            .sidebar, .sidebar-overlay, .topbar, .ra-acciones, .ra-filtros, .ra-calif button, .ra-alerta { display: none !important; }
-            .main-content { margin: 0 !important; width: 100% !important; padding: 0 !important; }
-            body { background: #fff !important; }
-            .ra-card, .ra-cabecera, .ra-stat { box-shadow: none !important; }
-            .ra-calif input { border: none; width: auto; }
-            .ra-tabla tr[hidden] { display: table-row !important; }
-            .ra-solo-print { display: block; margin-bottom: 10px; font-size: 0.8rem; color: #475569; }
-        }
-    </style>
+    <link rel="stylesheet" href="css/regularizacion_alumnos.css?v=1">
     <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>

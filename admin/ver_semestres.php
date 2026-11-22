@@ -34,12 +34,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
     <link rel="stylesheet" href="style_dashboard_admin.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="style-gestionar-grupos.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="style_sidebar.css">
-    <style>
-        .btn-back{display:inline-flex;align-items:center;gap:8px;color:var(--muted,#6d7f77);text-decoration:none;font-weight:600;font-size:0.9rem;margin-bottom:15px;transition:color 0.2s;}
-        .btn-back:hover{color:var(--green,#16a05d);}
-        .btn-back i{background:#f1f5f9;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;transition:background 0.2s;}
-        .btn-back:hover i{background:var(--green-soft,#e9f8f0);}
-    </style>
+    <link rel="stylesheet" href="css/ver_semestres.css?v=1">
     <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>

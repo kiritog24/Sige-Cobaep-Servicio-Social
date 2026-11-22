@@ -61,24 +61,7 @@ if (!empty($matricula_buscada)) {
     <link rel="stylesheet" href="../admin/style_sidebar.css">
     <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css">
     <link rel="stylesheet" href="../Prefectura/style_creacion_reportes.css">
-    <style>
-        .search-container { background: #ffffff; padding: 25px; border-radius: var(--radius-md); border: 1px solid var(--line); box-shadow: var(--shadow-sm); margin-bottom: 25px; }
-        .search-box { display: flex; gap: 10px; max-width: 500px; }
-        .search-box input { flex: 1; padding: 0.8rem; border: 1px solid var(--line); border-radius: var(--radius-sm); font-size: 0.95rem; }
-        .search-box button { background: var(--green); color: white; border: none; padding: 0 20px; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; transition: 0.2s; }
-        .search-box button:hover { background: var(--green-700); }
-        .student-header { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 20px; border: 1px solid #e2e8f0; border-radius: var(--radius-md); margin-bottom: 25px; }
-        .pts-indicator { text-align: center; background: white; padding: 10px 20px; border-radius: var(--radius-sm); border: 1px solid var(--line); }
-        .pts-indicator span { display: block; font-size: 0.7rem; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 5px; }
-        .pts-indicator strong { font-size: 1.8rem; }
-        .btn-pdf { background: #0ea5e9; color: white; padding: 0.8rem 1.5rem; border-radius: var(--radius-sm); text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
-        .btn-pdf:hover { background: #0284c7; }
-        .action-buttons { display: flex; gap: 8px; justify-content: center; }
-        .btn-action { border: none; background: transparent; width: 30px; height: 30px; border-radius: var(--radius-sm); display: grid; place-items: center; cursor: pointer; transition: 0.2s ease; color: var(--muted); text-decoration: none; font-size: 0.9rem; }
-        .btn-edit:hover { background: #fef08a; color: #ca8a04; }
-        .btn-delete:hover { background: #fee2e2; color: #dc2626; }
-        #modalEditarReporte .custom-select-options { z-index: 2050; }
-    </style>
+    <link rel="stylesheet" href="css/expediente_alumnos.css?v=1">
     <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>

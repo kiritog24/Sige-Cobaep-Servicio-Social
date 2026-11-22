@@ -78,51 +78,7 @@ $colores_accion = ['eliminacion' => 'rojo', 'fallido' => 'rojo', 'baja_grupo' =>
     <link href="style_dashboard_admin.css" rel="stylesheet">
     <link href="style_sidebar.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/responsive.css?v=5">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .bt-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
-        .bt-title { display: flex; align-items: center; gap: 14px; }
-        .bt-title .ico { width: 52px; height: 52px; border-radius: 14px; background: #ede9fe; color: #6d28d9; display: grid; place-items: center; font-size: 1.35rem; flex-shrink: 0; }
-        .bt-title h1 { margin: 0; font-size: 1.55rem; color: #0f172a; }
-        .bt-title p { margin: 3px 0 0; color: #64748b; font-size: .9rem; }
-        .bt-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 18px; padding: 18px; box-shadow: 0 4px 18px rgba(15, 23, 42, .04); margin-bottom: 18px; }
-        .bt-filtros { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)) auto; gap: 10px; align-items: end; }
-        .bt-filtros label { display: block; font-size: .74rem; font-weight: 700; color: #64748b; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .03em; }
-        .bt-filtros input, .bt-filtros select { width: 100%; box-sizing: border-box; padding: 10px 11px; border: 1px solid #cbd5e1; border-radius: 10px; font-family: inherit; font-size: .88rem; background: #fff; }
-        .bt-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 15px; border-radius: 10px; border: none; background: #16a05d; color: #fff; font-weight: 700; font-family: inherit; font-size: .86rem; cursor: pointer; text-decoration: none; white-space: nowrap; }
-        .bt-btn.sec { background: #fff; color: #334155; border: 1px solid #cbd5e1; }
-        .bt-resumen { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; font-size: .88rem; color: #475569; }
-        .bt-lista { list-style: none; margin: 0; padding: 0 6px 0 0; max-height: min(70vh, 720px); overflow-y: auto; overscroll-behavior: contain; }
-        @media print { .bt-lista { max-height: none; overflow: visible; } }
-        .bt-item { display: grid; grid-template-columns: 44px 1fr auto; gap: 12px; padding: 13px 4px; border-bottom: 1px solid #f1f5f9; align-items: start; }
-        .bt-item:last-child { border-bottom: none; }
-        .bt-ico { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: .95rem; background: #f1f5f9; color: #475569; }
-        .bt-ico.verde { background: #ecfdf5; color: #047857; } .bt-ico.rojo { background: #fef2f2; color: #b91c1c; }
-        .bt-ico.ambar { background: #fffbeb; color: #b45309; } .bt-ico.azul { background: #eff6ff; color: #1d4ed8; }
-        .bt-desc { font-size: .92rem; color: #0f172a; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
-        .bt-meta { font-size: .78rem; color: #64748b; margin-top: 3px; display: flex; flex-wrap: wrap; gap: 4px 12px; }
-        .bt-meta b { color: #334155; font-weight: 600; }
-        .bt-chip { display: inline-block; padding: 2px 8px; border-radius: 20px; background: #f1f5f9; font-size: .7rem; font-weight: 700; color: #475569; }
-        .bt-fecha { text-align: right; font-size: .8rem; color: #475569; white-space: nowrap; }
-        .bt-fecha small { display: block; color: #94a3b8; }
-        .bt-detalle { margin-top: 6px; }
-        .bt-detalle summary { cursor: pointer; font-size: .78rem; color: #0f766e; font-weight: 600; }
-        .bt-detalle ul { margin: 6px 0 0; padding-left: 18px; font-size: .8rem; color: #475569; }
-        .bt-vacio { text-align: center; padding: 50px 10px; color: #94a3b8; }
-        .bt-pag { display: flex; justify-content: center; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
-        .bt-pag a, .bt-pag span { padding: 7px 12px; border-radius: 9px; border: 1px solid #e2e8f0; text-decoration: none; color: #334155; font-size: .85rem; font-weight: 600; }
-        .bt-pag span.actual { background: #16a05d; color: #fff; border-color: #16a05d; }
-        @media (max-width: 1100px) { .bt-filtros { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-        @media (max-width: 420px) { .bt-filtros { grid-template-columns: minmax(0, 1fr) !important; } .bt-filtros input, .bt-filtros select { min-width: 0; } }
-        @media (max-width: 640px) {
-            .bt-filtros { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-            .bt-filtros .bt-buscar, .bt-filtros .bt-acc { grid-column: 1 / -1; }
-            .bt-item { grid-template-columns: 36px 1fr; }
-            .bt-ico { width: 34px; height: 34px; }
-            .bt-fecha { grid-column: 2; text-align: left; }
-            .bt-fecha small { display: inline; margin-left: 6px; }
-        }
-    </style>
+    <link rel="stylesheet" href="css/bitacora.css?v=1">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>

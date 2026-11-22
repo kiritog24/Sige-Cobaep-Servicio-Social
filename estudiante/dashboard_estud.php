@@ -252,16 +252,7 @@ try {
                     </div>
                     <a class="aviso-tutor-btn" href="perfil.php?completar=tutor"><i class="fas fa-pen"></i> Registrarlo ahora</a>
                 </div>
-                <style>
-                    .aviso-tutor { display: flex; align-items: center; gap: 14px; background: #fffbeb; border: 1px solid #fde68a; border-left: 5px solid #f59e0b; border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; }
-                    .aviso-tutor-ico { width: 44px; height: 44px; border-radius: 12px; background: #fef3c7; color: #b45309; display: grid; place-items: center; font-size: 1.2rem; flex-shrink: 0; }
-                    .aviso-tutor-txt { flex: 1; min-width: 0; }
-                    .aviso-tutor-txt strong { display: block; color: #78350f; font-size: .95rem; }
-                    .aviso-tutor-txt span { display: block; color: #92400e; font-size: .84rem; line-height: 1.45; margin-top: 2px; }
-                    .aviso-tutor-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 10px; background: #d97706; color: #fff; font-weight: 700; font-size: .86rem; text-decoration: none; white-space: nowrap; }
-                    .aviso-tutor-btn:hover { background: #b45309; }
-                    @media (max-width: 640px) { .aviso-tutor { flex-wrap: wrap; } .aviso-tutor-btn { width: 100%; justify-content: center; } }
-                </style>
+                <link rel="stylesheet" href="css/dashboard_estud.css?v=1">
             <?php endif; ?>
             <div class="info-banner">
                 <i class="fas fa-graduation-cap"></i>

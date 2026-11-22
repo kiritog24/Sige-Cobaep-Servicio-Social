@@ -3,7 +3,7 @@
  * Plantilla compartida del panel del estudiante (barra lateral + encabezado).
  * Uso:
  *   $alumno = estudiante_requerir_sesion($pdo);
- *   estudiante_layout_inicio('Avisos', 'Descripción', 'avisos.php', $alumno, $css_extra);
+ *   estudiante_layout_inicio('Avisos', 'Descripción', 'avisos.php', $alumno, 'css/avisos.css');  // hoja de estilos propia de la página (opcional)
  *   ... contenido ...
  *   estudiante_layout_fin();
  */
@@ -24,7 +24,7 @@ function estudiante_requerir_sesion(PDO $pdo): array {
     return $alumno;
 }
 
-function estudiante_layout_inicio(string $titulo, string $subtitulo, string $activo, array $alumno, string $css_extra = ''): void {
+function estudiante_layout_inicio(string $titulo, string $subtitulo, string $activo, array $alumno, string $css_archivo = ''): void {
     $nombre_pila = htmlspecialchars($alumno['nombre']);
     $iniciales = htmlspecialchars(mb_substr($alumno['nombre'], 0, 1) . mb_substr($alumno['apellido_paterno'], 0, 1));
     $menu = [
@@ -58,21 +58,8 @@ function estudiante_layout_inicio(string $titulo, string $subtitulo, string $act
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="style_dashboard_estud.css">
-    <style>
-        .info-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:1.4rem;margin-bottom:1.2rem;box-shadow:0 2px 10px rgba(15,23,42,.03);}
-        .info-card h2{margin:0 0 .3rem;font-size:1rem;color:#0f172a;display:flex;align-items:center;gap:10px;}
-        .info-card h2 i{color:#059669;}
-        .info-card .desc{margin:0 0 1rem;color:#64748b;font-size:.85rem;}
-        .info-empty{background:#f8fafc;border:1px dashed #cbd5e1;border-radius:12px;padding:1.6rem 1rem;text-align:center;color:#64748b;font-size:.88rem;}
-        .info-empty i{display:block;font-size:1.8rem;color:#94a3b8;margin-bottom:.5rem;}
-        .info-table{width:100%;border-collapse:collapse;font-size:.85rem;}
-        .info-table th{text-align:left;color:#475569;font-weight:600;padding:.6rem;border-bottom:1px solid #e2e8f0;background:#f8fafc;}
-        .info-table td{padding:.6rem;border-bottom:1px solid #f1f5f9;color:#1e293b;vertical-align:top;}
-        .info-wrap{overflow-x:auto;}
-        .tag{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.72rem;font-weight:700;}
-        .tag.green{background:#ecfdf5;color:#047857;} .tag.amber{background:#fffbeb;color:#b45309;} .tag.red{background:#fef2f2;color:#b91c1c;} .tag.blue{background:#eff6ff;color:#1d4ed8;} .tag.gray{background:#f1f5f9;color:#475569;}
-        <?php echo $css_extra; ?>
-    </style>
+    <link rel="stylesheet" href="css/layout.css?v=1">
+    <?php if ($css_archivo !== ''): ?><link rel="stylesheet" href="<?php echo htmlspecialchars($css_archivo, ENT_QUOTES, 'UTF-8'); ?>?v=1"><?php endif; ?>
     <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>

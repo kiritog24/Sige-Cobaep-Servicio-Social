@@ -1,0 +1,35 @@
+/* Estilos de Prefectura/asistencia_clases.php (antes estaban dentro del PHP) */
+.ac-filtros { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; background: #fff; border: 1px solid var(--line, #e2e8f0); border-radius: 14px; padding: 14px 16px; margin: 18px 0; }
+.ac-filtros label { display: flex; flex-direction: column; gap: 4px; font-size: .72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .03em; }
+.ac-filtros input, .ac-filtros select { padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 9px; font: inherit; font-size: .9rem; min-width: 0; text-transform: none; }
+.ac-filtros button { padding: 10px 16px; border: 0; border-radius: 9px; background: #063f2b; color: #fff; font-weight: 700; cursor: pointer; font-family: inherit; }
+.ac-resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr)); gap: 12px; margin-bottom: 18px; }
+.ac-num { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 16px; display: flex; gap: 12px; align-items: center; }
+.ac-num i { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; font-size: 1.05rem; flex: 0 0 42px; }
+.ac-num strong { display: block; font-size: 1.5rem; line-height: 1; color: #0f172a; }
+.ac-num span { font-size: .78rem; color: #64748b; }
+.ac-num.rojo i { background: #fef2f2; color: #dc2626; } .ac-num.ambar i { background: #fffbeb; color: #d97706; }
+.ac-num.azul i { background: #eff6ff; color: #2563eb; } .ac-num.gris i { background: #f1f5f9; color: #475569; }
+.ac-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px; margin-bottom: 18px; }
+.ac-card h2 { margin: 0 0 4px; font-size: 1.05rem; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+.ac-card > p { margin: 0 0 14px; font-size: .84rem; color: #64748b; }
+.ac-vacio { padding: 18px; text-align: center; color: #64748b; background: #f8fafc; border-radius: 12px; font-size: .88rem; }
+.ac-alumno { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: flex-start; justify-content: space-between; padding: 12px 0; border-top: 1px solid #eef2f7; }
+.ac-alumno:first-of-type { border-top: 0; }
+.ac-alumno .quien strong { display: block; color: #0f172a; font-size: .92rem; }
+.ac-alumno .quien small { color: #64748b; font-size: .78rem; }
+.ac-chip { display: inline-flex; align-items: center; gap: 5px; font-size: .74rem; font-weight: 700; padding: 3px 8px; border-radius: 99px; margin: 4px 4px 0 0; }
+.ac-chip.verde { background: #ecfdf5; color: #047857; } .ac-chip.rojo { background: #fef2f2; color: #b91c1c; } .ac-chip.gris { background: #f1f5f9; color: #475569; }
+.ac-acciones { display: flex; flex-wrap: wrap; gap: 6px; }
+.ac-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px; border-radius: 9px; font-size: .78rem; font-weight: 700; text-decoration: none; border: 1px solid #cbd5e1; color: #334155; background: #fff; cursor: pointer; font-family: inherit; }
+.ac-btn:hover { background: #f8fafc; }
+.ac-btn.morado { border-color: #e9d5ff; color: #7e22ce; background: #faf5ff; }
+.ac-btn[disabled] { opacity: .55; cursor: default; }
+.ac-tabla { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.ac-tabla th { text-align: left; font-size: .72rem; color: #64748b; text-transform: uppercase; padding: 8px; border-bottom: 1px solid #e2e8f0; }
+.ac-tabla td { padding: 9px 8px; border-bottom: 1px solid #f1f5f9; }
+.ac-estado { font-weight: 700; font-size: .78rem; white-space: nowrap; }
+.ac-estado.ok { color: #047857; } .ac-estado.no { color: #b91c1c; }
+.ac-msg { padding: 12px 14px; border-radius: 10px; margin: 14px 0 0; font-size: .88rem; font-weight: 600; }
+.ac-msg.ok { background: #ecfdf5; color: #065f46; } .ac-msg.err { background: #fef2f2; color: #991b1b; }
+.ac-banner { margin-top: 14px; padding: 12px 16px; border-radius: 12px; background: #f1f5f9; border: 1px solid #e2e8f0; color: #334155; font-weight: 600; font-size: .88rem; }

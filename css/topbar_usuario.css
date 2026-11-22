@@ -1,0 +1,27 @@
+/* Estilos de includes/topbar_usuario.php (antes estaban dentro del PHP) */
+.tbu-wrap { position: relative; }
+.tbu-btn-perfil { cursor: pointer; user-select: none; }
+.tbu-chevron { font-size: 12px; color: #94a3b8; margin-left: 6px; }
+.tbu-avatar { overflow: hidden; }
+.tbu-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
+.tbu-btn-campana { position: relative; cursor: pointer; }
+.tbu-count { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: #ef4444; color: #fff; font-size: 10px; font-weight: 800; display: grid; place-items: center; border: 2px solid #fff; }
+.tbu-menu { display: none; position: absolute; right: 0; top: calc(100% + 10px); background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; box-shadow: 0 18px 40px rgba(15, 23, 42, .14); z-index: 1000; min-width: 220px; overflow: hidden; }
+.tbu-menu.abierto { display: block; animation: tbuIn .15s ease; }
+@keyframes tbuIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.tbu-perfil a { display: flex; align-items: center; gap: 10px; padding: 11px 16px; color: #334155; text-decoration: none; font-size: .9rem; font-weight: 600; }
+.tbu-perfil a:hover { background: #f1f5f9; color: #047857; }
+.tbu-perfil a i { width: 18px; text-align: center; color: #10b981; }
+.tbu-perfil hr { margin: 0; border: none; border-top: 1px solid #e2e8f0; }
+.tbu-perfil .tbu-salir, .tbu-perfil .tbu-salir i { color: #ef4444; }
+.tbu-avisos { width: 340px; max-width: calc(100vw - 32px); max-height: 420px; overflow-y: auto; }
+.tbu-menu-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #f1f5f9; font-size: .9rem; color: #0f172a; }
+.tbu-menu-head span { font-size: .75rem; color: #64748b; }
+.tbu-aviso { display: flex; gap: 12px; padding: 11px 16px; border-bottom: 1px solid #f8fafc; text-decoration: none; color: inherit; }
+a.tbu-aviso:hover { background: #f8fafc; }
+.tbu-aviso strong { display: block; font-size: .84rem; color: #0f172a; }
+.tbu-aviso small { display: block; font-size: .76rem; color: #64748b; margin-top: 2px; line-height: 1.35; }
+.tbu-ico { flex: 0 0 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-size: .9rem; }
+.tbu-ico.red { background: #fef2f2; color: #dc2626; } .tbu-ico.amber { background: #fffbeb; color: #d97706; }
+.tbu-ico.blue { background: #eff6ff; color: #2563eb; } .tbu-ico.gray { background: #f1f5f9; color: #475569; } .tbu-ico.green { background: #ecfdf5; color: #059669; }
+.tbu-vacio { padding: 22px 16px; text-align: center; color: #64748b; font-size: .85rem; }

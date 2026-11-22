@@ -107,37 +107,7 @@ if (in_array($formato, ['pdf', 'xlsx'], true)) {
     <title>Lista Provisoria Asistencia - SIGE COBAEP</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     
-    <style>
-        /* Diseño institucional, sobrio y responsivo */
-        * { box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 900px; margin: 0 auto; background: #fff; border: 1px solid #ccc; border-top: 4px solid #1b4332; padding: 25px; }
-        
-        /* Cabecera */
-        .header-actions { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
-        .header-title h2 { margin: 0; font-size: 22px; color: #1b4332; font-weight: normal; }
-        .header-title p { margin: 5px 0 0 0; color: #555; font-size: 14px; font-weight: bold; }
-        
-        .btn-group { display: flex; gap: 10px; }
-        .back-btn { background: #e9ecef; color: #333; padding: 8px 15px; text-decoration: none; font-size: 13px; border: 1px solid #ccc; border-radius: 2px; }
-        .back-btn:hover { background: #d3d9df; }
-        
-        .export-btn { background: #1b4332; color: white; border: none; padding: 8px 15px; font-size: 13px; cursor: pointer; border-radius: 2px; font-weight: bold; display: flex; align-items: center; gap: 5px; }
-        .export-btn:hover { background: #112d21; }
-
-        /* Contenedor de la tabla responsivo */
-        .preview-table-container { overflow-x: auto; width: 100%; margin-top: 10px; }
-        table { border-collapse: collapse; width: 100%; min-width: 600px; font-family: Arial, sans-serif; font-size: 12px; }
-
-        /* MEDIA QUERIES PARA CELULARES (Responsividad) */
-        @media (max-width: 600px) {
-            body { padding: 10px; }
-            .container { padding: 15px; }
-            .header-actions { flex-direction: column; align-items: flex-start; gap: 15px; }
-            .btn-group { width: 100%; flex-direction: column; }
-            .export-btn, .back-btn { width: 100%; justify-content: center; text-align: center; }
-        }
-    </style>
+    <link rel="stylesheet" href="css/vista_previa_lista.css?v=1">
     <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 

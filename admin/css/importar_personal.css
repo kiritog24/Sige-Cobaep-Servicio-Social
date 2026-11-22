@@ -1,0 +1,47 @@
+/* Estilos de admin/importar_personal.php (antes estaban dentro del PHP) */
+body { font-family: 'Inter', sans-serif; }
+.ip-wrap { max-width: 1150px; }
+.ip-back { color: #16a05d; text-decoration: none; font-weight: 600; font-size: .88rem; display: inline-flex; gap: 6px; align-items: center; margin-bottom: 14px; }
+.ip-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+.ip-title { display: flex; align-items: center; gap: 14px; }
+.ip-title .ico { width: 52px; height: 52px; border-radius: 14px; background: #ccfbf1; color: #0f766e; display: grid; place-items: center; font-size: 1.35rem; flex-shrink: 0; }
+.ip-title h1 { margin: 0; font-size: 1.55rem; color: #0f172a; }
+.ip-title p { margin: 3px 0 0; color: #64748b; font-size: .9rem; }
+.ip-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+.ip-tab { padding: 9px 14px; border-radius: 12px; border: 1px solid #e2e8f0; background: #fff; color: #475569; text-decoration: none; font-weight: 600; font-size: .88rem; display: inline-flex; gap: 8px; align-items: center; }
+.ip-tab.activo { background: #0f766e; color: #fff; border-color: #0f766e; }
+.ip-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 18px; padding: 22px; box-shadow: 0 4px 18px rgba(15, 23, 42, .04); margin-bottom: 20px; }
+.ip-card h2 { margin: 0 0 14px; font-size: 1.05rem; color: #0f172a; display: flex; gap: 10px; align-items: center; }
+.ip-card h2 i { color: #0d9488; }
+.ip-pasos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px; }
+.ip-paso { background: #f8fafc; border-radius: 14px; padding: 14px; font-size: .85rem; color: #475569; line-height: 1.5; }
+.ip-paso b.n { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #0d9488; color: #fff; font-size: .78rem; margin-right: 6px; }
+.ip-paso strong { color: #0f172a; }
+.ip-form { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; }
+.ip-form label { display: block; font-size: .8rem; font-weight: 700; color: #475569; margin-bottom: 6px; }
+.ip-file { width: 100%; box-sizing: border-box; padding: 12px; border: 2px dashed #cbd5e1; border-radius: 12px; background: #f8fafc; font-family: inherit; }
+.ip-select { width: 100%; padding: 11px 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-family: inherit; font-size: .9rem; background: #fff; }
+.ip-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 18px; border-radius: 12px; border: none; background: #0d9488; color: #fff; font-weight: 600; font-family: inherit; font-size: .9rem; cursor: pointer; text-decoration: none; }
+.ip-btn:hover { background: #0f766e; }
+.ip-btn.sec { background: #fff; color: #334155; border: 1px solid #cbd5e1; }
+.ip-btn:disabled { opacity: .5; cursor: not-allowed; }
+.ip-nota { font-size: .82rem; color: #64748b; margin: 14px 0 0; line-height: 1.6; }
+.ip-alerta { padding: 13px 16px; border-radius: 12px; margin-bottom: 18px; font-weight: 600; font-size: .9rem; }
+.ip-alerta.err { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+.ip-alerta.info { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; font-weight: 500; }
+.ip-res { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+.ip-res div { border-radius: 14px; padding: 12px 14px; }
+.ip-res b { display: block; font-size: 1.5rem; }
+.ip-res span { font-size: .8rem; font-weight: 600; }
+.r-nuevo { background: #ecfdf5; color: #047857; } .r-existe { background: #f1f5f9; color: #475569; } .r-error { background: #fef2f2; color: #b91c1c; }
+.ip-tabla-wrap { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 12px; }
+table.ip-tabla { width: 100%; border-collapse: collapse; font-size: .84rem; }
+.ip-tabla th { background: #f8fafc; text-align: left; padding: 10px; color: #475569; font-size: .74rem; text-transform: uppercase; letter-spacing: .03em; border-bottom: 1px solid #e2e8f0; }
+.ip-tabla td { padding: 10px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+.ip-tabla td small { color: #64748b; display: block; }
+.ip-chip { display: inline-flex; gap: 5px; align-items: center; padding: 3px 9px; border-radius: 20px; font-size: .74rem; font-weight: 700; white-space: nowrap; }
+.ip-user { font-family: Consolas, monospace; font-weight: 700; color: #0f172a; }
+.ip-auto { color: #0d9488; font-style: italic; }
+.ip-acciones { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+@media (max-width: 800px) { .ip-pasos { grid-template-columns: 1fr; } .ip-form { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .ip-res { grid-template-columns: 1fr; } .ip-btn { width: 100%; } .ip-acciones form { width: 100%; } }

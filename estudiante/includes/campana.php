@@ -22,12 +22,7 @@ function estudiante_campana(PDO $pdo): void {
     $activa = basename($_SERVER['PHP_SELF']) === 'avisos.php';
     static $estilos = false;
     if (!$estilos) { $estilos = true; ?>
-    <style>
-        .campana-est { position: relative; width: 44px; height: 44px; flex-shrink: 0; display: grid; place-items: center; border-radius: 14px; background: #fff; border: 1px solid #e2e8f0; color: #475569; text-decoration: none; box-shadow: 0 2px 10px rgba(15,23,42,.04); transition: .2s; }
-        .campana-est:hover, .campana-est.activa { color: #059669; border-color: #a7f3d0; transform: translateY(-2px); }
-        .campana-est:focus-visible { outline: 3px solid #34d399; outline-offset: 2px; }
-        .campana-est .campana-num { position: absolute; top: -5px; right: -5px; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 999px; background: #ef4444; color: #fff; font-size: .65rem; font-weight: 800; display: grid; place-items: center; box-shadow: 0 0 0 2px #fff; }
-    </style>
+    <link rel="stylesheet" href="css/campana.css?v=1">
     <?php } ?>
                     <a class="campana-est<?php echo $activa ? ' activa' : ''; ?>" href="avisos.php" title="<?php echo $titulo; ?>" aria-label="<?php echo $titulo; ?>">
                         <i class="far fa-bell"></i><?php if ($nuevos): ?><span class="campana-num"><?php echo $nuevos > 9 ? '9+' : $nuevos; ?></span><?php endif; ?>

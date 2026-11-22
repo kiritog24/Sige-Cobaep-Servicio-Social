@@ -35,42 +35,7 @@ $plural = ['maestros' => 'Docentes', 'prefectos' => 'Prefectos', 'admin' => 'Adm
     <link href="style_dashboard_admin.css" rel="stylesheet">
     <link href="style_sidebar.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/responsive.css?v=5">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .cp-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
-        .cp-title { display: flex; align-items: center; gap: 14px; }
-        .cp-title .ico { width: 52px; height: 52px; border-radius: 14px; background: #ecfeff; color: #0e7490; display: grid; place-items: center; font-size: 1.35rem; flex-shrink: 0; }
-        .cp-title h1 { margin: 0; font-size: 1.55rem; color: #0f172a; }
-        .cp-title p { margin: 3px 0 0; color: #64748b; font-size: .9rem; }
-        .cp-back { color: #16a05d; text-decoration: none; font-weight: 600; font-size: .88rem; display: inline-flex; gap: 6px; align-items: center; margin-bottom: 14px; }
-        .cp-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-        .cp-tab { padding: 9px 14px; border-radius: 12px; border: 1px solid #e2e8f0; background: #fff; color: #475569; text-decoration: none; font-weight: 600; font-size: .88rem; }
-        .cp-tab.activo { background: #0e7490; color: #fff; border-color: #0e7490; }
-        .cp-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 18px; padding: 18px; box-shadow: 0 4px 18px rgba(15, 23, 42, .04); }
-        .cp-barra { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
-        .cp-barra label { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #334155; font-size: .9rem; cursor: pointer; }
-        .cp-btns { display: flex; gap: 8px; flex-wrap: wrap; }
-        .cp-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; border-radius: 10px; border: none; background: #16a05d; color: #fff; font-weight: 700; font-family: inherit; font-size: .88rem; cursor: pointer; }
-        .cp-btn.sec { background: #fff; color: #334155; border: 1px solid #cbd5e1; }
-        .cp-btn:disabled { opacity: .55; cursor: wait; }
-        .cp-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: 10px; max-height: min(64vh, 620px); overflow-y: auto; padding-right: 4px; overscroll-behavior: contain; align-content: start; }
-        .cp-buscar { display: flex; align-items: center; gap: 10px; padding: 0 12px; border: 1px solid #dbe4df; border-radius: 12px; margin-bottom: 12px; max-width: 420px; }
-        .cp-buscar input { flex: 1; border: none; outline: none; padding: 10px 0; font: inherit; font-size: .9rem; }
-        .cp-buscar i { color: #94a3b8; }
-        .cp-item.oculto { display: none; }
-        .cp-item { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 14px; cursor: pointer; }
-        .cp-item:has(input:checked) { border-color: #16a05d; background: #f0fdf4; }
-        .cp-item input { width: 18px; height: 18px; accent-color: #16a05d; flex-shrink: 0; }
-        .cp-av { width: 46px; height: 46px; border-radius: 50%; overflow: hidden; background: #e2e8f0; display: grid; place-items: center; font-weight: 700; color: #475569; flex-shrink: 0; }
-        .cp-av img { width: 100%; height: 100%; object-fit: cover; }
-        .cp-item b { display: block; font-size: .9rem; color: #0f172a; }
-        .cp-item small { color: #64748b; font-size: .78rem; }
-        .cp-sinfoto { color: #b45309 !important; font-weight: 600; }
-        .cp-una { margin-left: auto; border: none; background: #ecfeff; color: #0e7490; width: 34px; height: 34px; border-radius: 9px; cursor: pointer; flex-shrink: 0; }
-        .cp-nota { font-size: .82rem; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 10px 12px; margin-bottom: 14px; }
-        .cp-vacio { text-align: center; padding: 40px; color: #94a3b8; }
-        @media (max-width: 560px) { .cp-btn { width: 100%; } .cp-btns { width: 100%; } }
-    </style>
+    <link rel="stylesheet" href="css/credenciales_personal.css?v=1">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>

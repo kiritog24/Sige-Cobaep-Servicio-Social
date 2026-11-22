@@ -6,21 +6,7 @@ require_once 'includes/avisos_data.php';
 $alumno = estudiante_requerir_sesion($pdo);
 $avisos = obtener_avisos_estudiante($pdo, (int)$alumno['id_alumno'], 50);
 
-$css = '
-.aviso{display:flex;gap:14px;padding:1rem 0;border-bottom:1px solid #f1f5f9;text-decoration:none;color:inherit;}
-.aviso:last-child{border-bottom:0;}
-a.aviso:hover h3{color:#047857;}
-.aviso-icon{flex:0 0 42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:1rem;}
-.aviso-icon.blue{background:#eff6ff;color:#2563eb;} .aviso-icon.green{background:#ecfdf5;color:#059669;}
-.aviso-icon.red{background:#fef2f2;color:#dc2626;} .aviso-icon.amber{background:#fffbeb;color:#d97706;} .aviso-icon.gray{background:#f1f5f9;color:#475569;}
-.aviso h3{margin:0 0 3px;font-size:.93rem;color:#1e293b;}
-.aviso p{margin:0 0 5px;font-size:.84rem;color:#64748b;line-height:1.45;}
-.aviso small{font-size:.72rem;color:#94a3b8;font-weight:600;}
-.aviso.cerrada{background:#fef2f2;border-left:4px solid #dc2626;padding-left:12px;border-radius:8px;}
-.aviso.cerrada h3{color:#b91c1c;}
-.aviso.retardo{border-left:4px solid #f59e0b;padding-left:12px;}
-';
-estudiante_layout_inicio('Avisos', 'Novedades de tus materias, asistencia y conducta.', 'avisos.php', $alumno, $css);
+estudiante_layout_inicio('Avisos', 'Novedades de tus materias, asistencia y conducta.', 'avisos.php', $alumno, 'css/avisos.css');
 ?>
 <div class="info-card">
     <h2><i class="fas fa-bullhorn"></i> Avisos recientes</h2>

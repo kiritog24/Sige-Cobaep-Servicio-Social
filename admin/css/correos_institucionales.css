@@ -1,0 +1,47 @@
+/* Estilos de admin/correos_institucionales.php (antes estaban dentro del PHP) */
+body { font-family: 'Inter', sans-serif; }
+.ci-wrap { max-width: 1150px; }
+.ci-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+.ci-title { display: flex; align-items: center; gap: 14px; }
+.ci-title .ico { width: 52px; height: 52px; border-radius: 14px; background: #e0f2fe; color: #0369a1; display: grid; place-items: center; font-size: 1.35rem; flex-shrink: 0; }
+.ci-title h1 { margin: 0; font-size: 1.55rem; color: #0f172a; }
+.ci-title p { margin: 3px 0 0; color: #64748b; font-size: .9rem; }
+.ci-back { color: #16a05d; text-decoration: none; font-weight: 600; font-size: .88rem; display: inline-flex; gap: 6px; align-items: center; margin-bottom: 14px; }
+.ci-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 18px; padding: 22px; box-shadow: 0 4px 18px rgba(15, 23, 42, .04); margin-bottom: 20px; }
+.ci-card h2 { margin: 0 0 14px; font-size: 1.05rem; color: #0f172a; display: flex; gap: 10px; align-items: center; }
+.ci-card h2 i { color: #16a05d; }
+.ci-pasos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px; }
+.ci-paso { background: #f8fafc; border-radius: 14px; padding: 14px; font-size: .85rem; color: #475569; line-height: 1.5; }
+.ci-paso b.n { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #16a05d; color: #fff; font-size: .78rem; margin-right: 6px; }
+.ci-paso strong { color: #0f172a; }
+.ci-form { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.ci-file { flex: 1; min-width: 240px; padding: 12px; border: 2px dashed #cbd5e1; border-radius: 12px; background: #f8fafc; font-family: inherit; }
+.ci-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 18px; border-radius: 12px; border: none; background: #16a05d; color: #fff; font-weight: 600; font-family: inherit; font-size: .9rem; cursor: pointer; text-decoration: none; }
+.ci-btn:hover { background: #12804b; }
+.ci-btn.sec { background: #fff; color: #334155; border: 1px solid #cbd5e1; }
+.ci-btn.sec:hover { background: #f1f5f9; }
+.ci-btn:disabled { opacity: .5; cursor: not-allowed; }
+.ci-nota { font-size: .82rem; color: #64748b; margin: 12px 0 0; line-height: 1.5; }
+.ci-alerta { padding: 13px 16px; border-radius: 12px; margin-bottom: 18px; font-weight: 600; font-size: .9rem; }
+.ci-alerta.ok { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+.ci-alerta.err { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+.ci-alerta.info { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; font-weight: 500; }
+.ci-res { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+.ci-res div { border-radius: 14px; padding: 12px 14px; }
+.ci-res b { display: block; font-size: 1.5rem; }
+.ci-res span { font-size: .8rem; font-weight: 600; }
+.r-nuevo { background: #ecfdf5; color: #047857; } .r-cambio { background: #eff6ff; color: #1d4ed8; }
+.r-igual { background: #f1f5f9; color: #475569; } .r-error { background: #fef2f2; color: #b91c1c; }
+.ci-filtros { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.ci-filtro { border: 1px solid #cbd5e1; background: #fff; border-radius: 20px; padding: 6px 12px; font-size: .8rem; font-weight: 600; cursor: pointer; font-family: inherit; color: #334155; }
+.ci-filtro.activo { background: #0f172a; color: #fff; border-color: #0f172a; }
+.ci-tabla-wrap { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 12px; }
+table.ci-tabla { width: 100%; border-collapse: collapse; font-size: .84rem; }
+.ci-tabla th { background: #f8fafc; text-align: left; padding: 10px; color: #475569; font-size: .74rem; text-transform: uppercase; letter-spacing: .03em; border-bottom: 1px solid #e2e8f0; }
+.ci-tabla td { padding: 10px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+.ci-tabla td small { color: #64748b; display: block; }
+.ci-chip { display: inline-flex; gap: 5px; align-items: center; padding: 3px 9px; border-radius: 20px; font-size: .74rem; font-weight: 700; white-space: nowrap; }
+.ci-old { text-decoration: line-through; color: #94a3b8; }
+.ci-acciones { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+@media (max-width: 800px) { .ci-pasos, .ci-res { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .ci-pasos { grid-template-columns: 1fr; } .ci-btn { width: 100%; } .ci-acciones form { width: 100%; } }

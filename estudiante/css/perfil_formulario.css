@@ -1,0 +1,16 @@
+/* Estilos de estudiante/perfil.php (formulario de datos e impresión de la credencial) */
+.form-section { margin: 18px 0 10px; font-size: 0.85rem; color: #065f46; text-transform: uppercase; letter-spacing: .04em; display:flex; gap:8px; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:6px; }
+.form-section:first-child { margin-top: 0; }
+.form-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.form-grid .form-group { display:flex; flex-direction:column; gap:4px; margin:0; }
+.form-control:disabled { background:#f1f5f9; color:#64748b; }
+@media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+
+/* Imprimir SOLO la credencial */
+@media print {
+    @page { size: auto; margin: 12mm; }
+    body * { visibility: hidden !important; }
+    #credencialImprimible, #credencialImprimible * { visibility: visible !important; }
+    #credencialImprimible { position: absolute; left: 0; top: 0; width: 120mm; margin: 0; box-shadow: none;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

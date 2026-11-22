@@ -39,9 +39,7 @@ if (!preg_match('#^https?://' . preg_quote($_SERVER['HTTP_HOST'] ?? 'localhost',
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="style_dashboard_docente.css?v=<?php echo time(); ?>">
 
-    <style>
-        .btn-back{display:inline-flex;align-items:center;gap:8px;color:#6d7f77;text-decoration:none;font-weight:600;font-size:.85rem;margin-bottom:6px;}
-    </style>
+    <link rel="stylesheet" href="css/perfil_alumno.css?v=1">
     <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>

@@ -51,30 +51,7 @@ try {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="style_dashboard_docente.css?v=<?php echo time(); ?>">
 
-    <style>
-        .empty-state { background: #ffffff; border: 2px dashed #e8efeb; border-radius: 20px; padding: 4rem 2rem; text-align: center; margin-top: 10px; }
-        .empty-state i { font-size: 3.5rem; color: #9bc7b5; margin-bottom: 1rem; display: block; }
-        .empty-state h3 { color: #10251d; margin: 0 0 0.5rem 0; font-size: 1.2rem; font-weight: 800;}
-        .empty-state p { color: #6d7f77; margin: 0; font-size: 0.95rem; }
-
-        .grid-aulas { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); gap: 1.5rem; }
-        
-        .aula-card { background: #ffffff; border-radius: 20px; border: 1px solid #e8efeb; overflow: hidden; box-shadow: 0 4px 18px rgba(9, 48, 32, 0.05); display: flex; flex-direction: column; transition: 0.3s ease; }
-        .aula-card:hover { transform: translateY(-5px); box-shadow: 0 14px 40px rgba(9, 48, 32, 0.08); border-color: #d9e9e1;}
-        
-        .aula-header { height: 130px; background: linear-gradient(145deg, var(--green-950), var(--green-900)); position: relative; padding: 1.5rem; display: flex; flex-direction: column; justify-content: flex-end; }
-        .aula-badge { position: absolute; top: 15px; left: 15px; background: rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 50px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .aula-header h3 { margin: 0; font-size: 1.5rem; color: white; font-weight: 800; }
-        .aula-header p { margin: 5px 0 0 0; font-size: 0.85rem; color: #a7f3d0; font-weight: 600; }
-
-        .aula-body { padding: 1.5rem; flex: 1; display: flex; flex-direction: column; justify-content: center;}
-        .meta { font-size: 0.9rem; color: #6d7f77; display: flex; align-items: center; gap: 10px; font-weight: 600;}
-        .meta i { width: 20px; text-align: center; font-size: 1.1rem; color: #3b82f6; }
-        
-        .aula-footer { padding: 0 1.5rem 1.5rem 1.5rem; }
-        .btn-manage { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--green); color: white; padding: 12px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 0.95rem; transition: 0.2s ease; width: 100%;}
-        .btn-manage:hover { background: var(--green-800); box-shadow: 0 4px 10px rgba(22, 160, 93, 0.3); }
-    </style>
+    <link rel="stylesheet" href="css/mis_grupos.css?v=1">
     <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 

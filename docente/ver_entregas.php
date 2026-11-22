@@ -57,32 +57,7 @@ try {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="style_dashboard_docente.css">
-    <style>
-        .header-entregas { background: white; border: 1px solid var(--line); border-radius: 16px; padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; box-shadow: var(--shadow-sm); }
-        .header-entregas h2 { margin: 0 0 5px 0; font-size: 1.5rem; font-weight: 800; color: var(--ink); }
-        .table-entregas { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); }
-        .table-entregas th { background: #f8fafc; text-align: left; padding: 14px; font-size: 0.85rem; color: var(--muted); border-bottom: 1px solid var(--line); }
-        .table-entregas td { padding: 14px; border-bottom: 1px solid var(--line); font-size: 0.9rem; color: var(--ink); }
-        
-        .badge-status { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
-        .badge-pendiente { background: #fef9c3; color: #854d0e; }
-        .badge-revisada { background: #dcfce7; color: #166534; }
-        .badge-faltante { background: #fee2e2; color: #991b1b; }
-
-        .btn-descargar { background: #eff6ff; color: #2563eb; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.8rem; display: inline-block;}
-        .btn-descargar:hover { background: #dbeafe; }
-        .btn-revisar { background: white; border: 1px solid #cbd5e1; color: var(--ink); padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
-        .btn-revisar:hover { background: #f1f5f9; }
-
-        /* Estilos del Modal */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: white; border-radius: 16px; width: 90%; max-width: 500px; padding: 2rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
-        .modal-overlay.active { display: flex; }
-        .form-group { margin-bottom: 1.2rem; }
-        .form-group label { display: block; font-size: 0.85rem; font-weight: 700; color: var(--muted); margin-bottom: 8px; }
-        .form-control { width: 100%; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-family: 'Inter'; font-size: 0.95rem; outline: none; }
-        .btn-group { display: flex; gap: 10px; justify-content: flex-end; margin-top: 1.5rem; }
-    </style>
+    <link rel="stylesheet" href="css/ver_entregas.css?v=1">
     <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>

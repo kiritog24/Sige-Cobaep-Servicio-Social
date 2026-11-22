@@ -1,0 +1,13 @@
+/* Estilos comunes de las páginas del alumno que usan estudiante/includes/layout.php */
+.info-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:1.4rem;margin-bottom:1.2rem;box-shadow:0 2px 10px rgba(15,23,42,.03);}
+.info-card h2{margin:0 0 .3rem;font-size:1rem;color:#0f172a;display:flex;align-items:center;gap:10px;}
+.info-card h2 i{color:#059669;}
+.info-card .desc{margin:0 0 1rem;color:#64748b;font-size:.85rem;}
+.info-empty{background:#f8fafc;border:1px dashed #cbd5e1;border-radius:12px;padding:1.6rem 1rem;text-align:center;color:#64748b;font-size:.88rem;}
+.info-empty i{display:block;font-size:1.8rem;color:#94a3b8;margin-bottom:.5rem;}
+.info-table{width:100%;border-collapse:collapse;font-size:.85rem;}
+.info-table th{text-align:left;color:#475569;font-weight:600;padding:.6rem;border-bottom:1px solid #e2e8f0;background:#f8fafc;}
+.info-table td{padding:.6rem;border-bottom:1px solid #f1f5f9;color:#1e293b;vertical-align:top;}
+.info-wrap{overflow-x:auto;}
+.tag{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.72rem;font-weight:700;}
+.tag.green{background:#ecfdf5;color:#047857;} .tag.amber{background:#fffbeb;color:#b45309;} .tag.red{background:#fef2f2;color:#b91c1c;} .tag.blue{background:#eff6ff;color:#1d4ed8;} .tag.gray{background:#f1f5f9;color:#475569;}

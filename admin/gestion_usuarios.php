@@ -207,23 +207,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
         </div>
     </div>
     <?php endif; ?>
-    <style>
-        .cred-panel { background:#fff; border:1px solid #99f6e4; border-radius:16px; padding:20px; margin:15px 0 25px; box-shadow:0 6px 18px rgba(13,148,136,.08); }
-        .cred-panel-head { display:flex; gap:14px; align-items:center; }
-        .cred-ico { width:46px; height:46px; border-radius:12px; background:#ccfbf1; color:#0f766e; display:grid; place-items:center; font-size:1.2rem; flex-shrink:0; }
-        .cred-panel h3 { margin:0; font-size:1.05rem; color:#134e4a; }
-        .cred-panel-head p { margin:3px 0 0; font-size:.86rem; color:#475569; }
-        .cred-aviso { font-size:.84rem; color:#92400e; background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:10px 12px; margin:14px 0; line-height:1.5; }
-        .cred-acciones { display:flex; gap:10px; flex-wrap:wrap; }
-        .cred-btn { display:inline-flex; align-items:center; gap:8px; padding:10px 16px; border-radius:10px; background:#0d9488; color:#fff; text-decoration:none; font-weight:600; font-size:.88rem; border:none; cursor:pointer; font-family:inherit; }
-        .cred-btn:hover { background:#0f766e; }
-        .cred-btn.sec { background:#fff; color:#334155; border:1px solid #cbd5e1; }
-        .cred-btn.sec:hover { background:#f1f5f9; }
-        .cred-modal { display:none; position:fixed; inset:0; background:rgba(3,43,30,.6); z-index:3000; align-items:center; justify-content:center; backdrop-filter:blur(4px); padding:16px; }
-        .cred-modal.abierto { display:flex; }
-        .cred-modal-box { background:#fff; padding:26px; border-radius:16px; max-width:500px; width:100%; box-shadow:0 24px 60px rgba(0,0,0,.2); max-height:90vh; overflow:auto; }
-        @media (max-width:600px) { .cred-btn { width:100%; justify-content:center; } .cred-acciones form { width:100%; } }
-    </style>
+    <link rel="stylesheet" href="css/gestion_usuarios.css?v=1">
     <script>
         function abrirModal(id){ document.getElementById(id).classList.add('abierto'); }
         function cerrarModal(id){ document.getElementById(id).classList.remove('abierto'); }

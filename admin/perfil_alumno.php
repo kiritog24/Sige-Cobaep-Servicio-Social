@@ -35,10 +35,7 @@ $volver = $al['id_grupo'] ? 'ver_grupo.php?id=' . (int)$al['id_grupo'] : 'gestio
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="style_dashboard_admin.css">
     <link rel="stylesheet" href="style_sidebar.css">
-    <style>
-        .btn-back{display:inline-flex;align-items:center;gap:8px;color:#6d7f77;text-decoration:none;font-weight:600;font-size:.9rem;margin-bottom:10px;}
-        .btn-back i{background:#f1f5f9;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;}
-    </style>
+    <link rel="stylesheet" href="css/perfil_alumno.css?v=1">
     <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>

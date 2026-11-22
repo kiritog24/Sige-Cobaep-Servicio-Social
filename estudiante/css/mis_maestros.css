@@ -1,0 +1,15 @@
+/* Estilos de estudiante/mis_maestros.php (antes estaban dentro del PHP) */
+.mm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(270px, 100%), 1fr));gap:1rem;}
+.mm-card{border:1px solid #e2e8f0;border-radius:16px;padding:1.2rem;background:#fff;display:flex;flex-direction:column;gap:.6rem;}
+.mm-top{display:flex;gap:.9rem;align-items:center;}
+.mm-foto{width:58px;height:58px;border-radius:50%;background:linear-gradient(145deg,#063f2b,#10b981);color:#fff;display:grid;place-items:center;font-weight:800;font-size:1.1rem;overflow:hidden;flex-shrink:0;}
+.mm-foto img{width:100%;height:100%;object-fit:cover;}
+.mm-top strong{display:block;color:#0f172a;font-size:.98rem;}
+.mm-top small{color:#64748b;font-size:.78rem;}
+.mm-mat{display:flex;flex-wrap:wrap;gap:6px;}
+.mm-mat span{background:#ecfdf5;color:#047857;font-size:.72rem;font-weight:700;padding:3px 9px;border-radius:20px;}
+.mm-card p{margin:0;font-size:.83rem;color:#475569;line-height:1.45;}
+.mm-card{cursor:pointer;transition:.2s;}
+.mm-card:hover{border-color:#10b981;box-shadow:0 10px 24px rgba(16,185,129,.12);transform:translateY(-2px);}
+.mm-ver{font-size:.78rem;font-weight:700;color:#0f766e;}
+.mm-card a{color:#047857;font-weight:600;font-size:.83rem;text-decoration:none;word-break:break-all;}

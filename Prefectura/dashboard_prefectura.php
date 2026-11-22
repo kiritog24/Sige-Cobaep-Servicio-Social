@@ -79,30 +79,7 @@ $nombre_usuario = isset($_SESSION['nombre'])
     <link rel="stylesheet" href="../admin/style_sidebar.css">
     <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css">
 
-    <style>
-        .alert-modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px); z-index: 9999;
-            justify-content: center; align-items: center;
-        }
-        .alert-modal-box {
-            background: #252525; color: #f1f5f9; width: 90%; max-width: 480px; padding: 2.5rem;
-            border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 10px 10px -5px rgba(0, 0, 0, 0.5);
-            border-top: 4px solid #ef4444; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-        .alert-modal-title { display: flex; align-items: center; gap: 12px; margin-bottom: 1.2rem; font-size: 1.15rem; font-weight: 700; }
-        .alert-modal-title i { color: #ef4444; font-size: 1.4rem; }
-        .alert-modal-text { font-size: 0.95rem; line-height: 1.6; color: #cbd5e1; margin-bottom: 1.5rem; }
-        .alert-modal-date { font-weight: 700; color: #f87171; display: block; margin-top: 15px; font-size: 1rem; }
-        .alert-modal-footer { display: flex; justify-content: flex-end; margin-top: 2rem; }
-        .alert-modal-btn {
-            background: #cbd5e1; color: #0f172a; border: none; padding: 0.75rem 1.8rem;
-            border-radius: 99px; font-weight: 600; cursor: pointer; transition: 0.2s ease;
-        }
-        .alert-modal-btn:hover { background: #f8fafc; transform: translateY(-1px); }
-        .status-suspendido { background-color: #000000; color: #ffffff; }
-        @keyframes popIn { 0% { opacity: 0; transform: scale(0.95) translateY(10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
-    </style>
+    <link rel="stylesheet" href="css/dashboard_prefectura.css?v=1">
     <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>
@@ -158,15 +135,6 @@ $nombre_usuario = isset($_SESSION['nombre'])
             <?php if ($pases_hoy): ?><small><?php echo count($pases_hoy) - $pases_pendientes; ?> de <?php echo count($pases_hoy); ?> materias de hoy ya pasaron lista.</small><?php endif; ?></span>
             <i class="fas fa-arrow-right"></i>
         </a>
-        <style>
-            .cruce-banner { display: flex; align-items: center; gap: 14px; margin: 18px 0 0; padding: 14px 18px; border-radius: 14px; background: #fff; border: 1px solid #e2e8f0; color: #334155; text-decoration: none; font-size: .9rem; }
-            .cruce-banner > i:first-child { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: #f1f5f9; color: #475569; flex: 0 0 40px; }
-            .cruce-banner span { flex: 1; min-width: 0; }
-            .cruce-banner small { display: block; color: #64748b; margin-top: 2px; }
-            .cruce-banner.hay { border-color: #fecaca; background: #fef2f2; }
-            .cruce-banner.hay > i:first-child { background: #fee2e2; color: #dc2626; }
-            .cruce-banner:hover { box-shadow: 0 4px 14px rgba(15, 23, 42, .06); }
-        </style>
         <?php endif; ?>
 
         <section class="section">
@@ -312,14 +280,6 @@ $nombre_usuario = isset($_SESSION['nombre'])
     </div>
 
     <form id="formCancelarSusp" action="procesos/eliminar_suspension.php" method="POST" hidden></form>
-    <style>
-        .susp-lista { margin: 4px 0 14px; padding: 12px; border-radius: 12px; background: #f8fafc; border: 1px solid #e2e8f0; font-size: .85rem; max-height: 180px; overflow-y: auto; }
-        .susp-lista > strong { display: block; margin-bottom: 8px; color: #334155; }
-        .susp-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 0; border-top: 1px solid #e2e8f0; }
-        .susp-item:first-of-type { border-top: 0; }
-        .susp-cancelar { flex: 0 0 auto; border: 1px solid #fecaca; background: #fff; color: #dc2626; border-radius: 8px; padding: 4px 10px; font-size: .78rem; font-weight: 700; cursor: pointer; }
-        .susp-cancelar:hover { background: #fef2f2; }
-    </style>
     <script>
         // La fecha fin nunca puede ser antes que la de inicio
         (function () {

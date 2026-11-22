@@ -40,42 +40,7 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista de Asistencia - SIGE COBAEP</title>
-    <style>
-        /* Diseño institucional, sobrio y sin aspecto "IA" */
-        * { box-sizing: border-box; }
-        body { background-color: #f0f2f5; font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 1000px; margin: 0 auto; background: #fff; border: 1px solid #ccc; border-top: 4px solid #1b4332; padding: 25px; }
-        
-        /* Cabecera */
-        .header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
-        .header h1 { margin: 0; font-size: 22px; color: #1b4332; font-weight: normal; }
-        .header p { margin: 5px 0 0 0; color: #555; font-size: 14px; font-weight: bold; }
-        .btn-volver { background: #e9ecef; color: #333; padding: 8px 15px; text-decoration: none; font-size: 13px; border: 1px solid #ccc; }
-        .btn-volver:hover { background: #d3d9df; }
-
-        /* Panel de Filtros para Excel */
-        .filter-panel { background: #f8f9fa; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 20px; }
-        .filter-panel h3 { margin: 0 0 10px 0; font-size: 14px; color: #333; }
-        .form-row { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group label { font-size: 11px; font-weight: bold; color: #666; margin-bottom: 4px; text-transform: uppercase; }
-        .form-control { padding: 6px 10px; border: 1px solid #aaa; border-radius: 2px; font-size: 13px; }
-        
-        .btn-excel { background: #1b4332; color: white; border: none; padding: 8px 20px; font-size: 13px; cursor: pointer; border-radius: 2px; font-weight: bold; display: flex; align-items: center; gap: 5px; }
-        .btn-excel:hover { background: #112d21; }
-
-        /* Tabla Estilo Clásico */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ccc; padding: 10px; font-size: 13px; text-align: left; }
-        th { background-color: #e9ecef; color: #333; font-size: 12px; font-weight: bold; }
-        tr:nth-child(even) { background-color: #f8f9fa; }
-        tr:hover { background-color: #f1f3f5; }
-        
-        .text-center { text-align: center; }
-        .val-p { color: #198754; font-weight: bold; }
-        .val-r { color: #d97706; font-weight: bold; }
-        .val-f { color: #dc3545; font-weight: bold; }
-    </style>
+    <link rel="stylesheet" href="css/lista_alumnos.css?v=1">
     <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>

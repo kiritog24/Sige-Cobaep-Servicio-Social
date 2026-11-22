@@ -43,23 +43,7 @@ $url_regreso = ($return_to === 'expediente') ? "expediente_alumnos.php?matricula
     <title>Editar Reporte · COBAEP 27</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; display: flex; justify-content: center; padding: 40px 20px; }
-        .edit-container { background: #fff; width: 100%; max-width: 600px; padding: 30px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-        .edit-header { display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 20px; }
-        .edit-header h2 { margin: 0; color: #0f172a; font-size: 1.4rem; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; font-weight: 700; color: #334155; margin-bottom: 8px; font-size: 0.9rem; }
-        .form-control { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.95rem; }
-        .form-control:focus { outline: none; border-color: #059669; box-shadow: 0 0 0 3px #a7f3d0; }
-        .btn-container { display: flex; gap: 15px; margin-top: 30px; justify-content: flex-end; }
-        .btn { padding: 12px 24px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; font-size: 0.95rem; transition: 0.2s; }
-        .btn-cancel { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
-        .btn-cancel:hover { background: #e2e8f0; }
-        .btn-save { background: #059669; color: white; }
-        .btn-save:hover { background: #047857; }
-        .student-badge { background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 0.95rem; color: #0f172a; }
-    </style>
+    <link rel="stylesheet" href="css/editar_reporte.css?v=1">
     <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>

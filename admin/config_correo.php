@@ -104,56 +104,7 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
     <link href="style_dashboard_admin.css" rel="stylesheet">
     <link href="style_sidebar.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/responsive.css?v=5">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .cc-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
-        .cc-title { display: flex; align-items: center; gap: 14px; }
-        .cc-title .ico { width: 52px; height: 52px; border-radius: 14px; background: #e0f2fe; color: #0369a1; display: grid; place-items: center; font-size: 1.35rem; flex-shrink: 0; }
-        .cc-title h1 { margin: 0; font-size: 1.55rem; color: #0f172a; }
-        .cc-title p { margin: 3px 0 0; color: #64748b; font-size: .9rem; }
-        .cc-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 20px; align-items: start; }
-        .cc-grid > div, .cc-campo, .cc-campo input, .cc-campo select { min-width: 0; max-width: 100%; box-sizing: border-box; }
-        .cc-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 18px; padding: 22px; box-shadow: 0 4px 18px rgba(15, 23, 42, .04); margin-bottom: 20px; }
-        .cc-card h2 { margin: 0 0 14px; font-size: 1.05rem; color: #0f172a; display: flex; gap: 10px; align-items: center; }
-        .cc-card h2 i { color: #16a05d; }
-        .cc-estado { display: flex; align-items: center; gap: 14px; padding: 16px; border-radius: 14px; margin-bottom: 20px; }
-        .cc-estado.on { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
-        .cc-estado.off { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
-        .cc-estado i { font-size: 1.6rem; }
-        .cc-estado b { display: block; font-size: 1rem; }
-        .cc-estado span { font-size: .86rem; }
-        .cc-campos { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-        .cc-campo { display: flex; flex-direction: column; gap: 5px; }
-        .cc-campo.ancho { grid-column: 1 / -1; }
-        .cc-campo label { font-size: .8rem; font-weight: 700; color: #475569; }
-        .cc-campo input, .cc-campo select { padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-family: inherit; font-size: .92rem; background: #fff; }
-        .cc-campo small { color: #64748b; font-size: .76rem; line-height: 1.4; }
-        .cc-avanzado { display: none; grid-column: 1 / -1; grid-template-columns: 2fr 1fr 1fr; gap: 14px; }
-        .cc-avanzado.visible { display: grid; }
-        .cc-switch { display: flex; align-items: center; gap: 12px; grid-column: 1 / -1; padding: 12px 14px; background: #f8fafc; border-radius: 12px; cursor: pointer; }
-        .cc-switch input { width: 20px; height: 20px; accent-color: #16a05d; }
-        .cc-switch b { color: #0f172a; font-size: .92rem; }
-        .cc-switch span { display: block; color: #64748b; font-size: .8rem; }
-        .cc-acciones { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 18px; }
-        .cc-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 18px; border-radius: 11px; border: none; background: #16a05d; color: #fff; font-weight: 700; font-family: inherit; font-size: .9rem; cursor: pointer; text-decoration: none; }
-        .cc-btn:hover { background: #12804b; }
-        .cc-btn.sec { background: #fff; color: #334155; border: 1px solid #cbd5e1; }
-        .cc-btn.peligro { background: #fff; color: #b91c1c; border: 1px solid #fecaca; }
-        .cc-btn:disabled { opacity: .5; cursor: not-allowed; }
-        .cc-alerta { padding: 13px 16px; border-radius: 12px; margin-bottom: 18px; font-weight: 600; font-size: .9rem; }
-        .cc-alerta.ok { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
-        .cc-alerta.err { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
-        .cc-pasos { margin: 0; padding-left: 20px; color: #475569; font-size: .86rem; line-height: 1.6; }
-        .cc-pasos li { margin-bottom: 8px; overflow-wrap: anywhere; }
-        .cc-nota, .cc-campo small { overflow-wrap: anywhere; }
-        .cc-pasos b { color: #0f172a; }
-        .cc-nota { font-size: .8rem; color: #64748b; background: #f8fafc; border-radius: 10px; padding: 10px 12px; margin-top: 12px; line-height: 1.5; }
-        .cc-pwd { position: relative; }
-        .cc-pwd input { width: 100%; box-sizing: border-box; padding-right: 44px; }
-        .cc-pwd button { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); border: none; background: none; color: #64748b; cursor: pointer; padding: 6px; }
-        @media (max-width: 1000px) { .cc-grid { grid-template-columns: minmax(0, 1fr); } }
-        @media (max-width: 560px) { .cc-campos, .cc-avanzado.visible { grid-template-columns: 1fr; } .cc-btn { width: 100%; } }
-    </style>
+    <link rel="stylesheet" href="css/config_correo.css?v=1">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>

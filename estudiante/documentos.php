@@ -69,17 +69,7 @@ try {
     error_log('Documentos alumno: ' . $e->getMessage());
 }
 
-$css = '
-.doc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px, 100%), 1fr));gap:1rem;}
-.doc-tile{display:flex;gap:12px;align-items:center;padding:1rem;border:1px solid #e2e8f0;border-radius:14px;text-decoration:none;color:inherit;background:#fff;transition:.2s;}
-.doc-tile:hover{border-color:#059669;box-shadow:0 4px 14px rgba(5,150,105,.08);}
-.doc-tile .ico{flex:0 0 44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:1.1rem;}
-.doc-tile strong{display:block;font-size:.9rem;color:#0f172a;}
-.doc-tile span{font-size:.78rem;color:#64748b;}
-.doc-tile.disabled{opacity:.6;pointer-events:none;}
-.dl{color:#047857;font-weight:600;text-decoration:none;white-space:nowrap;}
-';
-estudiante_layout_inicio('Documentos', 'Tus documentos escolares y materiales de clase.', 'documentos.php', $alumno, $css);
+estudiante_layout_inicio('Documentos', 'Tus documentos escolares y materiales de clase.', 'documentos.php', $alumno, 'css/documentos.css');
 ?>
 <div class="info-card">
     <h2><i class="fas fa-id-badge"></i> Documentos escolares</h2>

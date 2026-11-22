@@ -48,49 +48,7 @@ if (!$requiere_entrega) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <style>
-        :root { --bg-alumno: #f1f5f9; --ink: #0f172a; --muted: #64748b; --card-bg: #ffffff; --line: #e2e8f0; --primary: #3b82f6; }
-        body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background: var(--bg-alumno); color: var(--ink); }
-        .preview-banner { background: #f97316; color: white; text-align: center; padding: 10px; font-weight: 800; font-size: 0.85rem; position: sticky; top: 0; z-index: 100; }
-        .container { padding: 20px; }
-        .header-alumno { margin-bottom: 20px; }
-        .card-actividad { background: var(--card-bg); border-radius: 16px; border: 1px solid var(--line); padding: 1.5rem; }
-        .titulo-actividad { font-size: 1.5rem; font-weight: 800; margin: 0 0 10px 0; color: var(--ink); }
-        .meta-datos { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--line); }
-        .meta-item { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 700; }
-        .instrucciones { font-size: 0.95rem; line-height: 1.6; color: #334155; margin-bottom: 25px; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; }
-        .seccion-entrega { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 20px; text-align: center; background: #f8fafc; position: relative; }
-        .overlay-bloqueo { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.7); backdrop-filter: blur(3px); display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 12px; z-index: 10; }
-        .btn-fake { background: #cbd5e1; color: #64748b; padding: 10px 20px; border-radius: 8px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; border: none; cursor: not-allowed; }
-        .btn-real { background: var(--primary); color: white; padding: 10px 20px; border-radius: 8px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
-        
-        /* ESTILOS DE LA NUEVA ALERTA PERSONALIZADA */
-        .custom-alert-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
-            display: none; align-items: center; justify-content: center; z-index: 1000;
-            opacity: 0; transition: opacity 0.2s ease;
-        }
-        .custom-alert-overlay.show { display: flex; opacity: 1; }
-        .custom-alert-box {
-            background: white; border-radius: 16px; padding: 2rem; width: 90%; max-width: 380px;
-            text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-            transform: translateY(20px); transition: transform 0.2s ease;
-        }
-        .custom-alert-overlay.show .custom-alert-box { transform: translateY(0); }
-        .custom-alert-icon {
-            width: 60px; height: 60px; background: #fff7ed; color: #f97316;
-            border-radius: 50%; display: grid; place-items: center; font-size: 1.8rem;
-            margin: 0 auto 15px auto;
-        }
-        .custom-alert-title { font-size: 1.25rem; font-weight: 800; color: var(--ink); margin: 0 0 10px 0; }
-        .custom-alert-text { font-size: 0.95rem; color: var(--muted); margin: 0 0 20px 0; line-height: 1.5; }
-        .btn-alert {
-            background: var(--primary); color: white; border: none; padding: 12px 25px;
-            border-radius: 10px; font-weight: 700; width: 100%; cursor: pointer; transition: 0.2s;
-        }
-        .btn-alert:hover { background: #2563eb; }
-    </style>
+    <link rel="stylesheet" href="css/vista_previa_actividad.css?v=1">
     <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>
