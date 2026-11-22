@@ -393,3 +393,33 @@ a.btn-outline-full { text-decoration: none; display: flex; align-items: center; 
 @media (max-width: 330px) {
     .hero-actions { grid-template-columns: 1fr; }
 }
+
+/* ---------- Inscribir alumno: lista seleccionable (muestra el nombre completo, sin cortarlo) ---------- */
+.lista-alumnos { max-height: 260px; overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; background: #fff; overscroll-behavior: contain; }
+.lista-alumnos .lista-alumno { display: grid; grid-template-columns: 20px 1fr; column-gap: 10px; row-gap: 1px; align-items: center; padding: 9px 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; margin: 0; }
+.lista-alumno:last-of-type { border-bottom: none; }
+.lista-alumno[hidden] { display: none; }
+.lista-alumno:hover { background: #f8fafc; }
+.lista-alumno:has(input:checked) { background: #ecfdf5; }
+.lista-alumno input { grid-row: span 2; width: 18px; height: 18px; accent-color: #16a05d; margin: 0; }
+.lista-alumnos .la-nombre { font-weight: 600; color: #10251d; font-size: .88rem; line-height: 1.3; overflow-wrap: anywhere; }
+.lista-alumnos .la-datos { grid-column: 2; font-weight: 500; font-size: .76rem; color: var(--muted); }
+.lista-alumnos-n { float: right; font-weight: 500; font-size: .75rem; color: var(--muted); }
+.lista-alumnos-vacio { margin: 0; padding: 18px; text-align: center; color: var(--muted); font-size: .85rem; }
+
+/* ---------- Alumnos inscritos: filas compactas también en teléfono ---------- */
+@media (max-width: 640px) {
+    .tabla-inscritos { max-height: 60vh; }
+    .tabla-compacta thead { display: none; }
+    .tabla-compacta, .tabla-compacta tbody { display: block; }
+    .tabla-compacta tr { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "alumno accion" "datos accion"; column-gap: 10px; align-items: center; padding: 10px 12px; border-top: 1px solid var(--line); }
+    .tabla-compacta tr:first-child { border-top: none; }
+    .tabla-compacta tr[hidden] { display: none; }
+    .tabla-compacta td { border: none !important; padding: 0 !important; }
+    .tabla-compacta td:nth-child(1) { grid-area: alumno; }
+    .tabla-compacta td:nth-child(2), .tabla-compacta td:nth-child(3) { grid-area: datos; display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--muted); }
+    .tabla-compacta td:nth-child(2) { justify-self: start; }
+    .tabla-compacta td:nth-child(3) { justify-self: end; }
+    .tabla-compacta td:nth-child(4) { grid-area: accion; }
+    .tabla-compacta td strong { font-size: .86rem; }
+}

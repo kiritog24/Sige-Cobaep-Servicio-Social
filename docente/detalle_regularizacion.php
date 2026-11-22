@@ -690,16 +690,19 @@ $render_material = function (array $act) use ($h, $id_clase) { ?>
                         <input type="search" id="buscarAlumno" class="input-modern" placeholder="Escribe para filtrar...">
                     </div>
                     <div class="form-group">
-                        <label for="id_alumno">Alumno</label>
-                        <select name="id_alumno" id="id_alumno" class="input-modern" required size="6">
+                        <label>Alumno <span class="lista-alumnos-n" id="nAlumnos"><?php echo count($alumnos_disponibles); ?> disponibles</span></label>
+                        <div class="lista-alumnos" id="listaAlumnos" role="radiogroup" aria-label="Alumno a inscribir">
                             <?php if (empty($alumnos_disponibles)): ?>
-                                <option value="" disabled>No tienes alumnos disponibles para inscribir.</option>
+                                <p class="lista-alumnos-vacio">No tienes alumnos disponibles para inscribir.</p>
                             <?php else: foreach ($alumnos_disponibles as $alum): ?>
-                                <option value="<?php echo (int)$alum['id_alumno']; ?>">
-                                    <?php echo $h($alum['matricula'] . ' · ' . $alum['apellido_paterno'] . ' ' . $alum['apellido_materno'] . ' ' . $alum['nombre'] . ' (' . $alum['grupo'] . ')'); ?>
-                                </option>
+                                <label class="lista-alumno">
+                                    <input type="radio" name="id_alumno" value="<?php echo (int)$alum['id_alumno']; ?>" required>
+                                    <span class="la-nombre"><?php echo $h($alum['apellido_paterno'] . ' ' . $alum['apellido_materno'] . ' ' . $alum['nombre']); ?></span>
+                                    <span class="la-datos"><?php echo $h($alum['matricula']); ?> · <?php echo $h($alum['grupo']); ?></span>
+                                </label>
                             <?php endforeach; endif; ?>
-                        </select>
+                            <p class="lista-alumnos-vacio" id="sinAlumnos" hidden>Ningún alumno coincide con la búsqueda.</p>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -757,7 +760,7 @@ $render_material = function (array $act) use ($h, $id_clase) { ?>
                 <?php else: ?>
                     <input type="search" id="buscarInscrito" class="input-modern" placeholder="Buscar por nombre o matrícula...">
                     <div class="tabla-inscritos">
-                        <table>
+                        <table class="no-tarjetas tabla-compacta">
                             <thead><tr><th>Alumno</th><th>Grupo</th><th>Entrega</th><th></th></tr></thead>
                             <tbody>
                                 <?php foreach ($inscritos as $al): ?>
@@ -896,15 +899,23 @@ $render_material = function (array $act) use ($h, $id_clase) { ?>
         });
 
         // ---------- Filtros de búsqueda ----------
+        const sinAcentos = t => (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
         const buscarAlumno = document.getElementById('buscarAlumno');
         if (buscarAlumno) buscarAlumno.addEventListener('input', () => {
-            const q = buscarAlumno.value.toLowerCase();
-            document.querySelectorAll('#id_alumno option').forEach(o => { o.hidden = q && !o.textContent.toLowerCase().includes(q); });
+            const q = sinAcentos(buscarAlumno.value.trim());
+            let vis = 0;
+            document.querySelectorAll('#listaAlumnos .lista-alumno').forEach(l => {
+                const ok = !q || sinAcentos(l.textContent).includes(q);
+                l.hidden = !ok; if (ok) vis++;
+            });
+            const n = document.getElementById('nAlumnos'), sin = document.getElementById('sinAlumnos');
+            if (n) n.textContent = q ? vis + ' encontrado(s)' : vis + ' disponibles';
+            if (sin) sin.hidden = vis > 0;
         });
         const buscarInscrito = document.getElementById('buscarInscrito');
         if (buscarInscrito) buscarInscrito.addEventListener('input', () => {
-            const q = buscarInscrito.value.toLowerCase();
-            document.querySelectorAll('.tabla-inscritos tbody tr').forEach(tr => { tr.hidden = q && !tr.textContent.toLowerCase().includes(q); });
+            const q = sinAcentos(buscarInscrito.value.trim());
+            document.querySelectorAll('.tabla-inscritos tbody tr').forEach(tr => { tr.hidden = q && !sinAcentos(tr.textContent).includes(q); });
         });
 
         // ---------- Recepción de trabajos (se guarda al instante) ----------

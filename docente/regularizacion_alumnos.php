@@ -131,6 +131,11 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
         .ra-btn.primario { background: var(--green); border-color: var(--green); color: #fff; }
         .ra-btn.primario:hover { background: var(--green-800); color: #fff; }
         .ra-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
+        /* Teléfono: 2 por fila; la última, si queda sola, ocupa todo el ancho y en una sola línea */
+        @media (max-width: 640px) {
+            .ra-stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .ra-stats .ra-stat:last-child:nth-child(odd) { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 10px; }
+        }
         .ra-stat { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; }
         .ra-stat strong { display: block; font-size: 1.5rem; color: var(--ink); }
         .ra-stat span { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
@@ -138,7 +143,9 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
         .ra-barra span { display: block; height: 100%; background: var(--green); }
         .ra-card { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 18px; box-shadow: var(--shadow-sm); }
         .ra-filtros { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
-        .ra-buscar { flex: 1 1 240px; position: relative; }
+        .ra-buscar { flex: 1 1 240px; position: relative; display: block; min-width: 0; margin: 0; }
+        /* En teléfono los filtros van uno debajo de otro: sin esto los 240px se volvían alto y sobraba espacio */
+        @media (max-width: 640px) { .ra-filtros { flex-direction: column; } .ra-buscar, .ra-filtros .ra-select { flex: 0 0 auto; width: 100%; } }
         .ra-buscar i { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
         .ra-buscar input, .ra-select { width: 100%; padding: 11px 13px; border: 1px solid #d5dfdb; border-radius: 11px; font: 0.88rem 'Inter', sans-serif; outline: none; background: #fff; }
         .ra-buscar input { padding-left: 38px; }
