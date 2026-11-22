@@ -51,8 +51,10 @@ try {
     $puntuales = isset($asist_data['Puntual']) ? $asist_data['Puntual'] : 0;
     $retardos = (isset($asist_data['Retardo']) ? $asist_data['Retardo'] : 0) + 
                 (isset($asist_data['Retardo Justificado']) ? $asist_data['Retardo Justificado'] : 0);
-    $faltas = (isset($asist_data['Falta']) ? $asist_data['Falta'] : 0) + 
-              (isset($asist_data['Falta Justificada']) ? $asist_data['Falta Justificada'] : 0);
+    // Faltas sin justificar del mes: registros "Falta" + días de clase sin ningún registro de entrada (igual que Prefectura)
+    require_once __DIR__ . '/../includes/asistencia.php';
+    $faltas = (isset($asist_data['Falta']) ? $asist_data['Falta'] : 0)
+            + count(dias_sin_entrada_alumno($pdo, (int)$id_alumno, date('Y-m-01'), date('Y-m-d')));
 
     // 3. Actividades / Clases
     $stmtClases = $pdo->prepare("SELECT COUNT(*) FROM CLASE_ALUMNO WHERE id_alumno = ?");

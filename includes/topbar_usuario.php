@@ -70,6 +70,11 @@ function usuario_avisos(PDO $pdo): array {
         if ($rep_hoy)    $av[] = ['fa-file-lines', 'red', "$rep_hoy reporte(s) registrados hoy", 'Consulta los reportes en el expediente de cada alumno.', 'expediente_alumnos.php'];
         if ($faltas_hoy) $av[] = ['fa-user-xmark', 'amber', "$faltas_hoy falta(s) registradas hoy", 'Puedes justificarlas desde el historial de asistencias.', 'historial_asistencias.php'];
         if ($sin_salida) $av[] = ['fa-door-open', 'gray', "$sin_salida alumno(s) sin registro de salida", 'Entraron hoy y no tienen salida registrada.', 'historial_asistencias.php'];
+        if ($rol === 'prefectos') {
+            require_once __DIR__ . '/asistencia.php';
+            $pintas_hoy = count(array_filter(posibles_pintas($pdo, date('Y-m-d')), fn($p) => $p['pinta']));
+            if ($pintas_hoy) array_unshift($av, ['fa-person-walking-arrow-right', 'red', "$pintas_hoy posible(s) pinta(s) hoy", 'Entraron al plantel pero faltaron a una clase.', 'asistencia_clases.php']);
+        }
         if ($rep && !$rep_hoy) $av[] = ['fa-triangle-exclamation', 'red', "$rep reporte(s) esta semana", 'Revisa los reportes recientes.', 'expediente_alumnos.php'];
     }
     if ($susp)        $av[] = ['fa-ban', 'red', "$susp alumno(s) suspendidos", 'Tienen suspensión disciplinaria vigente.', $rol === 'administrativo' ? 'reportes.php' : 'expediente_alumnos.php'];

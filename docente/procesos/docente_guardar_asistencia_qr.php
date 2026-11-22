@@ -1,70 +1,59 @@
 <?php
+/**
+ * docente/procesos/docente_guardar_asistencia_qr.php — Pase de lista con la credencial (QR) del alumno.
+ * Marca "Presente" en la materia; avisa si el alumno no es de la materia o si no registró su entrada en Prefectura.
+ */
 session_start();
 require_once '../../config/database.php';
+require_once __DIR__ . '/../../includes/asistencia.php';
 
-header('Content-Type: application/json');
-
-if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'docente') {
-    echo json_encode(['status' => 'error', 'message' => 'No autorizado']);
+header('Content-Type: application/json; charset=utf-8');
+$responder = function (string $status, string $message, array $extra = []) {
+    echo json_encode(['status' => $status, 'message' => $message] + $extra, JSON_UNESCAPED_UNICODE);
     exit();
-}
+};
 
-$qr_crudo = isset($_POST['id_alumno']) ? $_POST['id_alumno'] : '';
-$id_clase = isset($_POST['id_clase']) ? (int)$_POST['id_clase'] : 0;
+if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'docente') $responder('error', 'No autorizado');
+
+$qr_crudo = trim((string)($_POST['id_alumno'] ?? ''));
+$id_clase = (int)($_POST['id_clase'] ?? 0);
 require_once __DIR__ . '/permisos.php';
 if (!docente_dueno_clase($pdo, $id_clase)) docente_denegar(true);
-$fecha = isset($_POST['fecha']) ? trim($_POST['fecha']) : date('Y-m-d');
 
-if (empty($qr_crudo) || $id_clase === 0) {
-    echo json_encode(['status' => 'error', 'message' => 'Datos incompletos']);
-    exit();
-}
+$fecha = trim((string)($_POST['fecha'] ?? date('Y-m-d')));
+if (!fecha_valida($fecha) || $fecha > date('Y-m-d')) $responder('error', 'La fecha del pase de lista no es válida.');
+if ($motivo = dia_sin_clases($pdo, $fecha)) $responder('error', "Ese día no hay clases ($motivo).");
+
+// La credencial trae la matrícula (ej. 27/2026B0001)
+$matricula = preg_replace('/[^a-zA-Z0-9\/]/', '', $qr_crudo);
+if ($matricula === '') $responder('error', 'Código QR vacío o ilegible');
 
 try {
-    // 1. Limpiamos la lectura del QR
-    $qr_leido = preg_replace('/[^a-zA-Z0-9\/]/', '', $qr_crudo);
+    $st = $pdo->prepare("SELECT id_alumno, CONCAT_WS(' ', nombre, apellido_paterno) AS nombre FROM alumnos WHERE matricula = ? AND estatus = 'Alta'");
+    $st->execute([$matricula]);
+    $al = $st->fetch(PDO::FETCH_ASSOC);
+    if (!$al) $responder('error', 'Matrícula no registrada: ' . $matricula);
+    $id_alumno = (int)$al['id_alumno'];
 
-    if (empty($qr_leido)) {
-         echo json_encode(['status' => 'error', 'message' => 'Código QR vacío o ilegible']);
-         exit();
+    $st = $pdo->prepare("SELECT 1 FROM clase_regular_alumno WHERE id_clase = ? AND id_alumno = ?");
+    $st->execute([$id_clase, $id_alumno]);
+    if (!$st->fetchColumn()) $responder('error', trim($al['nombre']) . ' no está inscrito en esta materia.');
+
+    $st = $pdo->prepare("SELECT estatus FROM asistencias_clases WHERE id_clase = ? AND id_alumno = ? AND fecha = ?");
+    $st->execute([$id_clase, $id_alumno, $fecha]);
+    $previo = $st->fetchColumn();
+    if ($previo !== false && estatus_clase_normal($previo) !== 'Falta') {
+        $responder('warning', $al['nombre'] . ' ya estaba capturado.', ['id_alumno' => $id_alumno]);
     }
 
-    // 2. Buscamos el ID del alumno por su matrícula
-    if (is_numeric($qr_leido)) {
-        $stmt = $pdo->prepare("SELECT id_alumno FROM alumnos WHERE matricula = ? OR id_alumno = ?");
-        $stmt->execute([$qr_leido, (int)$qr_leido]);
-    } else {
-        $stmt = $pdo->prepare("SELECT id_alumno FROM alumnos WHERE matricula = ?");
-        $stmt->execute([$qr_leido]);
-    }
-    
-    $id_alumno = $stmt->fetchColumn();
+    // Presente (si antes tenía falta, se corrige: el alumno sí llegó)
+    $pdo->prepare("INSERT INTO asistencias_clases (id_clase, id_alumno, fecha, estatus) VALUES (?, ?, ?, 'Presente')
+                   ON DUPLICATE KEY UPDATE estatus = 'Presente'")->execute([$id_clase, $id_alumno, $fecha]);
 
-    if (!$id_alumno) {
-         echo json_encode(['status' => 'error', 'message' => 'No registrado: ' . htmlspecialchars($qr_crudo)]);
-         exit();
-    }
-
-    // 3. Verificamos en "asistencias_clases" con la columna "fecha"
-    $stmtCheck = $pdo->prepare("SELECT id_asistencia FROM asistencias_clases WHERE id_clase = ? AND id_alumno = ? AND fecha = ?");
-    $stmtCheck->execute([$id_clase, $id_alumno, $fecha]);
-    
-    if ($stmtCheck->fetchColumn()) {
-        echo json_encode(['status' => 'warning', 'message' => 'Ya fue capturado', 'id_alumno' => $id_alumno]);
-        exit();
-    }
-
-    // 4. Insertamos en "asistencias_clases" usando la columna "estatus"
-    $stmtInsert = $pdo->prepare("INSERT INTO asistencias_clases (id_clase, id_alumno, fecha, estatus) VALUES (?, ?, ?, 'Presente')");
-    $resultado = $stmtInsert->execute([$id_clase, $id_alumno, $fecha]);
-
-    if ($resultado) {
-        echo json_encode(['status' => 'success', 'message' => 'Asistencia tomada', 'id_alumno' => $id_alumno]);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'Error al guardar']);
-    }
-
+    $e = entradas_plantel($pdo, [$id_alumno], $fecha)[$id_alumno] ?? null;
+    $aviso = entro_al_plantel($e) ? '' : ' Ojo: no registró su entrada en Prefectura.';
+    $responder($aviso ? 'warning' : 'success', $al['nombre'] . ': presente.' . $aviso, ['id_alumno' => $id_alumno, 'guardado' => true]);
 } catch (PDOException $e) {
-    echo json_encode(['status' => 'error', 'message' => 'Error SQL: ' . $e->getMessage()]);
+    error_log('docente_guardar_asistencia_qr: ' . $e->getMessage());
+    $responder('error', 'No se pudo guardar. Intenta de nuevo.');
 }
-?>

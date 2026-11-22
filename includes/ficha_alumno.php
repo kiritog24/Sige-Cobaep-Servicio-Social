@@ -35,10 +35,24 @@ function ficha_alumno_cargar(PDO $pdo, int $id_alumno): ?array {
 
     $st = $pdo->prepare("SELECT SUM(estatus = 'Puntual') AS puntuales,
                                 SUM(estatus IN ('Retardo', 'Retardo Justificado')) AS retardos,
-                                SUM(estatus IN ('Falta', 'Falta Justificada')) AS faltas
-                         FROM ASISTENCIAS WHERE id_alumno = ?");
+                                SUM(estatus = 'Falta') AS faltas, SUM(estatus = 'Falta Justificada') AS justificadas
+                         FROM ASISTENCIAS WHERE id_alumno = ? AND tipo_registro = 'Entrada'");
     $st->execute([$id_alumno]);
     $d['asis'] = $st->fetch(PDO::FETCH_ASSOC);
+
+    // Faltas de días completos sin registro (desde que está en su grupo actual) y asistencia a clases
+    require_once __DIR__ . '/asistencia.php';
+    $st = $pdo->prepare("SELECT MAX(fecha_asignacion) FROM GRUPO_ALUMNO WHERE id_alumno = ? AND fecha_baja IS NULL");
+    $st->execute([$id_alumno]);
+    $desde_grupo = $st->fetchColumn();
+    $d['asis']['faltas'] = (int)$d['asis']['faltas'] + ($desde_grupo ? count(dias_sin_entrada_alumno($pdo, $id_alumno, $desde_grupo, date('Y-m-d'))) : 0);
+    $d['clases'] = resumen_clases_alumno($pdo, $id_alumno);
+    $st = $pdo->prepare("SELECT COUNT(DISTINCT ac.fecha) FROM ASISTENCIAS_CLASES ac
+                         WHERE ac.id_alumno = ? AND ac.estatus IN ('Falta', 'Ausente')
+                           AND EXISTS (SELECT 1 FROM ASISTENCIAS x WHERE x.id_alumno = ac.id_alumno AND x.tipo_registro = 'Entrada'
+                                       AND DATE(x.fecha_hora_escaneo) = ac.fecha AND x.estatus IN ('Puntual', 'Retardo', 'Retardo Justificado'))");
+    $st->execute([$id_alumno]);
+    $d['dias_pinta'] = (int)$st->fetchColumn();
 
     $st = $pdo->prepare("SELECT fecha_hora_escaneo, fecha_hora_salida, estatus FROM ASISTENCIAS WHERE id_alumno = ? ORDER BY fecha_hora_escaneo DESC LIMIT 10");
     $st->execute([$id_alumno]);
@@ -179,9 +193,34 @@ function ficha_alumno_render(array $d, array $opt = []): void {
             <div class="pa-stats">
                 <div><strong><?php echo (int)$asis['puntuales']; ?></strong><span>Puntuales</span></div>
                 <div><strong><?php echo (int)$asis['retardos']; ?></strong><span>Retardos</span></div>
-                <div><strong><?php echo (int)$asis['faltas']; ?></strong><span>Faltas</span></div>
+                <div><strong><?php echo (int)$asis['faltas']; ?></strong><span>Faltas<?php echo (int)$asis['justificadas'] ? ' · ' . (int)$asis['justificadas'] . ' just.' : ''; ?></span></div>
                 <div><strong><span class="pill <?php echo $pts >= 75 ? 'ok' : ($pts >= 60 ? 'warn' : 'bad'); ?>"><?php echo $pts; ?></span></strong><span>Puntos conducta</span></div>
             </div>
+            <h3 style="margin:16px 0 8px; font-size:.85rem; color:#334155;"><i class="fas fa-chalkboard-user"></i> Asistencia a clases (pase de lista de los docentes)</h3>
+            <?php if (empty($d['clases'])): ?>
+                <p class="pa-empty">Los docentes aún no registran pase de lista para este alumno.</p>
+            <?php else: ?>
+                <?php if ($d['dias_pinta']): ?>
+                    <div class="pa-aviso" style="background:#fef2f2; color:#991b1b;"><i class="fas fa-person-walking-arrow-right"></i> <b><?php echo $d['dias_pinta']; ?> día(s)</b> entró al plantel y faltó a alguna clase.</div>
+                <?php endif; ?>
+                <div style="overflow-x:auto;">
+                <table class="no-tarjetas" data-sin-buscador style="width:100%; border-collapse:collapse; font-size:.8rem;">
+                    <thead><tr style="text-align:left; color:#64748b;"><th style="padding:6px;">Materia</th><th style="padding:6px;">P</th><th style="padding:6px;">R</th><th style="padding:6px;">F</th><th style="padding:6px;">J</th><th style="padding:6px;">%</th></tr></thead>
+                    <tbody>
+                    <?php foreach ($d['clases'] as $c): $pct = $c['total'] ? round(($c['presentes'] + $c['retardos'] + $c['justificadas']) * 100 / $c['total']) : 0; ?>
+                        <tr style="border-top:1px solid #eef2f7;">
+                            <td style="padding:6px;"><?php echo $h($c['materia']); ?></td>
+                            <td style="padding:6px;"><?php echo $c['presentes']; ?></td>
+                            <td style="padding:6px;"><?php echo $c['retardos']; ?></td>
+                            <td style="padding:6px; color:<?php echo $c['faltas'] ? '#b91c1c' : 'inherit'; ?>; font-weight:<?php echo $c['faltas'] ? '700' : '400'; ?>;"><?php echo $c['faltas']; ?></td>
+                            <td style="padding:6px;"><?php echo $c['justificadas']; ?></td>
+                            <td style="padding:6px;"><span class="pill <?php echo $pct >= 80 ? 'ok' : ($pct >= 60 ? 'warn' : 'bad'); ?>"><?php echo $pct; ?>%</span></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+                </div>
+            <?php endif; ?>
         </div>
         <div class="pa-card">
             <h2><i class="fas fa-chalkboard-user"></i> Docentes asignados</h2>
@@ -206,7 +245,7 @@ function ficha_alumno_render(array $d, array $opt = []): void {
                     <?php foreach ($d['ultimas'] as $u): ?>
                         <tr>
                             <td><?php echo date('d/m/Y', strtotime($u['fecha_hora_escaneo'])); ?></td>
-                            <td><?php echo date('H:i', strtotime($u['fecha_hora_escaneo'])); ?></td>
+                            <td><?php $hh = date('H:i', strtotime($u['fecha_hora_escaneo'])); echo ($u['estatus'] === 'Falta Justificada' && $hh === '00:00') ? '—' : $hh; ?></td>
                             <td><?php echo $u['fecha_hora_salida'] ? date('H:i', strtotime($u['fecha_hora_salida'])) : '—'; ?></td>
                             <td><?php echo $h($u['estatus']); ?></td>
                         </tr>

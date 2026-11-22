@@ -38,7 +38,8 @@ try {
         SELECT a.id_alumno, a.matricula, a.nombre, a.apellido_paterno,
             SUM(CASE WHEN ac.estatus IN ('Presente', 'Asistencia') THEN 1 ELSE 0 END) as presentes,
             SUM(CASE WHEN ac.estatus = 'Retardo' THEN 1 ELSE 0 END) as retardos,
-            SUM(CASE WHEN ac.estatus IN ('Falta', 'Ausente') THEN 1 ELSE 0 END) as faltas
+            SUM(CASE WHEN ac.estatus IN ('Falta', 'Ausente') THEN 1 ELSE 0 END) as faltas,
+            SUM(CASE WHEN ac.estatus = 'Justificada' THEN 1 ELSE 0 END) as justificadas
         FROM clase_regular_alumno cra
         INNER JOIN alumnos a ON cra.id_alumno = a.id_alumno
         LEFT JOIN asistencias_clases ac ON a.id_alumno = ac.id_alumno AND ac.id_clase = cra.id_clase $where_fecha
@@ -61,7 +62,7 @@ try {
     // 2. VALIDACIÓN INTELIGENTE: Comprobar si hay asistencias en el periodo seleccionado
     $total_asistencias_periodo = 0;
     foreach($alumnos as $alum) {
-        $total_asistencias_periodo += ($alum['presentes'] + $alum['retardos'] + $alum['faltas']);
+        $total_asistencias_periodo += ($alum['presentes'] + $alum['retardos'] + $alum['faltas'] + $alum['justificadas']);
     }
 
     if ($total_asistencias_periodo == 0) {
@@ -71,7 +72,7 @@ try {
         if ($tipo_filtro === 'parcial') $mensaje = "No hay asistencias registradas en este rango de fechas.";
         
         echo "<tr>
-                <td colspan='5' style='text-align:center; padding: 40px 20px; color: #dc2626; background: #fef2f2; border-bottom: 2px solid #fecaca;'>
+                <td colspan='7' style='text-align:center; padding: 40px 20px; color: #dc2626; background: #fef2f2; border-bottom: 2px solid #fecaca;'>
                     <i class='fas fa-calendar-times' style='font-size: 2rem; display:block; margin-bottom: 10px; color: #f87171;'></i>
                     <strong style='font-size: 1.1rem;'>$mensaje</strong>
                 </td>
@@ -84,6 +85,10 @@ try {
         $presentes = $alum['presentes'] ?? 0;
         $retardos = $alum['retardos'] ?? 0;
         $faltas = $alum['faltas'] ?? 0;
+        $justificadas = (int)($alum['justificadas'] ?? 0);
+        $total_al = $presentes + $retardos + $faltas + $justificadas;
+        $pct = $total_al ? round(($presentes + $retardos + $justificadas) * 100 / $total_al) : 0;
+        $color_pct = $pct >= 80 ? '#198754' : ($pct >= 60 ? '#d97706' : '#dc3545');
 
         echo "<tr>";
         echo "<td>" . htmlspecialchars($alum['matricula']) . "</td>";
@@ -91,10 +96,13 @@ try {
         echo "<td class='text-center' style='color:#198754; font-weight:bold;'>" . $presentes . "</td>";
         echo "<td class='text-center' style='color:#d97706; font-weight:bold;'>" . $retardos . "</td>";
         echo "<td class='text-center' style='color:#dc3545; font-weight:bold;'>" . $faltas . "</td>";
+        echo "<td class='text-center' style='color:#1d4ed8; font-weight:bold;'>" . $justificadas . "</td>";
+        echo "<td class='text-center' style='color:$color_pct; font-weight:bold;'>" . ($total_al ? $pct . '%' : '—') . "</td>";
         echo "</tr>";
     }
 
 } catch (PDOException $e) {
-    echo "<tr><td colspan='5'>Error en la base de datos: " . $e->getMessage() . "</td></tr>";
+    error_log('obtener_tabla_asistencia_ajax: ' . $e->getMessage());
+    echo "<tr><td colspan='7'>No se pudo cargar el reporte. Intenta de nuevo.</td></tr>";
 }
 ?>

@@ -183,7 +183,7 @@ try {
         </section>
     </main>
 
-    <script src="dashboard_maestro.js"></script>
+    <script src="../js/dashboard_docente.js"></script>
     <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

@@ -1,0 +1,57 @@
+/* Pase de lista del docente (modal de Gestionar Aula) */
+.asist-aviso { display: block; padding: 10px 14px; border-radius: 10px; font-size: .85rem; margin: 10px 12px 0; line-height: 1.45; }
+.asist-aviso > i { margin-right: 4px; }
+.asist-aviso--verde { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+.asist-aviso--ambar { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+.asist-aviso--gris  { background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; margin: 12px; padding: 18px; text-align: center; }
+.asist-guardada { display: inline-block; margin: 6px 0 0; font-size: .78rem; font-weight: 700; color: #047857; background: #fff; border-radius: 99px; padding: 2px 10px; }
+
+/* Botón de QR del modal: que el texto nunca se salga en pantallas chicas */
+#modalAsistencia button[onclick="abrirScannerQR()"] { height: auto !important; min-height: 38px; white-space: normal; line-height: 1.2; }
+.asist-vacio { padding: 24px; text-align: center; color: #64748b; }
+
+.asist-barra { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; background: #fff; z-index: 2; }
+.asist-contadores { display: flex; flex-wrap: wrap; gap: 10px; font-size: .8rem; color: #475569; }
+.asist-contadores span { display: inline-flex; align-items: center; gap: 4px; }
+.asist-contadores .c-p i { color: #10b981; } .asist-contadores .c-r i { color: #f59e0b; }
+.asist-contadores .c-f i { color: #ef4444; } .asist-contadores .c-j i { color: #3b82f6; }
+.asist-contadores .c-s b { color: #b91c1c; }
+.asist-atajos { display: flex; flex-wrap: wrap; gap: 6px; }
+.asist-atajos button { border: 1px solid #cbd5e1; background: #f8fafc; color: #334155; border-radius: 8px; padding: 5px 9px; font-size: .74rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+.asist-atajos button:hover { background: #e2e8f0; }
+
+.alumno-asist-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-bottom: 1px solid #eef2f7; transition: background .2s; }
+.alumno-asist-row:last-child { border-bottom: 0; }
+.asist-info { min-width: 0; line-height: 1.25; display: flex; flex-direction: column; gap: 2px; }
+.asist-nombre { font-size: .88rem; color: #0f172a; }
+.asist-mat { font-size: .72rem; color: #64748b; }
+.asist-plantel { font-size: .72rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+.asist-plantel--ok { color: #047857; }
+.asist-plantel--retardo { color: #b45309; }
+.asist-plantel--sin, .asist-plantel--falta { color: #b91c1c; }
+.asist-plantel--justificada { color: #1d4ed8; }
+.asist-plantel--suspendido { color: #475569; }
+.asist-sugerido { font-size: .68rem; color: #1d4ed8; font-style: italic; }
+.asist-pinta { display: none; font-size: .72rem; font-weight: 700; color: #b91c1c; background: #fef2f2; border-radius: 6px; padding: 3px 6px; margin-top: 2px; }
+.alumno-asist-row[data-plantel="entro"]:has(input[value="Falta"]:checked) .asist-pinta { display: inline-flex; gap: 5px; align-items: center; }
+.alumno-asist-row.sin-marcar-resaltado { background: #fef2f2; }
+
+.asist-opciones { display: flex; gap: 6px; flex: 0 0 auto; }
+.asist-op { position: relative; cursor: pointer; }
+.asist-op input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.asist-op span { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 9px; border: 2px solid #e2e8f0; background: #fff; font-weight: 800; font-size: .85rem; color: #94a3b8; transition: .15s; user-select: none; }
+.asist-op:hover span { border-color: #cbd5e1; color: #475569; }
+.asist-op input:focus-visible + span { outline: 2px solid #0f766e; outline-offset: 2px; }
+.asist-op--p input:checked + span { background: #10b981; border-color: #10b981; color: #fff; }
+.asist-op--r input:checked + span { background: #f59e0b; border-color: #f59e0b; color: #fff; }
+.asist-op--f input:checked + span { background: #ef4444; border-color: #ef4444; color: #fff; }
+.asist-op--j input:checked + span { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+.asist-op input:disabled + span { opacity: .45; cursor: not-allowed; }
+
+@media (max-width: 560px) {
+    .alumno-asist-row { flex-direction: column; align-items: stretch; }
+    .asist-opciones { justify-content: space-between; }
+    .asist-op { flex: 1; }
+    .asist-op span { width: 100%; }
+    .asist-atajos button { flex: 1 1 auto; }
+}

@@ -169,7 +169,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
     <div id="modalInscribir" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header"><h2><i class="fas fa-user-plus"></i> Inscribir Alumnos Existentes</h2><button class="close-modal" id="btnCerrarModal">&times;</button></div>
-            <form action="Procesos/inscribir_multiples.php" method="POST">
+            <form action="procesos/inscribir_multiples.php" method="POST">
                 <input type="hidden" name="id_grupo" value="<?php echo $id_grupo; ?>">
                 <div class="modal-body">
                     <div class="search-box"><i class="fas fa-search"></i><input type="text" id="buscadorDisponibles" placeholder="Buscar por matrícula o nombre..."></div>
@@ -202,7 +202,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
     <div id="modalExcel" class="modal-overlay">
         <div class="modal-content" style="max-width:500px;">
             <div class="modal-header"><h2><i class="fas fa-file-excel"></i> Inscribir por Excel/CSV</h2><button class="close-modal" id="btnCerrarModalExcel">&times;</button></div>
-            <form action="Procesos/inscribirAlumnos_excel.php" method="POST" enctype="multipart/form-data">
+            <form action="procesos/inscribirAlumnos_excel.php" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="id_grupo" value="<?php echo $id_grupo; ?>">
                 <div class="modal-body">
                     <p style="font-size:0.9rem; color:#6b7280; margin-bottom:15px;">Sube un archivo <b>CSV (delimitado por comas)</b> que contenga una columna con las <b>Matrículas</b> de los alumnos que deseas inscribir a este grupo (sin encabezados u otra información ajena).</p>

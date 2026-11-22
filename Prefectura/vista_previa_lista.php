@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../config/database.php'; 
+require_once __DIR__ . '/../includes/calendario.php';
 
 if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'prefectos') {
     header("Location: ../login.php");
@@ -14,6 +15,8 @@ $id_grupo_seleccionado = (int)($_GET['id_grupo'] ?? 0);
 
 // Convertir fecha a formato legible
 $fecha_legible = date('d/m/Y', strtotime($fecha_lista));
+// En un día sin clases (fin de semana o suspensión) nadie tiene falta: se marca SC
+$sin_clases = dia_sin_clases($pdo, $fecha_lista);
 
 // 1. Obtener los datos del grupo seleccionado (Semestre y Nombre) para los títulos
 $semestre_titulo = "N/A";
@@ -61,9 +64,9 @@ try {
 // ---------- Descargas reales: PDF (Dompdf) y Excel (.xlsx) ----------
 $formato = $_GET['formato'] ?? '';
 if (in_array($formato, ['pdf', 'xlsx'], true)) {
-    $marca = function (?string $e): string {
+    $marca = function (?string $e) use ($sin_clases): string {
         $e = mb_strtolower(trim((string)$e), 'UTF-8');
-        if ($e === '' || $e === 'falta') return '0';
+        if ($e === '' || $e === 'falta') return $sin_clases ? 'SC' : '0';
         if (strpos($e, 'justificad') !== false) return '*';
         if ($e === 'suspendido') return '-';
         return '1';
@@ -75,9 +78,9 @@ if (in_array($formato, ['pdf', 'xlsx'], true)) {
         $filas_x = [];
         foreach ($lista_alumnos as $n => $al) {
             $filas_x[] = [$n + 1, $al['matricula'], mb_strtoupper($al['apellido_paterno'] . ' ' . $al['nombre'], 'UTF-8'),
-                          $al['fecha_hora_escaneo'] ? date('h:i a', strtotime($al['fecha_hora_escaneo'])) : '', $al['estatus'] ?: 'Sin registro', $marca($al['estatus'])];
+                          $al['fecha_hora_escaneo'] ? date('h:i a', strtotime($al['fecha_hora_escaneo'])) : '', $al['estatus'] ?: ($sin_clases ? 'Sin clases' : 'Sin registro'), $marca($al['estatus'])];
         }
-        xlsx_descargar($nombre_desc . '.xlsx', 'Lista', ['COBAEP Plantel 27 · ' . $titulo_lista, 'Fecha: ' . $fecha_legible . ' · 1 = asistió, 0 = falta, * = justificada, - = suspendido'],
+        xlsx_descargar($nombre_desc . '.xlsx', 'Lista', ['COBAEP Plantel 27 · ' . $titulo_lista, 'Fecha: ' . $fecha_legible . ($sin_clases ? ' · SIN CLASES (' . $sin_clases . ')' : '') . ' · 1 = asistió, 0 = falta, * = justificada, - = suspendido, SC = sin clases'],
             ['No.', 'Matrícula', 'Nombre del alumno', 'Hora de entrada', 'Estatus', 'Marca'], $filas_x, [6, 16, 40, 14, 18, 8]);
     }
     require_once __DIR__ . '/../includes/pdf_documento.php';
@@ -87,13 +90,13 @@ if (in_array($formato, ['pdf', 'xlsx'], true)) {
         $m = $marca($al['estatus']);
         $color = $m === '0' ? '#b91c1c' : ($m === '*' ? '#1d4ed8' : '#0f172a');
         $cuerpo .= '<tr><td class="c">' . ($n + 1) . '</td><td class="c">' . $e($al['matricula']) . '</td><td>' . $e(mb_strtoupper($al['apellido_paterno'] . ' ' . $al['nombre'], 'UTF-8')) . '</td>'
-            . '<td class="c">' . ($al['fecha_hora_escaneo'] ? date('h:i a', strtotime($al['fecha_hora_escaneo'])) : '—') . '</td><td class="c">' . $e($al['estatus'] ?: 'Sin registro') . '</td>'
+            . '<td class="c">' . ($al['fecha_hora_escaneo'] ? date('h:i a', strtotime($al['fecha_hora_escaneo'])) : '—') . '</td><td class="c">' . $e($al['estatus'] ?: ($sin_clases ? 'Sin clases' : 'Sin registro')) . '</td>'
             . '<td class="c" style="font-weight:bold;color:' . $color . '">' . $m . '</td></tr>';
     }
     if (!$lista_alumnos) $cuerpo .= '<tr><td colspan="6" class="c">No hay alumnos en este grupo.</td></tr>';
-    $cuerpo .= '</tbody></table><p class="nota">1 = asistió · 0 = falta · * = justificada · - = suspendido</p>'
+    $cuerpo .= '</tbody></table><p class="nota">1 = asistió · 0 = falta · * = justificada · - = suspendido · SC = sin clases</p>'
         . '<br><br><table style="width:60%;margin:0 auto"><tr><td style="border:none;border-top:1px solid #333;text-align:center;padding-top:4px">Prefectura · Firma y sello</td></tr></table>';
-    pdf_descargar($nombre_desc . '.pdf', $titulo_lista, 'Fecha: ' . $fecha_legible, $cuerpo, 'portrait');
+    pdf_descargar($nombre_desc . '.pdf', $titulo_lista, 'Fecha: ' . $fecha_legible . ($sin_clases ? ' · Sin clases (' . $sin_clases . ')' : ''), $cuerpo, 'portrait');
 }
 ?>
 <!DOCTYPE html>
@@ -172,7 +175,7 @@ if (in_array($formato, ['pdf', 'xlsx'], true)) {
                     
                     <tr>
                         <th colspan="<?php echo $total_columnas; ?>" style="text-align: left; font-size: 12px; font-weight: normal; padding: 5px; color: #555; border: 1px solid #000;">
-                            FECHA DEL REPORTE: <?php echo $fecha_legible; ?>
+                            FECHA DEL REPORTE: <?php echo $fecha_legible; ?><?php if ($sin_clases): ?> · <b style="color:#475569;">SIN CLASES (<?php echo htmlspecialchars(mb_strtoupper($sin_clases, 'UTF-8')); ?>)</b><?php endif; ?>
                         </th>
                     </tr>
                     
@@ -197,7 +200,10 @@ if (in_array($formato, ['pdf', 'xlsx'], true)) {
                             $color_texto = '#000000';
 
                             // LÓGICA DE MARCADORES (1, 0, *)
-                            if (empty($estado_str) || $estado_str === 'falta') {
+                            if ((empty($estado_str) || $estado_str === 'falta') && $sin_clases) {
+                                $marca_asistencia = 'SC';
+                                $color_texto = '#6c757d'; // Día sin clases: no es falta
+                            } elseif (empty($estado_str) || $estado_str === 'falta') {
                                 $marca_asistencia = '0';
                                 $color_texto = '#dc3545'; // Rojo sobrio
                             } elseif (strpos($estado_str, 'justificad') !== false || strpos($estado_str, 'permiso') !== false) {

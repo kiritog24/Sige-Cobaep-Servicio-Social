@@ -61,7 +61,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($tipo_movimiento === 'entrada') {
                 // Si el alumno ya ingresó hoy, mostrar aviso de que ya está dentro
                 if ($registro_hoy) {
-                    header("Location: ../dashboard_prefectura.php?msg=error_manual&detalle=" . urlencode("El alumno ya registró su entrada y se encuentra dentro de la institución."));
+                    $aviso = $registro_hoy['fecha_hora_salida'] !== null
+                        ? "El alumno ya registró su entrada y su salida el día de hoy."
+                        : "El alumno ya registró su entrada y se encuentra dentro de la institución.";
+                    header("Location: ../dashboard_prefectura.php?msg=error_manual&detalle=" . urlencode($aviso));
                     exit();
                 } else {
                     $estatus_db = 'Puntual'; 

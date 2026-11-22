@@ -144,7 +144,8 @@ $tutores_con_correo = (int)$pdo->query("SELECT COUNT(*) FROM ALUMNOS a INNER JOI
 
 $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
 $tipos_aviso = ['conducta' => ['fa-file-lines', '#b45309', 'Conducta'], 'faltas' => ['fa-user-clock', '#b91c1c', 'Faltas'], 'retardos' => ['fa-clock', '#c2410c', 'Retardos'],
-                'citatorio' => ['fa-handshake', '#1d4ed8', 'Citatorio'], 'general' => ['fa-bullhorn', '#0f766e', 'Aviso general']];
+                'citatorio' => ['fa-handshake', '#1d4ed8', 'Citatorio'], 'general' => ['fa-bullhorn', '#0f766e', 'Aviso general'],
+                'clases' => ['fa-person-walking-arrow-right', '#9333ea', 'Faltó a clases']];
 $chips = ['enviado' => ['Enviado', 'ok'], 'pendiente' => ['Pendiente', 'pend'], 'fallido' => ['Falló', 'err'], 'sin_correo' => ['Sin correo', 'warn']];
 ?>
 <!DOCTYPE html>
@@ -414,7 +415,7 @@ $chips = ['enviado' => ['Enviado', 'ok'], 'pendiente' => ['Pendiente', 'pend'], 
             return confirm(msg);
         }
     </script>
-    <script src="../Prefectura/procesos/dashboard_prefecturas.js"></script>
+    <script src="../js/dashboard_prefectura.js"></script>
     <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

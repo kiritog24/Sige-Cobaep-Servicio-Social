@@ -806,7 +806,7 @@ $render_material = function (array $act) use ($h, $id_clase) { ?>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <script src="dashboard_maestro.js"></script>
+    <script src="../js/dashboard_docente.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
         const ID_CLASE = <?php echo (int)$id_clase; ?>;

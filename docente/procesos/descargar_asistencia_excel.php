@@ -67,24 +67,26 @@ while($row = $stmtAsist->fetch(PDO::FETCH_ASSOC)){
 require_once __DIR__ . '/../../includes/xlsx_simple.php';
 $encabezados = ['No.', 'Matrícula', 'Nombre del alumno'];
 foreach ($fechas as $f) $encabezados[] = date('d/m', strtotime($f));
-array_push($encabezados, 'Asist.', 'Ret.', 'Faltas');
+array_push($encabezados, 'Asist.', 'Ret.', 'Faltas', 'Just.', '% Asist.');
 $filas_x = [];
 foreach ($alumnos as $n => $alum) {
     $fila = [$n + 1, $alum['matricula'], trim($alum['apellido_paterno'] . ' ' . $alum['nombre'])];
-    $tp = $tr = $tf = 0;
+    $tp = $tr = $tf = $tj = 0;
     foreach ($fechas as $f) {
         $est = $asistencias[$alum['id_alumno']][$f] ?? '';
         if ($est === 'Presente' || $est === 'Asistencia') { $fila[] = 'P'; $tp++; }
         elseif ($est === 'Retardo') { $fila[] = 'R'; $tr++; }
         elseif ($est === 'Falta' || $est === 'Ausente') { $fila[] = 'F'; $tf++; }
+        elseif ($est === 'Justificada') { $fila[] = 'J'; $tj++; }
         else $fila[] = '';
     }
-    array_push($fila, $tp, $tr, $tf);
+    $tt = $tp + $tr + $tf + $tj;
+    array_push($fila, $tp, $tr, $tf, $tj, $tt ? round(($tp + $tr + $tj) * 100 / $tt) . '%' : '');
     $filas_x[] = $fila;
 }
-$anchos = array_merge([6, 16, 36], array_fill(0, count($fechas), 7), [8, 8, 8]);
+$anchos = array_merge([6, 16, 36], array_fill(0, count($fechas), 7), [8, 8, 8, 8, 9]);
 $nombre_materia = $clase['nombre_materia'] ?? 'Materia';
 xlsx_descargar('Asistencia_' . $nombre_materia . '_' . $nombre_archivo . '.xlsx', 'Asistencia',
     ['COBAEP Plantel 27 Zaragoza, Pue. · Reporte de asistencia',
-     mb_strtoupper($nombre_materia, 'UTF-8') . ' (' . ($clase['semestre'] ?? '') . '° "' . ($clase['nombre_grupo'] ?? '') . '") · ' . $titulo_periodo . ' · P = asistencia, R = retardo, F = falta'],
+     mb_strtoupper($nombre_materia, 'UTF-8') . ' (' . ($clase['semestre'] ?? '') . '° "' . ($clase['nombre_grupo'] ?? '') . '") · ' . $titulo_periodo . ' · P = asistencia, R = retardo, F = falta, J = justificada'],
     $encabezados, $filas_x, $anchos);

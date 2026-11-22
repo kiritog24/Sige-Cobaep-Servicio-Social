@@ -18,6 +18,7 @@ $act = fn(array $paginas) => in_array($pp, $paginas, true) ? ' active' : '';
                 <span class="nav-heading">Asistencia</span>
                 <a href="escaner_qr.php" class="nav-item<?php echo $act(['escaner_qr.php']); ?>"><i class="fas fa-qrcode"></i><span>Escáner QR</span></a>
                 <a href="monitoreo_grupos.php" class="nav-item<?php echo $act(['monitoreo_grupos.php', 'vista_previa_lista.php']); ?>"><i class="fas fa-users-viewfinder"></i><span>Monitoreo de Grupos</span></a>
+                <a href="asistencia_clases.php" class="nav-item<?php echo $act(['asistencia_clases.php']); ?>"><i class="fas fa-person-walking-arrow-right"></i><span>Asistencia a Clases</span></a>
                 <a href="historial_asistencias.php" class="nav-item<?php echo $act(['historial_asistencias.php']); ?>"><i class="fas fa-history"></i><span>Historial de Asistencias</span></a>
                 <a href="concentrado_asistencia.php" class="nav-item<?php echo $act(['concentrado_asistencia.php']); ?>"><i class="fas fa-chart-column"></i><span>Concentrado por periodo</span></a>
 

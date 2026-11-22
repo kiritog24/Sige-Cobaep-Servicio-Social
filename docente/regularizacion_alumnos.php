@@ -360,7 +360,7 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
         </section>
     </main>
 
-    <script src="dashboard_maestro.js"></script>
+    <script src="../js/dashboard_docente.js"></script>
     <script>
     (function () {
         const buscar = document.getElementById('raBuscar');

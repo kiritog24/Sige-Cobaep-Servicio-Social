@@ -82,7 +82,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
                                         <div class="action-buttons">
                                             <button type="button" class="btn-action view" data-ficha-tipo="maestros" data-ficha-id="<?php echo (int)$h['id_maestro']; ?>" style="background:#ecfdf5; color:#047857; border:none; cursor:pointer; font-family:inherit;"><i class="fas fa-eye"></i> Ver perfil</button>
                                             <button type="button" class="btn-action edit" style="border:none; cursor:pointer;" onclick="editarHorario(<?php echo $h['id_horario']; ?>, <?php echo $h['id_maestro']; ?>, <?php echo $h['id_grupo']; ?>, '<?php echo $h['ciclo']; ?>', '<?php echo $h['anio']; ?>')"><i class="fas fa-pen"></i> Editar</button>
-                                            <a href="Procesos/guardar_horario_admin.php?eliminar=<?php echo $h['id_horario']; ?>" class="btn-action delete" onclick="return confirm('¿Seguro que deseas eliminar este registro de horario?');"><i class="fas fa-trash"></i> Eliminar</a>
+                                            <a href="procesos/guardar_horario_admin.php?eliminar=<?php echo $h['id_horario']; ?>" class="btn-action delete" onclick="return confirm('¿Seguro que deseas eliminar este registro de horario?');"><i class="fas fa-trash"></i> Eliminar</a>
                                         </div>
                                     </td>
                                 </tr>
@@ -101,7 +101,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
                 <h2 id="tituloModalHorario" style="margin:0; font-size:1.25rem;"><i class="fas fa-calendar-plus" style="color:#10b981; margin-right:8px;"></i> Asignar Horario</h2>
                 <button type="button" onclick="cerrarModalHorario()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
             </div>
-            <form action="Procesos/guardar_horario_admin.php" method="POST" enctype="multipart/form-data">
+            <form action="procesos/guardar_horario_admin.php" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="id_horario" id="h_id_horario" value="0">
                 <div style="margin-bottom:15px;">
                     <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:6px;">Docente</label>

@@ -79,7 +79,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
         <?php endif; ?>
 
         <section class="section">
-            <form action="Procesos/asignar_docentes.php" method="POST" id="formAsignacion">
+            <form action="procesos/asignar_docentes.php" method="POST" id="formAsignacion">
                 <div class="split-layout">
                     <!-- PANEL 1: GRUPOS -->
                     <div class="panel">

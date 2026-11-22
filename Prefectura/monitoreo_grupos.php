@@ -2,6 +2,7 @@
 session_start();
 require_once '../config/database.php'; 
 require_once __DIR__ . '/../includes/topbar_usuario.php';
+require_once __DIR__ . '/../includes/calendario.php';
 
 if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'prefectos') {
     header("Location: ../login.php");
@@ -18,11 +19,12 @@ $query_grupos = "
         g.semestre, 
         g.nombre_grupo,
         g.turno,
-        (SELECT COUNT(*) FROM grupo_alumno WHERE id_grupo = g.id_grupo) AS total_alumnos,
+        (SELECT COUNT(*) FROM grupo_alumno gx INNER JOIN alumnos ax ON ax.id_alumno = gx.id_alumno
+         WHERE gx.id_grupo = g.id_grupo AND gx.fecha_baja IS NULL AND ax.estatus = 'Alta') AS total_alumnos,
         (SELECT COUNT(DISTINCT a.id_alumno) 
          FROM asistencias a 
          INNER JOIN grupo_alumno ga2 ON a.id_alumno = ga2.id_alumno 
-         WHERE ga2.id_grupo = g.id_grupo 
+         WHERE ga2.id_grupo = g.id_grupo AND ga2.fecha_baja IS NULL
          AND DATE(a.fecha_hora_escaneo) = CURDATE() 
          AND a.estatus NOT IN ('Falta', 'Suspendido', '')
         ) AS asistencias_hoy
@@ -36,6 +38,7 @@ try {
 } catch (PDOException $e) {
     $grupos = [];
 }
+$sin_clases_hoy = dia_sin_clases($pdo, date('Y-m-d'));
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -147,6 +150,11 @@ try {
             <?php topbar_usuario($pdo); ?>
         </header>
 
+        <?php if ($sin_clases_hoy): ?>
+            <div style="margin-top:20px; padding:14px 18px; border-radius:12px; background:#f1f5f9; border:1px solid #e2e8f0; color:#334155; font-weight:600;">
+                <i class="fas fa-school-circle-xmark"></i> Hoy no hay clases (<?php echo htmlspecialchars($sin_clases_hoy); ?>): no se cuentan faltas.
+            </div>
+        <?php endif; ?>
         <section class="groups-grid">
             <?php if (empty($grupos)): ?>
                 <div style="grid-column: 1 / -1; padding: 2rem; text-align: center; background: white; border-radius: 12px;">
@@ -157,8 +165,7 @@ try {
                 <?php foreach ($grupos as $g): 
                     $total = (int)$g['total_alumnos'];
                     $asistencias = (int)$g['asistencias_hoy'];
-                    $faltas = $total - $asistencias;
-                    if($faltas < 0) $faltas = 0;
+                    $faltas = $sin_clases_hoy ? 0 : max(0, $total - $asistencias);
                     
                     $nombre_completo = $g['semestre'] . '° "' . $g['nombre_grupo'] . '"';
                     
@@ -236,7 +243,7 @@ try {
         </div>
     </div>
 
-    <script src="../Prefectura/procesos/dashboard_prefecturas.js"></script>
+    <script src="../js/dashboard_prefectura.js"></script>
     <script>
         function abrirModalLista(idGrupo, nombreGrupo) {
             document.getElementById('idGrupoModalInput').value = idGrupo;

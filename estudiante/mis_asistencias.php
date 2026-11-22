@@ -2,6 +2,7 @@
 session_start();
 require_once '../config/database.php';
 require_once __DIR__ . '/includes/campana.php';
+require_once __DIR__ . '/../includes/asistencia.php';
 
 // Validar que el usuario haya iniciado sesión y sea estudiante
 if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'estudiante') {
@@ -29,7 +30,7 @@ try {
     $generacion = $anio_ingreso . ' - ' . ($anio_ingreso + 3);
 
     // 2. Lógica del Nuevo Filtro de Calendario Mensual (Formato YYYY-MM)
-    $periodo_filtro = isset($_GET['periodo']) ? $_GET['periodo'] : date('Y-m');
+    $periodo_filtro = isset($_GET['periodo']) && preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $_GET['periodo']) ? $_GET['periodo'] : date('Y-m');
     $partes_fecha = explode('-', $periodo_filtro);
     $anio_filtro = $partes_fecha[0];
     $mes_filtro = $partes_fecha[1];
@@ -47,10 +48,18 @@ try {
     $stmtAsist->execute([$id_alumno, $mes_filtro, $anio_filtro]);
     $historial = $stmtAsist->fetchAll(PDO::FETCH_ASSOC);
 
-    // 4. Calcular Resumen de Estadísticas del Mes Seleccionado
+    // 4. Días de clase del mes sin ningún registro de entrada: también son faltas (igual que en Prefectura)
+    $inicio_mes = sprintf('%04d-%02d-01', $anio_filtro, $mes_filtro);
+    foreach (dias_sin_entrada_alumno($pdo, (int)$id_alumno, $inicio_mes, date('Y-m-t', strtotime($inicio_mes))) as $dia_f) {
+        $historial[] = ['fecha_hora_escaneo' => $dia_f . ' 00:00:00', 'fecha_hora_salida' => null, 'estatus' => 'Falta', 'motivo_justificacion' => null, 'sin_registro' => true];
+    }
+    usort($historial, fn($a, $b) => strcmp($b['fecha_hora_escaneo'], $a['fecha_hora_escaneo']));
+
+    // 5. Resumen del mes
     $tot_presentes = 0;
     $tot_retardos = 0;
     $tot_faltas = 0;
+    $tot_justificadas = 0;
 
     foreach($historial as $row) {
         $estatus_calc = strtolower($row['estatus'] ?? '');
@@ -58,10 +67,15 @@ try {
             $tot_presentes++;
         } elseif(stripos($estatus_calc, 'retardo') !== false) {
             $tot_retardos++;
+        } elseif($estatus_calc === 'falta justificada') {
+            $tot_justificadas++;
         } else {
             $tot_faltas++;
         }
     }
+
+    // 6. Asistencia a cada materia en el mes (pase de lista de los docentes)
+    $por_materia = resumen_clases_alumno($pdo, (int)$id_alumno, $inicio_mes, date('Y-m-t', strtotime($inicio_mes)));
 
 } catch (PDOException $e) {
     die("Error al cargar historial: " . $e->getMessage());
@@ -144,7 +158,7 @@ $meses_texto = [
                     <button class="mobile-menu" id="mobileMenu" type="button"><i class="fas fa-bars"></i></button>
                     <div>
                         <h1>Mis Asistencias</h1>
-                        <p>Consulta tu registro de entradas y salidas del plantel.</p>
+                        <p>Tu entrada al plantel y tu asistencia a cada clase.</p>
                     </div>
                 </div>
 
@@ -204,7 +218,7 @@ $meses_texto = [
                         <div class="stat-text">
                             <div class="label">Faltas</div>
                             <div class="value"><?php echo $tot_faltas; ?></div>
-                            <div class="sub">Inasistencias del mes</div>
+                            <div class="sub">Sin justificar<?php echo $tot_justificadas ? ' · ' . $tot_justificadas . ' justificada(s)' : ''; ?></div>
                         </div>
                     </div>
                 </div>
@@ -258,6 +272,7 @@ $meses_texto = [
                                 <?php foreach($historial as $row): 
                                     $fecha = date('d/m/Y', strtotime($row['fecha_hora_escaneo']));
                                     $entrada = date('h:i A', strtotime($row['fecha_hora_escaneo']));
+                                    if (!empty($row['sin_registro']) || ($row['estatus'] === 'Falta Justificada' && date('H:i', strtotime($row['fecha_hora_escaneo'])) === '00:00')) $entrada = '<span style="color:#cbd5e1;">-</span>';
                                     $salida = !empty($row['fecha_hora_salida']) ? date('h:i A', strtotime($row['fecha_hora_salida'])) : '<span style="color:#cbd5e1;">-</span>';
                                     
                                     $estatus_min = strtolower($row['estatus'] ?? '');
@@ -272,7 +287,9 @@ $meses_texto = [
                                     }
 
                                     $observacion = '<span style="color:#cbd5e1;">-</span>';
-                                    if(!empty($row['motivo_justificacion'])) {
+                                    if (!empty($row['sin_registro'])) {
+                                        $observacion = '<div class="observacion"><i class="fas fa-door-closed"></i> No registraste entrada al plantel</div>';
+                                    } elseif(!empty($row['motivo_justificacion'])) {
                                         $observacion = '<div class="observacion"><i class="fas fa-info-circle"></i> ' . htmlspecialchars($row['motivo_justificacion']) . '</div>';
                                     }
                                 ?>
@@ -285,6 +302,35 @@ $meses_texto = [
                                 </tr>
                                 <?php endforeach; ?>
                             <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ASISTENCIA POR MATERIA (pase de lista de cada docente) -->
+            <div class="table-card" style="margin-top: 1.5rem;">
+                <div style="padding: 1.1rem 1.25rem 0;">
+                    <h3 style="margin:0; font-size:1rem; color:#0f172a;"><i class="fas fa-chalkboard-user" style="color:#10b981;"></i> Asistencia a mis clases · <?php echo $meses_texto[$mes_filtro] . ' ' . $anio_filtro; ?></h3>
+                    <p style="margin:4px 0 0; font-size:.82rem; color:#64748b;">Lo que registró cada docente al pasar lista. Entrar al plantel no basta: también cuenta estar en cada clase.</p>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>Materia</th><th>Docente</th><th>Presente</th><th>Retardo</th><th>Falta</th><th>Justificada</th><th>Asistencia</th></tr></thead>
+                        <tbody>
+                        <?php if (!$por_materia): ?>
+                            <tr><td colspan="7" class="empty-table"><i class="far fa-calendar-times"></i><strong>Sin pases de lista</strong><span>Tus docentes aún no registran asistencia este mes.</span></td></tr>
+                        <?php else: foreach ($por_materia as $pm):
+                            $pct = $pm['total'] ? round(($pm['presentes'] + $pm['retardos'] + $pm['justificadas']) * 100 / $pm['total']) : 0; ?>
+                            <tr>
+                                <td><strong><?php echo htmlspecialchars($pm['materia']); ?></strong></td>
+                                <td><?php echo htmlspecialchars($pm['docente'] ?: '—'); ?></td>
+                                <td><?php echo $pm['presentes']; ?></td>
+                                <td><?php echo $pm['retardos']; ?></td>
+                                <td><?php echo $pm['faltas'] ? '<span class="badge falta">' . $pm['faltas'] . '</span>' : '0'; ?></td>
+                                <td><?php echo $pm['justificadas']; ?></td>
+                                <td><span class="badge <?php echo $pct >= 80 ? 'puntual' : ($pct >= 60 ? 'retardo' : 'falta'); ?>"><?php echo $pct; ?>%</span></td>
+                            </tr>
+                        <?php endforeach; endif; ?>
                         </tbody>
                     </table>
                 </div>

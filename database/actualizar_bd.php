@@ -7,7 +7,7 @@
  * solo crea o agrega lo que todavía no existe y nunca borra datos.
  *
  * Uso:
- *   - Navegador: http://localhost:8888/SIGE-COBAEP/database/actualizar_bd.php
+ *   - Navegador: http://localhost/sige_cobaep1/database/actualizar_bd.php
  *   - Terminal:  php database/actualizar_bd.php
  */
 
@@ -257,12 +257,26 @@ try {
     // Avisos a tutores: además de conducta y faltas, retardos, citatorios y avisos generales
     if (tabla_existe($pdo, 'AVISOS_TUTOR')) {
         $tipo_col = (string)$pdo->query("SELECT COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = 'avisos_tutor' AND COLUMN_NAME = 'tipo'")->fetchColumn();
-        if (strpos($tipo_col, 'citatorio') === false) {
-            $pdo->exec("ALTER TABLE `AVISOS_TUTOR` MODIFY `tipo` ENUM('conducta','faltas','retardos','citatorio','general') NOT NULL");
-            registrar("➕ AVISOS_TUTOR.tipo ahora incluye retardos, citatorio y aviso general");
+        if (strpos($tipo_col, "'clases'") === false) {
+            $pdo->exec("ALTER TABLE `AVISOS_TUTOR` MODIFY `tipo` ENUM('conducta','faltas','retardos','citatorio','general','clases') NOT NULL");
+            registrar("➕ AVISOS_TUTOR.tipo ahora incluye retardos, citatorio, aviso general y faltas a clases estando en el plantel");
         } else {
-            registrar("✔ AVISOS_TUTOR.tipo ya incluye citatorios y avisos generales");
+            registrar("✔ AVISOS_TUTOR.tipo ya incluye todos los tipos de aviso");
         }
+    }
+
+    // Pase de lista del docente: índice para cruzar por fecha con la entrada al plantel
+    if (tabla_existe($pdo, 'ASISTENCIAS_CLASES')) {
+        $st = $pdo->query("SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE() AND LOWER(table_name) = 'asistencias_clases' AND index_name = 'idx_fecha_estatus'");
+        if (!(int)$st->fetchColumn()) {
+            $pdo->exec("ALTER TABLE `ASISTENCIAS_CLASES` ADD INDEX `idx_fecha_estatus` (`fecha`, `estatus`)");
+            registrar("➕ Índice por fecha en ASISTENCIAS_CLASES (cruce con Prefectura)");
+        } else {
+            registrar("✔ ASISTENCIAS_CLASES ya tiene índice por fecha");
+        }
+        // Estatus antiguos del pase de lista llevados a los actuales
+        $n = $pdo->exec("UPDATE `ASISTENCIAS_CLASES` SET estatus = CASE estatus WHEN 'Asistencia' THEN 'Presente' WHEN 'Ausente' THEN 'Falta' ELSE estatus END WHERE estatus IN ('Asistencia', 'Ausente')");
+        if ($n) registrar("➕ $n registro(s) del pase de lista con estatus antiguo actualizados");
     }
 
     registrar("✅ Base de datos actualizada correctamente.");

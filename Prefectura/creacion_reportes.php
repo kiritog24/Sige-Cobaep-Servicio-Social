@@ -375,7 +375,7 @@ try {
         </div>
     </div>
 
-    <script src="../Prefectura/procesos/dashboard_prefecturas.js"></script>
+    <script src="../js/dashboard_prefectura.js"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {

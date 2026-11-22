@@ -1,4 +1,8 @@
+# Archivos basura del sistema operativo / editores
 .DS_Store
+._*
+Thumbs.db
+desktop.ini
 *.code-workspace
 
 # Respaldo con datos personales de alumnos: no subir a GitHub
@@ -7,3 +11,7 @@ database/Sistema_SIGE_COBAEP_completo.sql
 # Datos sensibles generados por el sistema (no subir al repositorio)
 respaldos/
 config/clave_app.php
+
+# Archivos que suben alumnos y docentes (fotos, tareas, materiales, horarios).
+# Se quedan en el servidor; el sistema crea las carpetas solo cuando las necesita.
+uploads/

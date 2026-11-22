@@ -317,7 +317,7 @@ if ($grupo && in_array($formato, ['pdf', 'xlsx'], true)) {
             sel.addEventListener('change', toggle); toggle();
         })();
     </script>
-    <script src="../Prefectura/procesos/dashboard_prefecturas.js"></script>
+    <script src="../js/dashboard_prefectura.js"></script>
     <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

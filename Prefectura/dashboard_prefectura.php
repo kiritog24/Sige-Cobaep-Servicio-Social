@@ -2,6 +2,8 @@
 session_start();
 require_once '../config/database.php'; 
 require_once __DIR__ . '/../includes/topbar_usuario.php';
+require_once __DIR__ . '/../includes/calendario.php';
+require_once __DIR__ . '/../includes/asistencia.php';
 
 if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'prefectos') {
     header("Location: ../login.php");
@@ -10,10 +12,15 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'prefectos') {
 
 date_default_timezone_set('America/Mexico_City');
 $fecha_actual = date('d/m/Y');
+$sin_clases_hoy = dia_sin_clases($pdo, date('Y-m-d'));   // null = hoy sí hay clases
+$suspensiones = suspensiones_proximas($pdo);
+$pintas_hoy = $sin_clases_hoy ? [] : array_filter(posibles_pintas($pdo, date('Y-m-d')), fn($p) => $p['pinta']);
+$pases_hoy = $sin_clases_hoy ? [] : pases_de_lista_del_dia($pdo, date('Y-m-d'));
+$pases_pendientes = count(array_filter($pases_hoy, fn($c) => (int)$c['marcados'] === 0));
 
 try {
-    // 1. Contar total de alumnos
-    $stmt_alumnos = $pdo->query("SELECT COUNT(*) FROM alumnos");
+    // 1. Contar alumnos activos (sin bajas)
+    $stmt_alumnos = $pdo->query("SELECT COUNT(*) FROM alumnos WHERE estatus = 'Alta'");
     $total_alumnos = $stmt_alumnos->fetchColumn();
 
     // 2. Contar puntuales (y retardos justificados)
@@ -28,9 +35,8 @@ try {
                                   AND estatus = 'Retardo'");
     $retardos = $stmt_retardos->fetchColumn();
 
-    // 4. Calcular inasistencias
-    $inasistencias = $total_alumnos - ($puntuales + $retardos);
-    if ($inasistencias < 0) $inasistencias = 0;
+    // 4. Calcular inasistencias (en un día sin clases nadie tiene falta)
+    $inasistencias = $sin_clases_hoy ? 0 : max(0, $total_alumnos - ($puntuales + $retardos));
 
     // 5. Obtener últimos registros
     $stmt_ultimos = $pdo->query("
@@ -122,7 +128,7 @@ $nombre_usuario = isset($_SESSION['nombre'])
         <section class="stats-grid" aria-label="Resumen">
             <article class="stat-card teachers">
                 <div class="stat-icon"><i class="fas fa-users"></i></div>
-                <div class="stat-content"><span>Total Alumnos</span><strong><?php echo $total_alumnos; ?></strong><small>Registrados en sistema</small></div>
+                <div class="stat-content"><span>Total Alumnos</span><strong><?php echo $total_alumnos; ?></strong><small>Activos en el sistema</small></div>
             </article>
 
             <article class="stat-card students">
@@ -137,9 +143,31 @@ $nombre_usuario = isset($_SESSION['nombre'])
 
             <article class="stat-card absent">
                 <div class="stat-icon"><i class="fas fa-user-xmark"></i></div>
+                <?php if ($sin_clases_hoy): ?>
+                <div class="stat-content"><span>Pendientes / Faltas</span><strong>0</strong><small>Hoy no hay clases · <?php echo htmlspecialchars($sin_clases_hoy); ?></small></div>
+                <?php else: ?>
                 <div class="stat-content"><span>Pendientes / Faltas</span><strong><?php echo $inasistencias; ?></strong><small>Aún no ingresan</small></div>
+                <?php endif; ?>
             </article>
         </section>
+
+        <?php if (!$sin_clases_hoy): ?>
+        <a href="asistencia_clases.php" class="cruce-banner <?php echo $pintas_hoy ? 'hay' : ''; ?>">
+            <i class="fas fa-person-walking-arrow-right"></i>
+            <span><b><?php echo count($pintas_hoy); ?> posible(s) pinta(s) hoy</b> · alumnos que entraron al plantel y faltaron a una clase.
+            <?php if ($pases_hoy): ?><small><?php echo count($pases_hoy) - $pases_pendientes; ?> de <?php echo count($pases_hoy); ?> materias de hoy ya pasaron lista.</small><?php endif; ?></span>
+            <i class="fas fa-arrow-right"></i>
+        </a>
+        <style>
+            .cruce-banner { display: flex; align-items: center; gap: 14px; margin: 18px 0 0; padding: 14px 18px; border-radius: 14px; background: #fff; border: 1px solid #e2e8f0; color: #334155; text-decoration: none; font-size: .9rem; }
+            .cruce-banner > i:first-child { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: #f1f5f9; color: #475569; flex: 0 0 40px; }
+            .cruce-banner span { flex: 1; min-width: 0; }
+            .cruce-banner small { display: block; color: #64748b; margin-top: 2px; }
+            .cruce-banner.hay { border-color: #fecaca; background: #fef2f2; }
+            .cruce-banner.hay > i:first-child { background: #fee2e2; color: #dc2626; }
+            .cruce-banner:hover { box-shadow: 0 4px 14px rgba(15, 23, 42, .06); }
+        </style>
+        <?php endif; ?>
 
         <section class="section">
             <div class="section-heading">
@@ -153,7 +181,7 @@ $nombre_usuario = isset($_SESSION['nombre'])
                     <i class="fas fa-arrow-right action-arrow"></i>
                 </a>
                 
-                <a href="#" class="action-card suspension-btn" onclick="document.getElementById('modalSuspension').style.display='flex'">
+                <a href="#" class="action-card suspension-btn" onclick="document.getElementById('modalSuspension').style.display='flex'; return false;">
                     <div class="action-icon red"><i class="fas fa-calendar-times"></i></div>
                     <div class="action-text"><h3>Suspender Faltas</h3><p>Configura días sin clases.</p></div>
                     <i class="fas fa-arrow-right action-arrow"></i>
@@ -249,7 +277,7 @@ $nombre_usuario = isset($_SESSION['nombre'])
     <div class="modal-overlay" id="modalSuspension">
         <div class="modal">
             <h3><i class="fas fa-calendar-times" style="color: #ef4444;"></i> Programar Suspensión</h3>
-            <p>El sistema no pondrá faltas automáticas durante el rango de fechas que elijas. Al terminar, se reactivará solo.</p>
+            <p>En esos días nadie tendrá falta (panel, monitoreo, listas, concentrado y avisos a tutores). Los sábados y domingos ya se omiten solos.</p>
             <form action="procesos/registrar_suspension.php" method="POST">
                 <div class="form-group">
                     <label>Motivo de la suspensión</label>
@@ -261,9 +289,20 @@ $nombre_usuario = isset($_SESSION['nombre'])
                     </select>
                 </div>
                 <div class="form-group" style="display: flex; gap: 10px;">
-                    <div style="flex: 1;"><label>Fecha de Inicio</label><input type="date" name="fecha_inicio" class="form-control" required></div>
-                    <div style="flex: 1;"><label>Fecha de Fin</label><input type="date" name="fecha_fin" class="form-control" required></div>
-                </div>  
+                    <div style="flex: 1;"><label>Fecha de Inicio</label><input type="date" name="fecha_inicio" id="suspInicio" class="form-control" required></div>
+                    <div style="flex: 1;"><label>Fecha de Fin</label><input type="date" name="fecha_fin" id="suspFin" class="form-control" required></div>
+                </div>
+                <?php if ($suspensiones): ?>
+                <div class="susp-lista">
+                    <strong>Suspensiones programadas</strong>
+                    <?php foreach ($suspensiones as $s): ?>
+                    <div class="susp-item">
+                        <span><b><?php echo htmlspecialchars($s['motivo']); ?></b> · <?php echo rango_fechas_texto($s['fecha_inicio'], $s['fecha_fin']); ?></span>
+                        <button type="submit" form="formCancelarSusp" name="id_suspension" value="<?php echo (int)$s['id_suspension']; ?>" class="susp-cancelar" onclick="return confirm('¿Cancelar esta suspensión? Esos días volverán a contar como días de clase.');"><i class="fas fa-xmark"></i> Cancelar</button>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-cancel" onclick="document.getElementById('modalSuspension').style.display='none'">Cancelar</button>
                     <button type="submit" class="btn btn-primary" style="background: #ef4444;">Confirmar Suspensión</button>
@@ -271,6 +310,24 @@ $nombre_usuario = isset($_SESSION['nombre'])
             </form>
         </div>
     </div>
+
+    <form id="formCancelarSusp" action="procesos/eliminar_suspension.php" method="POST" hidden></form>
+    <style>
+        .susp-lista { margin: 4px 0 14px; padding: 12px; border-radius: 12px; background: #f8fafc; border: 1px solid #e2e8f0; font-size: .85rem; max-height: 180px; overflow-y: auto; }
+        .susp-lista > strong { display: block; margin-bottom: 8px; color: #334155; }
+        .susp-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 0; border-top: 1px solid #e2e8f0; }
+        .susp-item:first-of-type { border-top: 0; }
+        .susp-cancelar { flex: 0 0 auto; border: 1px solid #fecaca; background: #fff; color: #dc2626; border-radius: 8px; padding: 4px 10px; font-size: .78rem; font-weight: 700; cursor: pointer; }
+        .susp-cancelar:hover { background: #fef2f2; }
+    </style>
+    <script>
+        // La fecha fin nunca puede ser antes que la de inicio
+        (function () {
+            const i = document.getElementById('suspInicio'), f = document.getElementById('suspFin');
+            if (!i || !f) return;
+            i.addEventListener('change', () => { f.min = i.value; if (!f.value || f.value < i.value) f.value = i.value; });
+        })();
+    </script>
 
     <!-- MODAL DE REGISTRO MANUAL -->
     <div class="modal-overlay" id="modalManual">
@@ -280,7 +337,7 @@ $nombre_usuario = isset($_SESSION['nombre'])
             <form action="procesos/registro_manual.php" method="POST">
                 <div class="form-group">
                     <label for="matricula_manual"><i class="fas fa-id-card"></i> Número de Matrícula</label>
-                    <input type="text" id="matricula_manual" name="matricula" class="form-control" placeholder="Ej. 22014567" required>
+                    <input type="text" id="matricula_manual" name="matricula" class="form-control" placeholder="Ej. 27/2026B0001" autocomplete="off" required>
                 </div>
                 <div class="form-group">
                     <label for="estado_asistencia"><i class="fas fa-check-circle"></i> Estado a registrar</label>
@@ -341,7 +398,7 @@ $nombre_usuario = isset($_SESSION['nombre'])
         </div>
     </div>
 
-    <script src="../Prefectura/procesos/dashboard_prefecturas.js"></script>
+    <script src="../js/dashboard_prefectura.js"></script>
 
     <script src="../js/responsive.js?v=10"></script>
 </body>

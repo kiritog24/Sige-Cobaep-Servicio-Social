@@ -255,7 +255,7 @@ try {
         </div>
     </div>
 
-    <script src="dashboard_maestro.js"></script>
+    <script src="../js/dashboard_docente.js"></script>
     <script>
         // Lógica del Modal
         const modal = document.getElementById('modalCrear');

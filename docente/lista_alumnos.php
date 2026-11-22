@@ -151,6 +151,8 @@ try {
                     <th class="text-center">Asist.</th>
                     <th class="text-center">Retardos</th>
                     <th class="text-center">Faltas</th>
+                    <th class="text-center" title="Faltas con justificante de Prefectura">Just.</th>
+                    <th class="text-center" title="Asistencia (presente + retardo + justificada)">%</th>
                 </tr>
             </thead>
             <tbody id="cuerpo_tabla">
@@ -184,7 +186,7 @@ try {
             const f_fin = document.getElementById('fecha_fin').value;
             
             const tbody = document.getElementById('cuerpo_tabla');
-            tbody.innerHTML = "<tr><td colspan='5' class='text-center'><i class='fas fa-spinner fa-spin'></i> Calculando asistencias...</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='7' class='text-center'><i class='fas fa-spinner fa-spin'></i> Calculando asistencias...</td></tr>";
 
             // Construir la URL con los parámetros
             const url = `procesos/obtener_tabla_asistencia_ajax.php?id_clase=${id_clase}&tipo_filtro=${tipo}&mes=${mes}&fecha_inicio=${f_inicio}&fecha_fin=${f_fin}`;
@@ -195,7 +197,7 @@ try {
                     tbody.innerHTML = html;
                 })
                 .catch(error => {
-                    tbody.innerHTML = "<tr><td colspan='5' class='text-center' style='color:red;'>Error al cargar los datos.</td></tr>";
+                    tbody.innerHTML = "<tr><td colspan='7' class='text-center' style='color:red;'>Error al cargar los datos.</td></tr>";
                 });
         }
     </script>

@@ -281,7 +281,7 @@ if (!empty($matricula_buscada)) {
         </div>
     </main>
 
-    <script src="../Prefectura/procesos/dashboard_prefecturas.js"></script>
+    <script src="../js/dashboard_prefectura.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Lógica del buscador del MODAL DE EDICIÓN

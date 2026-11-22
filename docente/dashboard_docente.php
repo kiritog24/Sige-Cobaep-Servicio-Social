@@ -482,7 +482,7 @@ $dia_inicial = in_array($numero_dia_hoy, $dias_menu, true) ? $numero_dia_hoy : 1
 
     </main>
 
-    <script src="dashboard_maestro.js"></script>
+    <script src="../js/dashboard_docente.js"></script>
     <script>
     (function () {
         const HOY = <?php echo $numero_dia_hoy; ?>;

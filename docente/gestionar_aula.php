@@ -227,6 +227,7 @@ try {
         border-radius: 8px;
     }
     </style>
+    <link rel="stylesheet" href="../css/asistencia.css?v=2">
     <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 
@@ -1016,14 +1017,14 @@ try {
             </div>
             <button type="button" class="btn-close" onclick="cerrarModal('modalAsistencia')"><i class="fas fa-times"></i></button>
         </div>
-        <form action="procesos/docente_guardar_asistencia.php" method="POST" style="padding: 1.5rem;">
+        <form action="procesos/docente_guardar_asistencia.php" method="POST" id="formAsistencia" style="padding: 1.5rem;">
             <input type="hidden" name="id_clase" id="asist_id_clase">
             
             <!-- CONTENEDOR FECHA Y BOTÓN QR -->
             <div style="margin-bottom: 1rem; display: flex; align-items: flex-end; gap: 15px; flex-wrap: wrap;">
                 <div>
                     <label style="display:block; font-size:0.8rem; font-weight:700; color:var(--muted); margin-bottom:5px;">Fecha del Pase:</label>
-                    <input type="date" name="fecha_asistencia" id="asist_fecha_input" class="form-control" style="width: auto; padding: 8px 12px;" value="<?php echo date('Y-m-d'); ?>" onchange="cargarListaAsistencia()" required>
+                    <input type="date" name="fecha_asistencia" id="asist_fecha_input" class="form-control" style="width: auto; padding: 8px 12px;" value="<?php echo date('Y-m-d'); ?>" max="<?php echo date('Y-m-d'); ?>" onchange="cargarListaAsistencia()" required>
                 </div>
                 <button type="button" class="btn-primary" style="background: var(--orange); padding: 8px 16px; font-size: 0.85rem; height: 38px; margin: 0; width: auto;" onclick="abrirScannerQR()">
                     <i class="fas fa-qrcode"></i> TOMAR LISTA DE ASISTENCIA POR QR
@@ -1050,25 +1051,17 @@ try {
                 </div>
             </div>
             
-            <!-- CABECERA DE LA LISTA -->
-            <div style="background: #f8fafc; padding: 10px 15px; border: 1px solid var(--line); border-bottom: none; display:flex; justify-content:space-between; font-size:0.8rem; font-weight:700; color:var(--muted); border-radius: 8px 8px 0 0;">
-                <span>Alumnos</span>
-                <span style="display:flex; gap:20px; padding-right: 5px;">
-                    <span title="Presente"><i class="fas fa-check" style="color:#10b981;"></i> P</span>
-                    <span title="Retardo"><i class="fas fa-clock" style="color:#f59e0b;"></i> R</span>
-                    <span title="Falta"><i class="fas fa-times" style="color:#ef4444;"></i> F</span>
-                </span>
-            </div>
-            
+            <p style="font-size:.78rem; color:var(--muted); margin:0 0 8px;"><b>P</b> presente · <b>R</b> retardo · <b>F</b> falta · <b>J</b> justificada (con justificante de Prefectura o permiso).</p>
+
             <!-- CONTENEDOR AJAX DE LA LISTA -->
-            <div id="contenedorListaAsistencia" class="lista-scroll" style="max-height: 350px; overflow-y: auto; border: 1px solid var(--line); border-radius: 0 0 8px 8px; margin-bottom: 1.5rem;">
+            <div id="contenedorListaAsistencia" class="lista-scroll" style="max-height: 420px; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 1.5rem; padding-right: 0;">
                 <!-- Cargando por AJAX -->
             </div>
             
             <!-- BOTONES DE GUARDAR/CANCELAR -->
             <div class="btn-group">
                 <button type="button" class="btn-cancel" onclick="cerrarModal('modalAsistencia')">Cancelar</button>
-                <button type="submit" class="btn-primary" style="margin:0; width:auto; padding:10px 20px;"><i class="fas fa-save"></i> Guardar Asistencia</button>
+                <button type="submit" id="btnGuardarAsistencia" class="btn-primary" style="margin:0; width:auto; padding:10px 20px;"><i class="fas fa-save"></i> Guardar Asistencia</button>
             </div>
         </form> 
     </div>
@@ -1092,7 +1085,7 @@ try {
 
     </main>
     
-    <script src="dashboard_maestro.js"></script>
+    <script src="../js/dashboard_docente.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
    <script>
     // =======================================================
@@ -1269,8 +1262,8 @@ try {
         const fecha = document.getElementById('asist_fecha_input').value;
         const contenedor = document.getElementById('contenedorListaAsistencia');
         contenedor.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;"><i class="fas fa-spinner fa-spin fa-2x"></i><br><br>Cargando lista de asistencia...</div>';
-        fetch(`procesos/obtener_lista_asistencia.php?id_clase=${id_clase}&fecha=${fecha}`)
-        .then(res => res.text()).then(html => { contenedor.innerHTML = html; })
+        fetch(`procesos/obtener_lista_asistencia.php?id_clase=${id_clase}&fecha=${encodeURIComponent(fecha)}`)
+        .then(res => res.text()).then(html => { contenedor.innerHTML = html; prepararListaAsistencia(); })
         .catch(() => { contenedor.innerHTML = '<div style="color:red; text-align:center; padding:20px;">Error al cargar la lista.</div>'; });
     }
 
@@ -1280,6 +1273,60 @@ try {
         document.getElementById('modalAsistencia').classList.add('active');
         cargarListaAsistencia();
     }
+
+    const escHtml = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    // Contadores, atajos y bloqueo del pase de lista
+    function contarAsistencia() {
+        const cont = document.getElementById('contenedorListaAsistencia');
+        const cuentas = { Presente: 0, Retardo: 0, Falta: 0, Justificada: 0, '': 0 };
+        cont.querySelectorAll('.alumno-asist-row').forEach(fila => {
+            const marcado = fila.querySelector('input[type="radio"]:checked');
+            cuentas[marcado ? marcado.value : '']++;
+            if (marcado) fila.classList.remove('sin-marcar-resaltado');
+        });
+        cont.querySelectorAll('[data-cuenta]').forEach(b => { b.textContent = cuentas[b.dataset.cuenta] ?? 0; });
+        return cuentas;
+    }
+    function prepararListaAsistencia() {
+        const meta = document.getElementById('asistMeta');
+        const bloqueada = meta && meta.dataset.bloqueo === '1';
+        const btn = document.getElementById('btnGuardarAsistencia');
+        if (btn) { btn.disabled = bloqueada; btn.style.opacity = bloqueada ? '.5' : ''; btn.style.cursor = bloqueada ? 'not-allowed' : ''; }
+        contarAsistencia();
+    }
+    document.getElementById('contenedorListaAsistencia')?.addEventListener('change', e => {
+        if (e.target.matches('input[type="radio"]')) contarAsistencia();
+    });
+    document.getElementById('contenedorListaAsistencia')?.addEventListener('click', e => {
+        const b = e.target.closest('[data-atajo]');
+        if (!b) return;
+        const tipo = b.dataset.atajo;
+        document.querySelectorAll('#contenedorListaAsistencia .alumno-asist-row').forEach(fila => {
+            if (fila.querySelector('input[type="radio"]:checked')) return;      // nunca cambia lo que ya marcaste
+            const entro = fila.dataset.plantel === 'entro';
+            let valor = null;
+            if (tipo === 'entraron' && entro) valor = 'Presente';
+            if (tipo === 'no_entraron' && !entro) valor = 'Falta';
+            if (tipo === 'todos') valor = 'Presente';
+            if (valor) { const r = fila.querySelector(`input[value="${valor}"]`); if (r) r.checked = true; }
+        });
+        contarAsistencia();
+    });
+    document.getElementById('formAsistencia')?.addEventListener('submit', async function (e) {
+        if (this.dataset.confirmado === '1') { this.dataset.confirmado = ''; return; }
+        const meta = document.getElementById('asistMeta');
+        if (meta && meta.dataset.bloqueo === '1') { e.preventDefault(); return; }
+        const sin = contarAsistencia()[''];
+        if (sin > 0) {
+            e.preventDefault();
+            document.querySelectorAll('#contenedorListaAsistencia .alumno-asist-row').forEach(f => {
+                if (!f.querySelector('input[type="radio"]:checked')) f.classList.add('sin-marcar-resaltado');
+            });
+            const msg = `Hay ${sin} alumno(s) sin marcar (resaltados en rojo). ¿Guardar solo los que sí marcaste?`;
+            const ok = window.sigeConfirm ? await window.sigeConfirm(msg, { titulo: 'Pase de lista incompleto', aceptar: 'Guardar así' }) : confirm(msg);
+            if (ok) { this.dataset.confirmado = '1'; this.requestSubmit ? this.requestSubmit() : this.submit(); }
+        }
+    });
 
     document.getElementById('buscadorAsistenciaList')?.addEventListener('input', function(e) {
         let term = e.target.value.toLowerCase();
@@ -1393,6 +1440,7 @@ try {
                     let radioPresente = document.querySelector(`input[name="asistencia[${data.id_alumno}]"][value="Presente"]`);
                     if (radioPresente) {
                         radioPresente.checked = true;
+                        contarAsistencia();
                         let filaAlumno = radioPresente.closest('.alum-row, .alumno-asist-row, div[style*="display: flex"]');
                         if (filaAlumno) {
                             let fondoOriginal = filaAlumno.style.backgroundColor;
@@ -1406,15 +1454,15 @@ try {
             if (data.status === 'success') {
                 msgBox.style.backgroundColor = '#dcfce7'; 
                 msgBox.style.color = '#166534'; 
-                msgBox.innerHTML = '<i class="fas fa-check-circle"></i> Asistencia tomada.';
+                msgBox.innerHTML = '<i class="fas fa-check-circle"></i> ' + escHtml(data.message || 'Asistencia tomada.');
             } else if (data.status === 'warning') {
                 msgBox.style.backgroundColor = '#fef3c7'; 
                 msgBox.style.color = '#b45309'; 
-                msgBox.innerHTML = '<i class="fas fa-exclamation-triangle"></i> El alumno ya fue capturado.';
+                msgBox.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + escHtml(data.message || 'El alumno ya fue capturado.');
             } else {
                 msgBox.style.backgroundColor = '#fef2f2'; 
                 msgBox.style.color = '#991b1b'; 
-                msgBox.innerHTML = `<i class="fas fa-times-circle"></i> ${data.message || 'No se pudo, vuelva intentar.'}`;
+                msgBox.innerHTML = `<i class="fas fa-times-circle"></i> ${escHtml(data.message || 'No se pudo, vuelve a intentar.')}`;
             }
             
             setTimeout(() => {

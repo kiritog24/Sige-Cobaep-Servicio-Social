@@ -2,6 +2,7 @@
 session_start();
 require_once '../config/database.php'; 
 require_once __DIR__ . '/../includes/topbar_usuario.php';
+require_once __DIR__ . '/../includes/asistencia.php';
 
 if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'prefectos') {
     header("Location: ../login.php");
@@ -20,7 +21,7 @@ $query = "
            g.semestre, g.nombre_grupo, g.turno 
     FROM asistencias a
     INNER JOIN alumnos al ON a.id_alumno = al.id_alumno
-    LEFT JOIN grupo_alumno ga ON al.id_alumno = ga.id_alumno
+    LEFT JOIN grupo_alumno ga ON al.id_alumno = ga.id_alumno AND ga.fecha_baja IS NULL
     LEFT JOIN grupos g ON ga.id_grupo = g.id_grupo
     WHERE 1=1
 ";
@@ -49,6 +50,28 @@ try {
 } catch (PDOException $e) {
     $historial = [];
 }
+
+// Alumnos sin ningún registro de entrada ese día (no vinieron o aún no llegan): se pueden justificar desde aquí
+$sin_registro = [];
+$sin_clases_fecha = null;
+if (fecha_valida($filtro_fecha) && $filtro_fecha <= date('Y-m-d')) {
+    $sin_clases_fecha = dia_sin_clases($pdo, $filtro_fecha);
+    if (!$sin_clases_fecha) {
+        $sql_sr = "SELECT al.id_alumno, al.matricula, al.nombre, al.apellido_paterno, al.apellido_materno, g.semestre, g.nombre_grupo, g.turno
+                   FROM alumnos al
+                   INNER JOIN grupo_alumno ga ON ga.id_alumno = al.id_alumno AND ga.fecha_asignacion <= :f1 AND (ga.fecha_baja IS NULL OR ga.fecha_baja > :f2)
+                   INNER JOIN grupos g ON g.id_grupo = ga.id_grupo AND g.estatus = 'Activo'
+                   WHERE al.estatus = 'Alta'
+                     AND NOT EXISTS (SELECT 1 FROM asistencias x WHERE x.id_alumno = al.id_alumno AND x.tipo_registro = 'Entrada' AND DATE(x.fecha_hora_escaneo) = :f3)";
+        $p_sr = [':f1' => $filtro_fecha, ':f2' => $filtro_fecha, ':f3' => $filtro_fecha];
+        if ($filtro_matricula !== '') { $sql_sr .= " AND al.matricula LIKE :m"; $p_sr[':m'] = '%' . $filtro_matricula . '%'; }
+        try {
+            $st_sr = $pdo->prepare($sql_sr . " GROUP BY al.id_alumno ORDER BY g.semestre, g.nombre_grupo, al.apellido_paterno, al.nombre");
+            $st_sr->execute($p_sr);
+            $sin_registro = $st_sr->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) { error_log('historial sin registro: ' . $e->getMessage()); }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -69,12 +92,15 @@ try {
     <?php
     $mostrar_modal = '';
     if (isset($_GET['msg']) && $_GET['msg'] === 'exito_justificante') {
+        $n_cl = (int)($_GET['clases'] ?? 0);
+        $txt_ok = 'El justificante se ha guardado correctamente con su motivo.' . ($n_cl ? " También se justificaron $n_cl falta(s) que tenía en sus clases ese día." : '');
         $mostrar_modal = "document.getElementById('modalExito').style.display = 'flex';
-                          if(document.getElementById('exitoText')) document.getElementById('exitoText').innerText = 'El justificante se ha guardado correctamente con su motivo.';";
+                          if(document.getElementById('exitoText')) document.getElementById('exitoText').innerText = " . json_encode($txt_ok, JSON_UNESCAPED_UNICODE) . ";";
     } elseif (isset($_GET['error'])) {
         $mensaje_error = "Ocurrió un error al procesar el justificante.";
         if ($_GET['error'] === 'no_aplica') $mensaje_error = "No se puede justificar este registro (ya está justificado, puntual o suspendido).";
         if ($_GET['error'] === 'id_invalido' || $_GET['error'] === 'registro_no_encontrado') $mensaje_error = "El registro seleccionado no es válido o ya no existe.";
+        if ($_GET['error'] === 'ya_tiene_registro') $mensaje_error = "El alumno ya tiene un registro ese día; justifícalo desde la tabla.";
         
         $mostrar_modal = "document.getElementById('modalError').style.display = 'flex';
                           if(document.getElementById('errorText')) document.getElementById('errorText').innerText = '$mensaje_error';";
@@ -107,7 +133,7 @@ try {
         <form method="GET" class="filter-bar">
             <div class="filter-group">
                 <label>Buscar por Matrícula</label>
-                <input type="text" name="matricula" class="filter-input" placeholder="Ej. 22014567" value="<?php echo htmlspecialchars($filtro_matricula); ?>">
+                <input type="text" name="matricula" class="filter-input" placeholder="Ej. 27/2026B0001" value="<?php echo htmlspecialchars($filtro_matricula); ?>">
             </div>
             <div class="filter-group">
                 <label>Filtrar por Fecha</label>
@@ -155,6 +181,7 @@ try {
                                     echo '</tr>';
                                 }
                                 $hora_entrada = date('h:i A', strtotime($row['fecha_hora_escaneo']));
+                                if ($row['estatus'] === 'Falta Justificada' && date('H:i', strtotime($row['fecha_hora_escaneo'])) === '00:00') $hora_entrada = '—';
 
                                 $estado_str = strtolower($row['estatus'] ?? '');
                                 $clase_badge = 'status-puntual'; 
@@ -274,6 +301,32 @@ try {
                 </div>
             </div>
         </section>
+
+        <?php if ($sin_clases_fecha): ?>
+            <div style="margin-top:16px; padding:12px 16px; border-radius:12px; background:#f1f5f9; color:#334155; font-weight:600; font-size:.88rem;"><i class="fas fa-school-circle-xmark"></i> Ese día no hubo clases (<?php echo htmlspecialchars($sin_clases_fecha); ?>): nadie tiene falta.</div>
+        <?php elseif ($sin_registro): ?>
+        <details class="overview-card sin-registro" style="margin-top:16px; padding:0; overflow:hidden;">
+            <summary style="padding:14px 18px; cursor:pointer; font-weight:700; color:#0f172a; display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px;">
+                <i class="fas fa-user-clock" style="color:#b91c1c;"></i> <?php echo count($sin_registro); ?> alumno(s) sin registro de entrada el <?php echo date('d/m/Y', strtotime($filtro_fecha)); ?>
+                <small style="font-weight:500; color:var(--muted);"><?php echo $filtro_fecha === date('Y-m-d') ? '(aún no llegan o faltaron)' : '(cuentan como falta)'; ?> · clic para ver y justificar</small>
+            </summary>
+            <div class="table-responsive" style="margin-top:0;">
+                <table>
+                    <thead><tr><th>Matrícula</th><th>Alumno</th><th>Grado y Grupo</th><th>Acciones</th></tr></thead>
+                    <tbody>
+                    <?php foreach ($sin_registro as $sr): $nom_sr = trim($sr['apellido_paterno'] . ' ' . $sr['apellido_materno'] . ' ' . $sr['nombre']); ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($sr['matricula']); ?></td>
+                            <td><?php echo htmlspecialchars($nom_sr); ?></td>
+                            <td><?php echo htmlspecialchars($sr['semestre'] . '° "' . $sr['nombre_grupo'] . '" - ' . $sr['turno']); ?></td>
+                            <td><button type="button" class="btn-justificar" onclick="abrirModalJustificar(0, <?php echo htmlspecialchars(json_encode($nom_sr, JSON_UNESCAPED_UNICODE), ENT_QUOTES); ?>, <?php echo (int)$sr['id_alumno']; ?>, '<?php echo htmlspecialchars($filtro_fecha); ?>')"><i class="fas fa-file-signature"></i> Justificar falta</button></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </details>
+        <?php endif; ?>
     </main>
 
     <!-- 3. MODAL DE FORMULARIO PARA JUSTIFICAR ASISTENCIA -->
@@ -284,6 +337,11 @@ try {
             
             <form action="procesos/justificar.php" method="POST">
                 <input type="hidden" name="id_asistencia" id="idAsistenciaModal">
+                <input type="hidden" name="id_alumno" id="idAlumnoModal">
+                <input type="hidden" name="fecha" id="fechaModal">
+                <input type="hidden" name="volver_fecha" value="<?php echo htmlspecialchars($filtro_fecha); ?>">
+                <input type="hidden" name="volver_matricula" value="<?php echo htmlspecialchars($filtro_matricula); ?>">
+                <p id="avisoAusencia" style="display:none; font-size:.8rem; color:#1d4ed8; background:#eff6ff; padding:8px 10px; border-radius:8px; margin:0 0 1rem;"><i class="fas fa-circle-info"></i> El alumno no tiene registro ese día: se guardará como falta justificada de todo el día y sus faltas en clases quedarán justificadas.</p>
                 
                 <div class="form-group" style="margin-bottom: 1.2rem;">
                     <label style="display: block; font-size: 0.8rem; font-weight: 700; color: var(--ink); margin-bottom: 0.5rem;">Motivo principal</label>
@@ -339,8 +397,8 @@ try {
     </div>
 
     
-    <script src="../Prefectura/procesos/dashboard_prefecturas.js"></script>
-    <script src="../Prefectura/procesos/modaldejustificacion.js"></script>
+    <script src="../js/dashboard_prefectura.js"></script>
+    <script src="../js/modal_justificacion.js"></script>
     <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

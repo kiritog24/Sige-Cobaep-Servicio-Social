@@ -186,7 +186,8 @@ CREATE TABLE `ASISTENCIAS_CLASES` (
   `fecha` date NOT NULL,
   `estatus` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id_asistencia`),
-  UNIQUE KEY `idx_asistencia_unica` (`id_clase`,`id_alumno`,`fecha`)
+  UNIQUE KEY `idx_asistencia_unica` (`id_clase`,`id_alumno`,`fecha`),
+  KEY `idx_fecha_estatus` (`fecha`,`estatus`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `BLOQUES_REGULARIZACION`;

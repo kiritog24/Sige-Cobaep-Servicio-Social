@@ -135,6 +135,20 @@ function aviso_tutor_faltas(PDO $pdo, int $id_alumno, string $desde, string $has
     return aviso_registrar($pdo, $id_alumno, 'faltas', "faltas-$desde-$hasta", 'Aviso de faltas · ' . $al['alumno'], $html, $al['correo_tutor'] ?: null);
 }
 
+/** Aviso de que el alumno entró al plantel pero faltó a una o varias clases ese día. $clases: [['materia'=>…, 'docente'=>…, 'hora'=>…], …] */
+function aviso_tutor_clases(PDO $pdo, int $id_alumno, string $fecha, ?string $entrada, array $clases): string {
+    $al = aviso_datos_alumno($pdo, $id_alumno);
+    if (!$al || !$clases) return 'error';
+    $lista = implode("
+", array_map(fn($c) => $c['materia'] . ($c['hora'] ? ' (' . $c['hora'] . ')' : '') . ($c['docente'] ? ' · ' . $c['docente'] : ''), $clases));
+    $html = aviso_html('Estimado(a) ' . ($al['nombre_tutor'] ?: 'padre, madre o tutor') . ':',
+        'Le informamos que su hijo(a) registró su entrada al plantel, pero no se presentó a las siguientes clases:',
+        [['Alumno(a)', $al['alumno']], ['Matrícula', $al['matricula']], ['Grupo', $al['grupo']],
+         ['Fecha', date('d/m/Y', strtotime($fecha))], ['Entrada al plantel', $entrada ? $entrada . ' h' : 'Registrada'], ['Clases a las que faltó', $lista]],
+        'Le pedimos platicar con su hijo(a) sobre la importancia de asistir a todas sus clases. Si hubo un motivo justificado, comuníquese con Prefectura.');
+    return aviso_registrar($pdo, $id_alumno, 'clases', 'clases-' . $fecha, 'Faltas a clases · ' . $al['alumno'], $html, $al['correo_tutor'] ?: null);
+}
+
 /**
  * Faltas sin justificar de los alumnos activos en un periodo (lunes a viernes, sin suspensiones de clases,
  * solo mientras pertenecen a su grupo). Igual que el concentrado de Prefectura.

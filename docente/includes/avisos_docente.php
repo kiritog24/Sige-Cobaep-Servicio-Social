@@ -54,8 +54,11 @@ function docente_avisos(PDO $pdo, int $id_docente): array {
         $st->execute([$id_docente]);
         $clases_semana = $st->fetchAll(PDO::FETCH_ASSOC);
 
-        // Pasar lista: clases de hoy que ya empezaron y no tienen asistencia registrada
+        // Pasar lista: clases de hoy que ya empezaron y no tienen asistencia registrada (si hoy hay clases)
+        require_once __DIR__ . '/../../includes/asistencia.php';
+        $sin_clases_hoy = dia_sin_clases($pdo, date('Y-m-d'));
         foreach ($clases_semana as $c) {
+            if ($sin_clases_hoy) break;
             if ((int)$c['dia_semana'] !== $numero_dia_hoy || (int)$c['lista_hoy'] > 0) continue;
             $inicio = strtotime(date('Y-m-d ') . $c['hora_inicio']);
             $fin    = strtotime(date('Y-m-d ') . $c['hora_fin']);
@@ -66,6 +69,18 @@ function docente_avisos(PDO $pdo, int $id_docente): array {
                 "Aún no registras la asistencia de <strong>" . htmlspecialchars($c['nombre_materia']) . "</strong> · Grupo " . htmlspecialchars($grupo) . '.',
                 ($ahora <= $fin ? 'Termina a las ' : 'Terminó a las ') . date('h:i a', $fin) . ' • Asistencia',
                 'gestionar_aula.php?id_grupo=' . (int)$c['id_grupo'] . '&abrir_lista=' . (int)$c['id_clase'], 'Pasar lista');
+        }
+
+        // Alumnos que entraron al plantel pero tienen falta en una clase de este docente hoy
+        if (!$sin_clases_hoy) {
+            foreach (posibles_pintas($pdo, date('Y-m-d'), 0, $id_docente) as $p) {
+                $mias = array_filter($p['clases'], fn($c) => !$c['salio_antes']);
+                if (!$mias) continue;
+                $c0 = reset($mias);
+                agregar_aviso($avisos, 2, 'urgente', 'fa-person-walking-arrow-right', 'Entró al plantel y faltó a tu clase',
+                    '<strong>' . htmlspecialchars($p['alumno']) . '</strong> registró su entrada a las ' . htmlspecialchars($p['entrada']) . ' y tiene falta en <strong>' . htmlspecialchars($c0['materia']) . '</strong>. Prefectura ya puede verlo.',
+                    'Hoy • Asistencia', 'gestionar_aula.php?id_grupo=' . (int)$p['id_grupo'] . '&abrir_lista=' . (int)$c0['id_clase'], 'Revisar lista');
+            }
         }
 
         // ---------------------------------------------------

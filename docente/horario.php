@@ -177,7 +177,7 @@ try {
         </div>
     </main>
 
-    <script src="dashboard_maestro.js"></script>
+    <script src="../js/dashboard_docente.js"></script>
     <script>
         // Mostrar el nombre del archivo seleccionado
         document.getElementById('archivo_horario').addEventListener('change', function(e) {

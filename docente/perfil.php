@@ -460,7 +460,7 @@ try {
         </section>
     </main>
 
-    <script src="dashboard_maestro.js"></script>
+    <script src="../js/dashboard_docente.js"></script>
     
     <!-- LÓGICA PARA PREVISUALIZAR LA IMAGEN -->
     <script>

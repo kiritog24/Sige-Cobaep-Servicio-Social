@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../../config/database.php';
+require_once __DIR__ . '/../../includes/calendario.php';
 
 // 1. SEGURIDAD: Verificar que sea un usuario autorizado (Prefecto)
 if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'prefectos') {
@@ -20,9 +21,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    // 3. VALIDACIÓN LÓGICA DE FECHAS
-    if (strtotime($fecha_fin) < strtotime($fecha_inicio)) {
+    // 3. VALIDACIÓN DEL MOTIVO Y DE LAS FECHAS
+    if (!in_array($motivo, MOTIVOS_SUSPENSION, true)) {
+        header("Location: ../dashboard_prefectura.php?error=motivo_invalido");
+        exit();
+    }
+    $di = DateTime::createFromFormat('!Y-m-d', $fecha_inicio);
+    $df = DateTime::createFromFormat('!Y-m-d', $fecha_fin);
+    if (!$di || !$df || $di->format('Y-m-d') !== $fecha_inicio || $df->format('Y-m-d') !== $fecha_fin || $df < $di) {
         header("Location: ../dashboard_prefectura.php?error=fechas_invalidas");
+        exit();
+    }
+    if ($di->diff($df)->days > 60) {
+        header("Location: ../dashboard_prefectura.php?error=rango_largo");
         exit();
     }
 
