@@ -1,0 +1,43 @@
+# SIGE-COBAEP — Seguridad
+
+# No listar el contenido de las carpetas
+Options -Indexes
+
+# Nunca ejecutar scripts que alguien haya subido a una carpeta "uploads"
+<If "%{REQUEST_URI} =~ m#/uploads/.*\.(php[0-9]?|phtml|phar|pht|cgi|pl|py|sh|htaccess)$#i">
+    Require all denied
+</If>
+
+# No permitir ver la configuración, librerías, includes ni respaldos desde el navegador
+<If "%{REQUEST_URI} =~ m#/(config|vendor|includes|Prefectura/includes|docente/includes|estudiante/includes)/#">
+    Require all denied
+</If>
+
+# Scripts de instalación/prueba, archivos ocultos, respaldos y volcados de base de datos
+<FilesMatch "^(instalar_v2|instalar_usuarios|test_conexion)\.php$|^\.|^\._|\.(sql|bak|old|log|ini|md|lock|json)$">
+    Require all denied
+</FilesMatch>
+
+# Sesión: cookie inaccesible para JavaScript, no enviada desde otros sitios, sin ID en la URL
+<IfModule php_module>
+    php_flag  session.cookie_httponly On
+    php_value session.cookie_samesite Lax
+    php_flag  session.use_strict_mode On
+    php_flag  session.use_only_cookies On
+    php_flag  session.use_trans_sid Off
+    php_flag  expose_php Off
+    php_flag  display_errors Off
+</IfModule>
+
+<IfModule headers_module>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header unset X-Powered-By
+
+    # Archivos subidos que podrían contener código (HTML, SVG, XML) se descargan, nunca se abren en el navegador
+    <If "%{REQUEST_URI} =~ m#/uploads/.*\.(html?|svg|xml|xhtml|js|mjs)$#i">
+        Header always set Content-Disposition "attachment"
+        Header always set Content-Security-Policy "default-src 'none'; sandbox"
+    </If>
+</IfModule>

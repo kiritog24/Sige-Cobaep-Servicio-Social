@@ -1,0 +1,160 @@
+<?php
+// procesos/auth.php
+session_start();
+require_once '../config/database.php';
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // El formulario envía "matricula", pero funciona como el usuario general para los 4 roles
+    $username_ingresado = trim((string)($_POST['matricula'] ?? ''));
+    $password = (string)($_POST['password'] ?? '');
+    $usuario_encontrado = null;
+    $roles_validos = ['estudiante', 'docente', 'admin', 'administrativo', 'prefectos'];
+    $rol_url = in_array($_POST['rol_esperado'] ?? '', $roles_validos, true) ? $_POST['rol_esperado'] : 'estudiante';
+    if ($rol_url === 'administrativo') $rol_url = 'admin';
+
+    // Bloqueo temporal por intentos fallidos (fuerza bruta)
+    $espera = login_bloqueado($pdo, $username_ingresado);
+    if ($espera > 0) {
+        header("Location: ../login.php?rol=" . $rol_url . "&bloqueado=" . $espera);
+        exit();
+    }
+
+    // 1. Buscar en ALUMNOS
+    $stmt_al = $pdo->prepare("
+        SELECT a.id_alumno AS id_usuario, a.matricula AS usuario, a.contrasena_hash, a.debe_cambiar_password,
+               (a.password_provisional_expira IS NOT NULL AND a.password_provisional_expira < NOW()) AS provisional_vencida,
+               CONCAT(a.nombre, ' ', a.apellido_paterno) AS nombre_completo,
+               g.semestre AS grado, g.nombre_grupo AS grupo, 'estudiante' AS rol
+        FROM ALUMNOS a
+        LEFT JOIN GRUPO_ALUMNO ga ON a.id_alumno = ga.id_alumno AND ga.fecha_baja IS NULL
+        LEFT JOIN GRUPOS g ON ga.id_grupo = g.id_grupo
+        WHERE a.matricula = ?
+    ");
+    $stmt_al->execute([$username_ingresado]);
+    $usuario_encontrado = $stmt_al->fetch();
+
+    // 2. Si no es alumno, buscar en MAESTROS
+    if (!$usuario_encontrado) {
+        $stmt_ma = $pdo->prepare("
+            SELECT id_maestro AS id_usuario, usuario, contrasena_hash,
+                   debe_cambiar_password, (password_provisional_expira IS NOT NULL AND password_provisional_expira < NOW()) AS provisional_vencida,
+                   CONCAT(nombre, ' ', apellido_paterno) AS nombre_completo,
+                   NULL AS grado, NULL AS grupo, 'docente' AS rol
+            FROM MAESTROS WHERE usuario = ?
+        ");
+        $stmt_ma->execute([$username_ingresado]);
+        $usuario_encontrado = $stmt_ma->fetch();
+    }
+
+    // 3. Si no es maestro, buscar en ADMINISTRATIVOS
+    if (!$usuario_encontrado) {
+        $stmt_ad = $pdo->prepare("
+            SELECT id_admin AS id_usuario, usuario, contrasena_hash,
+                   debe_cambiar_password, (password_provisional_expira IS NOT NULL AND password_provisional_expira < NOW()) AS provisional_vencida,
+                   CONCAT(nombre, ' ', apellido_paterno) AS nombre_completo,
+                   NULL AS grado, NULL AS grupo, 'administrativo' AS rol
+            FROM ADMINISTRATIVOS WHERE usuario = ?
+        ");
+        $stmt_ad->execute([$username_ingresado]);
+        $usuario_encontrado = $stmt_ad->fetch();
+    }
+
+    // 4. Si no es administrativo, buscar en PREFECTOS
+    if (!$usuario_encontrado) {
+        $stmt_pref = $pdo->prepare("
+            SELECT id_prefecto AS id_usuario, usuario, contrasena_hash,
+                   debe_cambiar_password, (password_provisional_expira IS NOT NULL AND password_provisional_expira < NOW()) AS provisional_vencida,
+                   CONCAT(nombre, ' ', apellido_paterno) AS nombre_completo,
+                   NULL AS grado, NULL AS grupo, 'prefectos' AS rol
+            FROM prefectos WHERE usuario = ?
+        ");
+        $stmt_pref->execute([$username_ingresado]);
+        $usuario_encontrado = $stmt_pref->fetch();
+    }
+
+
+
+    // 5. Verificar la contraseña si se encontró a alguien
+    if ($usuario_encontrado && password_verify($password, $usuario_encontrado['contrasena_hash'])) {
+
+        // ==============================================================
+        // NUEVA VALIDACIÓN: VERIFICAR QUE EL ROL COINCIDA CON EL PORTAL
+        // ==============================================================
+        $rol_real = $usuario_encontrado['rol'];
+        $rol_esperado = isset($_POST['rol_esperado']) ? $_POST['rol_esperado'] : '';
+
+        // Ajustamos la variable para que coincida con la base de datos
+        if ($rol_esperado === 'admin') {
+            $rol_esperado = 'administrativo';
+        }
+
+        // Si el rol de la base de datos NO es igual al de la tarjeta elegida:
+        if ($rol_real !== $rol_esperado) {
+            login_registrar_fallo($pdo, $username_ingresado);
+            header("Location: ../login.php?rol=" . $rol_url . "&error=1");
+            exit();
+        }
+        // Contraseña provisional vencida: ya no permite entrar (debe pedir otra a Administración)
+        if ((int)($usuario_encontrado['debe_cambiar_password'] ?? 0) === 1 && (int)($usuario_encontrado['provisional_vencida'] ?? 0) === 1) {
+            header("Location: ../login.php?rol=" . $rol_url . "&vencida=1");
+            exit();
+        }
+        login_limpiar($pdo, $username_ingresado);
+        // ==============================================================
+
+        // Nuevo ID de sesión al iniciar (evita fijación de sesión)
+        session_regenerate_id(true);
+
+        // "Recordar sesión": la cookie dura 30 días en lugar de borrarse al cerrar el navegador
+        if (!empty($_POST['remember'])) {
+            $p = session_get_cookie_params();
+            setcookie(session_name(), session_id(), [
+                'expires'  => time() + 60 * 60 * 24 * 30,
+                'path'     => $p['path'] ?: '/',
+                'httponly' => true,
+                'samesite' => 'Lax',
+            ]);
+        }
+
+        // Configurar el "Gafete VIP" (Sesiones) unificadas
+        $_SESSION['id_usuario'] = $usuario_encontrado['id_usuario'];
+        $_SESSION['matricula']  = $usuario_encontrado['usuario'];
+        $_SESSION['rol']        = $usuario_encontrado['rol'];
+        $_SESSION['nombre']     = $usuario_encontrado['nombre_completo'];
+        $_SESSION['grado']      = $usuario_encontrado['grado'];
+        $_SESSION['grupo']      = $usuario_encontrado['grupo'];
+        $_SESSION['pwd_revisada'] = 1;
+        // Contraseña provisional o temporal: primero debe crear la suya (cualquier rol)
+        if ((int)($usuario_encontrado['debe_cambiar_password'] ?? 0) === 1) {
+            $_SESSION['debe_cambiar_password'] = 1;
+            header("Location: ../cambiar_password.php");
+            exit();
+        }
+
+        // Redirigir al panel correspondiente
+        switch ($usuario_encontrado['rol']) {
+            case 'administrativo':
+                header("Location: ../admin/dashboard_admin.php");
+                break;
+            case 'docente':
+                header("Location: ../docente/dashboard_docente.php");
+                break;
+            case 'prefectos':
+                // Asegúrate de que esta ruta coincida con la ubicación real de tu archivo
+                header("Location: ../Prefectura/dashboard_prefectura.php");
+                break;
+            case 'estudiante':
+                header("Location: ../estudiante/dashboard_estud.php");
+                break;
+        }
+        exit();
+    } else {
+        login_registrar_fallo($pdo, $username_ingresado);
+        header("Location: ../login.php?rol=" . $rol_url . "&error=1");
+        exit();
+    }
+} else {
+    header("Location: ../login.php");
+    exit();
+}
+?>

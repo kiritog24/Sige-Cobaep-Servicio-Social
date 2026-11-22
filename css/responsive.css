@@ -1,0 +1,220 @@
+/* =====================================================================
+   SIGE-COBAEP · Ajustes responsivos globales
+   Se carga al final de cada página (después de los estilos de cada portal)
+   para unificar tamaños y mejorar la experiencia en teléfono, tablet y PC.
+   ===================================================================== */
+
+/* ---------- Base (todas las pantallas) ---------- */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+img, video, canvas, iframe { max-width: 100%; }
+.main-content { min-width: 0; }
+.header-icon, .topbar-left .icon-box, .page-title-container .icon-box, .header-icon-large, .group-icon, .info-icon { flex-shrink: 0 !important; aspect-ratio: 1 / 1; }
+.topbar-left > div { min-width: 0; }
+.espacio-layout > *, .layout-espacio > *, .profile-grid > *, .pu-grid > *, .split-layout > *, .pa-grid > * { min-width: 0; }
+
+/* Títulos de página: más moderados en PC */
+.topbar h1, .topbar-left h1, .group-topbar h1, .page-header-title h1, .header-left-title h1, .page-title {
+    font-size: clamp(1.3rem, 1.05rem + .9vw, 1.8rem) !important;
+    line-height: 1.15;
+}
+.topbar p, .topbar-left p, .page-desc { font-size: clamp(.8rem, .76rem + .2vw, .9rem); }
+
+/* Tarjetas de estadísticas más compactas */
+.stat-card { min-height: 0 !important; }
+.stat-content strong { font-size: clamp(1.45rem, 1.15rem + 1vw, 2rem) !important; }
+.stat-info .value, .stat-text .value { font-size: clamp(1.3rem, 1.1rem + .8vw, 1.7rem) !important; }
+
+/* Accesos rápidos del docente */
+.quick-card { padding: clamp(16px, 1.6vw, 24px) !important; }
+.quick-card h3 { font-size: clamp(1rem, .95rem + .3vw, 1.15rem) !important; }
+.quick-icon { width: 44px !important; height: 44px !important; min-width: 44px !important; flex: 0 0 44px !important; font-size: 1rem !important; }
+
+/* Botón de menú móvil uniforme en todos los portales */
+.mobile-menu {
+    width: 40px !important; height: 40px !important; min-width: 40px;
+    padding: 0 !important; border-radius: 12px !important;
+    font-size: 1.05rem !important; line-height: 1;
+    align-items: center; justify-content: center;
+    background: #fff; border: 1px solid #e2e8f0; color: #065f46; cursor: pointer;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, .06);
+}
+
+/* Tablas: siempre desplazables dentro de su tarjeta */
+.table-responsive, .tabla-inscritos, .ra-tabla-wrap, .info-wrap, .disponibles-list { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* ---------- Tablet (≤ 1024px) ---------- */
+@media screen and (max-width: 1024px) {
+    .main-content { padding-left: 20px !important; padding-right: 20px !important; }
+    .pu-grid, .espacio-layout, .layout-espacio, .profile-grid, .split-layout { grid-template-columns: 1fr !important; }
+    .layout-espacio { grid-template-areas: "hero" "main" "side" !important; }
+}
+
+/* ---------- Teléfono y tablet vertical (≤ 900px) ---------- */
+@media screen and (max-width: 900px) {
+    .mobile-menu { display: inline-flex !important; }
+    .collapse-toggle { display: none !important; }
+
+    /* Encabezado compacto: menú + título, y campana/perfil arriba a la derecha */
+    .topbar { position: relative; flex-direction: row !important; flex-wrap: wrap; align-items: flex-start !important; gap: 10px !important; margin-bottom: 18px !important; }
+    .topbar-left { flex: 1 1 100%; width: 100%; display: flex; align-items: flex-start; gap: 12px; padding-right: 108px; box-sizing: border-box; }
+    .topbar-right { position: absolute; top: 0; right: 0; width: auto !important; border: 0 !important; padding: 0 !important; gap: 8px !important; justify-content: flex-end !important; display: flex !important; flex-direction: row !important; align-items: center !important; }
+    .topbar-right .profile-container, .topbar-right .tbu-wrap, .topbar-right .profile-dropdown { margin: 0 !important; }
+    .topbar-right .date-pill, .topbar-right .profile-info, .topbar-right .tbu-chevron, .topbar-right .fa-chevron-down,
+    .profile-pill .profile-info, .profile-pill .fa-chevron-down { display: none !important; }
+    .topbar-right .profile, .profile-pill { padding: 4px !important; border-radius: 14px !important; gap: 0 !important; }
+    .topbar-right .notification-button, .campana-est { width: 40px !important; height: 40px !important; }
+    .eyebrow { font-size: .6rem !important; }
+    .topbar-left .header-icon { width: 40px !important; height: 40px !important; min-width: 40px; font-size: 1rem !important; border-radius: 12px !important; }
+
+    /* Encabezado de "Editar usuario" */
+    .edit-topbar { position: relative; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px; margin-left: 0 !important; margin-right: 0 !important; width: auto !important; }
+    .edit-topbar-left { flex: 1 1 100%; display: flex; align-items: center; gap: 10px; padding-right: 108px; box-sizing: border-box; min-width: 0; }
+    .edit-topbar .breadcrumb { flex-wrap: wrap; font-size: .78rem; min-width: 0; }
+    .edit-header { flex-direction: column; align-items: stretch !important; gap: 12px; }
+    .search-box input, .search-wrapper input, .search-container input { min-width: 0; }
+
+    /* Encabezados alternativos (formularios y directorios de admin) */
+    .group-topbar, .page-header-pills { flex-direction: column; align-items: stretch !important; gap: 12px; }
+    .page-header-title { gap: 10px !important; }
+    .header-icon-large { width: 44px !important; height: 44px !important; font-size: 1.1rem !important; }
+    .header-pills-row { flex-direction: column; align-items: stretch !important; gap: 10px; }
+    .header-pills-row > div:last-child { width: 100%; }
+
+    /* Rejillas a una o dos columnas */
+    .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
+    .stat-card { padding: 14px !important; gap: 10px !important; }
+    .stat-icon { width: 38px !important; height: 38px !important; min-width: 38px !important; max-width: 38px; flex: 0 0 38px !important; font-size: .9rem !important; border-radius: 11px !important; }
+    .quick-grid, .dashboard-panels, .bottom-split, .grid-aulas, .grid-grupos, .pa-grid, .mm-grid, .turnos { grid-template-columns: 1fr !important; }
+    .form-row, .form-grid, .pu-form-grid, .cards-grid { grid-template-columns: 1fr !important; }
+
+    /* Accesos rápidos compactos (icono a la izquierda) */
+    .quick-card { display: grid !important; grid-template-columns: 44px 1fr; column-gap: 14px; row-gap: 4px; align-items: center; min-height: 0 !important; }
+    .quick-card > * { grid-column: 2; margin: 0 !important; }
+    .quick-card > .quick-top, .quick-card > .quick-icon { grid-column: 1; grid-row: 1 / span 3; align-self: start; }
+    .quick-card p { font-size: .8rem !important; }
+    .action-card { padding: 14px !important; }
+    .section-heading h2, .section h2 { font-size: clamp(1.05rem, 1rem + .5vw, 1.3rem); }
+
+    /* Pestañas deslizables */
+    .tabs-container, .dias-menu, .ra-segmento { overflow-x: auto; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .tabs-container::-webkit-scrollbar, .dias-menu::-webkit-scrollbar { display: none; }
+    .tabs-container .tab { flex: 0 0 auto; white-space: nowrap; }
+
+    /* Barras de herramientas y filtros apilados */
+    .table-toolbar, .filters-container, .header-actions, .ra-filtros, .section-header, .grupos-header { flex-direction: column; align-items: stretch !important; gap: 10px !important; }
+    .search-wrapper, .search-container, .search-box, .filter-wrapper, .ra-buscar, .ra-select { width: 100% !important; max-width: none !important; }
+    .header-actions > *, .section-actions > * { width: 100%; justify-content: center; }
+    .section-actions { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+    .section-header h2 { font-size: 1.1rem !important; }
+    .material-card { flex-wrap: wrap; }
+    .material-actions { flex-wrap: wrap; }
+
+    /* Modales a lo ancho */
+    .modal-content, .modal-box, .modal-wide { width: calc(100% - 24px) !important; max-width: none !important; max-height: 90vh; overflow-y: auto; }
+    .modal-overlay, .alert-modal-overlay { padding: 12px; box-sizing: border-box; }
+
+    /* Hero de regularización */
+    .espacio-hero, .hero-estudiante { height: auto !important; min-height: 160px; padding: 1.1rem !important; }
+    .hero-title, .hero-content h1 { font-size: 1.35rem !important; }
+    .hero-top-bar, .hero-actions { flex-wrap: wrap; gap: 8px; }
+    .badge-profesor { position: static !important; margin-top: 10px; align-self: flex-start; }
+}
+
+/* ---------- Teléfono (≤ 600px) ---------- */
+@media screen and (max-width: 600px) {
+    .main-content { padding: 14px 12px 28px !important; }
+    .topbar h1, .topbar-left h1, .group-topbar h1, .page-header-title h1, .header-left-title h1, .page-title { font-size: 1.2rem !important; }
+    .topbar p, .topbar-left p { font-size: .78rem !important; }
+
+    .stat-content span, .stat-text .label { font-size: .58rem !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .stat-content, .stat-text { min-width: 0; }
+    .stat-content small, .stat-text .sub { font-size: .62rem !important; }
+    .stat-card { flex-direction: row !important; align-items: center !important; }
+
+    /* Inputs a 16px: iPhone no hace zoom al escribir */
+    input:not([type=checkbox]):not([type=radio]):not([type=range]), select, textarea { font-size: 16px !important; }
+
+    .btn-add-group, .btn-primary-add, .btn-guardar, .btn-submit, .pu-btn { justify-content: center; }
+    .action-buttons { flex-wrap: wrap; gap: 6px !important; }
+    .card, .pa-card, .pu-card, .info-card, .side-card, .panel-card, .content-card, .table-card { border-radius: 16px !important; }
+    .card, .pa-card, .pu-card, .info-card, .side-card, .content-card { padding: 16px !important; }
+    .bottom-banner { display: none !important; }
+    .topbar-left .header-icon, .page-header-title .header-icon-large { display: none !important; }
+    .group-info-card { flex-direction: column; align-items: stretch !important; gap: 12px; }
+    .group-actions { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .group-actions .btn { justify-content: center; font-size: .8rem; padding: 10px 8px; }
+    .student-header { flex-direction: column; align-items: stretch !important; gap: 14px; }
+    .student-header > div { flex-wrap: wrap; gap: 10px !important; }
+    .student-header .btn-pdf { flex: 1 1 100%; justify-content: center; }
+
+}
+
+/* ---------- Tablas como tarjetas (teléfono y tablet vertical) ---------- */
+@media screen and (max-width: 768px) {
+    .table-responsive:has(table.tabla-tarjetas), .ra-tabla-wrap:has(table.tabla-tarjetas), .info-wrap:has(table.tabla-tarjetas), .tabla-inscritos:has(table.tabla-tarjetas) { max-height: none !important; overflow: visible !important; border: none !important; }
+    table.tabla-tarjetas { min-width: 0 !important; width: 100% !important; border-collapse: separate !important; border-spacing: 0; background: transparent !important; }
+    table.tabla-tarjetas thead { display: none; }
+    table.tabla-tarjetas, table.tabla-tarjetas tbody, table.tabla-tarjetas tr { display: block; width: 100%; box-sizing: border-box; }
+    table.tabla-tarjetas tr { border: 1px solid #e2e8f0; border-radius: 14px; padding: 8px 14px; margin: 0 0 10px; background: #fff; box-shadow: 0 2px 8px rgba(15, 23, 42, .04); }
+    table.tabla-tarjetas tr[style*="display: none"], table.tabla-tarjetas tr[style*="display:none"], table.tabla-tarjetas tr[hidden] { display: none !important; }
+    table.tabla-tarjetas td { display: block; position: relative; width: 100%; box-sizing: border-box; border: none !important; padding: 7px 0 7px 36% !important; min-height: 30px;
+        text-align: left !important; font-size: .86rem; line-height: 1.4; overflow-wrap: anywhere; white-space: normal !important; background: transparent !important; }
+    table.tabla-tarjetas td + td { border-top: 1px dashed #f1f5f9 !important; }
+    table.tabla-tarjetas td::before { content: attr(data-label); position: absolute; left: 0; top: 8px; width: calc(36% - 10px);
+        font-weight: 700; color: #64748b; font-size: .68rem; text-transform: uppercase; letter-spacing: .03em; line-height: 1.3; overflow-wrap: anywhere; }
+    table.tabla-tarjetas td:not([data-label]), table.tabla-tarjetas td[data-label=""], table.tabla-tarjetas td[colspan] { padding-left: 0 !important; }
+    table.tabla-tarjetas td:not([data-label])::before, table.tabla-tarjetas td[data-label=""]::before, table.tabla-tarjetas td[colspan]::before { display: none; }
+    table.tabla-tarjetas td[colspan] { text-align: center !important; }
+    table.tabla-tarjetas td > * { max-width: 100%; }
+    table.tabla-tarjetas td .user-cell { justify-content: flex-start; }
+    table.tabla-tarjetas td .badge, table.tabla-tarjetas td .badge-role, table.tabla-tarjetas td [class*="badge"], table.tabla-tarjetas td .tag, table.tabla-tarjetas td .pill { display: inline-flex !important; width: auto !important; height: auto !important; white-space: nowrap; }
+    table.tabla-tarjetas td.td-acciones { padding: 10px 0 4px !important; margin-top: 2px; border-top: 1px solid #f1f5f9 !important; }
+    table.tabla-tarjetas td.td-acciones .action-buttons, table.tabla-tarjetas td.td-acciones .material-actions { display: flex !important; flex-direction: row !important; flex-wrap: wrap; gap: 6px; }
+    table.tabla-tarjetas td.td-acciones .action-buttons > * { flex: 1 1 auto; justify-content: center; text-align: center; }
+}
+
+/* ---------- Teléfonos pequeños (≤ 380px) ---------- */
+@media screen and (max-width: 340px) {
+    .stats-grid { grid-template-columns: 1fr !important; }
+    .group-actions { grid-template-columns: 1fr; }
+    .topbar-left { padding-right: 96px; }
+}
+
+/* Al abrir el menú en móvil no se desplaza el fondo */
+body.menu-open { overflow: hidden; }
+
+/* Menú lateral: logo y pie fijos; solo la lista de opciones se desplaza */
+.sidebar { max-height: 100vh; max-height: 100dvh; }
+.sidebar-inner { display: flex !important; flex-direction: column; height: 100%; min-height: 0; overflow: hidden !important; box-sizing: border-box; }
+.sidebar-inner > .brand, .sidebar-inner > .sidebar-bottom { flex: 0 0 auto; }
+.sidebar-inner > .navigation { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; margin-right: -6px; padding-right: 6px; }
+@media screen and (max-height: 720px) {
+    .sidebar-bottom .institution { display: none !important; }
+    .sidebar-inner > .brand { padding-bottom: 12px !important; margin-bottom: 8px !important; }
+}
+
+/* Menú colapsado en PC: las etiquetas flotantes no deben recortarse */
+@media (min-width: 993px) {
+    body.sidebar-collapsed .sidebar-inner, body.sidebar-collapsed .sidebar-inner > .navigation { overflow: visible !important; }
+}
+
+/* Barras de desplazamiento con el estilo del sistema */
+* { scrollbar-width: thin; scrollbar-color: #9bc7b5 transparent; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #b7d6c8; border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: #16a05d; background-clip: padding-box; }
+.sidebar, .sidebar * { scrollbar-color: rgba(255, 255, 255, .28) transparent; }
+.sidebar ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .25); background-clip: padding-box; }
+.sidebar ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, .45); background-clip: padding-box; }
+/* ---------- Inicio de sesión en teléfono/tablet ---------- */
+@media screen and (max-width: 992px) {
+    .login-layout .brand-panel { min-height: 0 !important; padding: 1.6rem 1.2rem 1.8rem !important; background: linear-gradient(160deg, #063f2b, #0f7a45 70%, #16a05d); border-radius: 0 0 28px 28px; overflow: hidden; }
+    .login-layout .brand-panel::before { display: none !important; }
+    .login-layout .brand-panel .info-card { display: none !important; }
+    .login-layout .logo-img { max-width: 84px !important; height: auto; margin-bottom: .6rem; }
+    .login-layout .brand-title { font-size: 1.1rem !important; margin: 0; text-align: center; }
+    .login-layout .brand-motto { font-size: .82rem !important; margin: .4rem 0 0; }
+    .login-layout .brand-divider { margin: .6rem auto !important; }
+    .login-layout .top-header { padding: 1rem !important; }
+}
