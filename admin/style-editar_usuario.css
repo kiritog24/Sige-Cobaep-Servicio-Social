@@ -585,9 +585,11 @@
 
 /* El contenido usa 25px de margen interno entre 993 y 1150px: la barra debe compensar lo mismo */
 @media (min-width: 993px) and (max-width: 1150px) {
+    /* El margen interno del contenido cambia según el ancho (25px o 20px): sin márgenes negativos no se sale nunca */
     .edit-topbar {
-        margin: -27px -25px 26px -25px;
-        padding: 0 25px;
+        margin: -20px 0 24px 0;
+        padding: 0 18px;
+        border-radius: 14px;
     }
 }
 

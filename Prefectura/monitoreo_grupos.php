@@ -54,7 +54,7 @@ try {
         /* ESTILOS DE LAS TARJETAS DE MONITOREO */
         .groups-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
             gap: 20px;
             margin-top: 20px;
         }
@@ -244,6 +244,6 @@ try {
             document.getElementById('modalFechaLista').style.display = 'flex';
         }
     </script>
-    <script src="../js/responsive.js?v=8"></script>
+    <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

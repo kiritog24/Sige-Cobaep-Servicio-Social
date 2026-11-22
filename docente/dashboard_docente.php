@@ -611,6 +611,6 @@ $dia_inicial = in_array($numero_dia_hoy, $dias_menu, true) ? $numero_dia_hoy : 1
         setInterval(actualizar, 20000);
     })();
     </script>
-    <script src="../js/responsive.js?v=8"></script>
+    <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

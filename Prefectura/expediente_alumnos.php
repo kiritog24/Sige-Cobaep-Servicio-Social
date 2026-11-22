@@ -364,6 +364,6 @@ if (!empty($matricula_buscada)) {
             document.getElementById('modalEliminarReporte').style.display = 'none';
         }
     </script>
-    <script src="../js/responsive.js?v=8"></script>
+    <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

@@ -581,7 +581,7 @@ body.sidebar-collapsed .collapse-toggle i { transform: rotate(180deg); }
         }
 
         .stats-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
             gap: 1rem;
         }
 

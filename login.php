@@ -161,6 +161,6 @@ if ($rol_esperado == 'admin') {
         </section>
     </main>
     <script src="js/app.js"></script>
-    <script src="js/responsive.js?v=8"></script>
+    <script src="js/responsive.js?v=10"></script>
 </body>
 </html>

@@ -229,6 +229,6 @@ if (in_array($formato, ['pdf', 'xlsx'], true)) {
     </div>
 
 
-    <script src="../js/responsive.js?v=8"></script>
+    <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

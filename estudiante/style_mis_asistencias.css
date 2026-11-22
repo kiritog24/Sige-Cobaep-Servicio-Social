@@ -62,7 +62,7 @@
         /* ==============================================================
            TARJETAS DE ESTADÍSTICAS (Iguales a las del Dashboard)
         ============================================================== */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr)); gap: 1rem; }
         .stat-card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02); padding: 1.25rem; transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 12px -3px rgba(0, 0, 0, 0.05); }
         

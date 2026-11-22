@@ -70,7 +70,7 @@ try {
 }
 
 $css = '
-.doc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;}
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px, 100%), 1fr));gap:1rem;}
 .doc-tile{display:flex;gap:12px;align-items:center;padding:1rem;border:1px solid #e2e8f0;border-radius:14px;text-decoration:none;color:inherit;background:#fff;transition:.2s;}
 .doc-tile:hover{border-color:#059669;box-shadow:0 4px 14px rgba(5,150,105,.08);}
 .doc-tile .ico{flex:0 0 44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:1.1rem;}

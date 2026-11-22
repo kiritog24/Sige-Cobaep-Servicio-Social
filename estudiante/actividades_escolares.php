@@ -112,7 +112,7 @@ try {
         .empty-state h3 { color: #0f172a; margin: 0 0 0.5rem 0; font-size: 1.2rem; }
         .empty-state p { color: #64748b; margin: 0; font-size: 0.95rem; }
 
-        .activities-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+        .activities-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); gap: 1.5rem; }
 
         .activity-card { background: white; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); display: flex; flex-direction: column; transition: transform 0.2s ease, box-shadow 0.2s ease; position: relative;}
         .activity-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
@@ -378,6 +378,6 @@ try {
             }
         });
     </script>
-    <script src="../js/responsive.js?v=8"></script>
+    <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

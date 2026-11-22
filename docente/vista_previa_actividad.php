@@ -169,6 +169,6 @@ if (!$requiere_entrega) {
             setTimeout(() => { alerta.style.display = 'none'; }, 200);
         }
     </script>
-    <script src="../js/responsive.js?v=8"></script>
+    <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

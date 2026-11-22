@@ -157,6 +157,6 @@ try {
 
     </div>
 
-    <script src="../js/responsive.js?v=8"></script>
+    <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

@@ -23,7 +23,7 @@ $css = '
 .pts-num{font-size:2.4rem;font-weight:800;line-height:1;}
 .pts-bar{flex:1;min-width:220px;height:12px;background:#f1f5f9;border-radius:999px;overflow:hidden;}
 .pts-bar div{height:100%;border-radius:999px;}
-.turnos{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;}
+.turnos{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px, 100%), 1fr));gap:1rem;}
 .turno{border:1px solid #e2e8f0;border-radius:14px;padding:1rem;}
 .turno strong{display:block;margin-bottom:.4rem;color:#0f172a;}
 .turno p{margin:.15rem 0;font-size:.84rem;color:#475569;}

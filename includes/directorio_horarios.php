@@ -127,7 +127,7 @@ function dh_render(array $datos, array $ctx = []): void {
 .dh-search input:focus, .dh-select:focus { border-color: var(--dh-green); box-shadow: 0 0 0 3px rgba(22,160,93,.12); }
 .dh-select { padding: 12px 14px; border: 1px solid #d5dfdb; border-radius: 12px; font: .88rem 'Inter', sans-serif; background: #fff; outline: none; }
 .dh-check { display: flex; align-items: center; gap: 8px; font-size: .85rem; font-weight: 600; color: var(--dh-muted); padding: 0 6px; cursor: pointer; }
-.dh-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 12px; }
+.dh-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(270px, 100%), 1fr)); gap: 12px; }
 .dh-item { text-align: left; background: #fff; border: 1px solid var(--dh-line); border-radius: 16px; padding: 16px; cursor: pointer; display: flex; gap: 14px; align-items: flex-start; font-family: inherit; color: inherit; transition: .2s; width: 100%; }
 .dh-item:hover { border-color: var(--dh-green); box-shadow: 0 8px 20px rgba(9,48,32,.07); transform: translateY(-2px); }
 .dh-item.mio { border-color: var(--dh-green); background: linear-gradient(135deg, #f0fbf5, #fff 60%); }
@@ -145,7 +145,7 @@ function dh_render(array $datos, array $ctx = []): void {
 .dh-badge.sin { background: #f8fafc; color: #94a3b8; }
 .dh-vacio { text-align: center; padding: 40px 20px; color: var(--dh-muted); border: 1px dashed #cbd5e1; border-radius: 14px; background: #f8fafc; }
 .dh-vacio i { font-size: 1.8rem; color: #94a3b8; display: block; margin-bottom: 8px; }
-.dh-turnos { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.dh-turnos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 14px; }
 .dh-turno { border: 1px solid var(--dh-line); border-radius: 16px; padding: 18px; }
 .dh-turno h4 { margin: 0 0 12px; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
 .dh-turno h4 i { color: var(--dh-green); }

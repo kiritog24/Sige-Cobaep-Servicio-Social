@@ -53,7 +53,7 @@ $plural = ['maestros' => 'Docentes', 'prefectos' => 'Prefectos', 'admin' => 'Adm
         .cp-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; border-radius: 10px; border: none; background: #16a05d; color: #fff; font-weight: 700; font-family: inherit; font-size: .88rem; cursor: pointer; }
         .cp-btn.sec { background: #fff; color: #334155; border: 1px solid #cbd5e1; }
         .cp-btn:disabled { opacity: .55; cursor: wait; }
-        .cp-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; max-height: min(64vh, 620px); overflow-y: auto; padding-right: 4px; overscroll-behavior: contain; align-content: start; }
+        .cp-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: 10px; max-height: min(64vh, 620px); overflow-y: auto; padding-right: 4px; overscroll-behavior: contain; align-content: start; }
         .cp-buscar { display: flex; align-items: center; gap: 10px; padding: 0 12px; border: 1px solid #dbe4df; border-radius: 12px; margin-bottom: 12px; max-width: 420px; }
         .cp-buscar input { flex: 1; border: none; outline: none; padding: 10px 0; font: inherit; font-size: .9rem; }
         .cp-buscar i { color: #94a3b8; }
@@ -143,6 +143,6 @@ $plural = ['maestros' => 'Docentes', 'prefectos' => 'Prefectos', 'admin' => 'Adm
         // El botón de "una sola" no debe marcar la casilla
         document.querySelectorAll('.cp-una').forEach(b => b.addEventListener('click', e => e.preventDefault()));
     </script>
-    <script src="../js/responsive.js?v=8"></script>
+    <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

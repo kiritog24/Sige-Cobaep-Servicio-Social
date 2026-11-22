@@ -415,6 +415,6 @@ $chips = ['enviado' => ['Enviado', 'ok'], 'pendiente' => ['Pendiente', 'pend'], 
         }
     </script>
     <script src="../Prefectura/procesos/dashboard_prefecturas.js"></script>
-    <script src="../js/responsive.js?v=8"></script>
+    <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

@@ -85,7 +85,7 @@ function ficha_alumno_render(array $d, array $opt = []): void {
     elseif (empty($tutor['correo_tutor'])) $faltan[] = 'correo del tutor';
     ?>
     <style>
-        .pa-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;}
+        .pa-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px, 100%), 1fr));gap:20px;}
         .pa-card{background:#fff;border:1px solid #e5ece8;border-radius:16px;padding:22px;box-shadow:0 4px 14px rgba(6,63,43,.04);}
         .pa-card h2{font-size:1rem;margin:0 0 14px;color:#10231a;display:flex;align-items:center;gap:10px;}
         .pa-card h2 i{color:#16a05d;}

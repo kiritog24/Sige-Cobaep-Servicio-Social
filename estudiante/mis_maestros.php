@@ -40,7 +40,7 @@ function foto_maestro(?string $ruta): ?string {
 }
 
 $css = '
-.mm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1rem;}
+.mm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(270px, 100%), 1fr));gap:1rem;}
 .mm-card{border:1px solid #e2e8f0;border-radius:16px;padding:1.2rem;background:#fff;display:flex;flex-direction:column;gap:.6rem;}
 .mm-top{display:flex;gap:.9rem;align-items:center;}
 .mm-foto{width:58px;height:58px;border-radius:50%;background:linear-gradient(145deg,#063f2b,#10b981);color:#fff;display:grid;place-items:center;font-weight:800;font-size:1.1rem;overflow:hidden;flex-shrink:0;}

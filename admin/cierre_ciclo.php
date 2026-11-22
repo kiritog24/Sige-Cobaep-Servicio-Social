@@ -251,6 +251,6 @@ $tam = fn($b) => $b >= 1048576 ? round($b / 1048576, 1) . ' MB' : max(1, round($
             if (inp && btn) inp.addEventListener('input', () => { btn.disabled = inp.value.trim().toUpperCase() !== t; });
         });
     </script>
-    <script src="../js/responsive.js?v=8"></script>
+    <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

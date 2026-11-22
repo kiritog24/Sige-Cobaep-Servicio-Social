@@ -831,6 +831,6 @@ try {
             document.getElementById(id).classList.remove('active');
         }
     </script>
-    <script src="../js/responsive.js?v=8"></script>
+    <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

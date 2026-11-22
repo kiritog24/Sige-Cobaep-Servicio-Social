@@ -114,7 +114,7 @@ try {
         .add-materia-form button { background: var(--orange); color: white; border: none; padding: 12px 25px; border-radius: 10px; font-weight: 800; cursor: pointer; transition: 0.2s; white-space: nowrap; display:flex; align-items:center; gap:8px; }
         .add-materia-form button:hover { background: #d97706; }
 
-        .grid-materias { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+        .grid-materias { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 1.5rem; }
         .materia-card { background: white; border-radius: 16px; border: 1px solid var(--line); box-shadow: var(--shadow-sm); transition: 0.2s ease; display: flex; flex-direction: column; overflow: hidden; min-height: 230px;}
         .materia-card:hover { transform: translateY(-3px); border-color: var(--green); box-shadow: var(--shadow-md); }
         
@@ -1448,6 +1448,6 @@ try {
         document.getElementById('modalRestaurarMateria').classList.add('active');
     }
 </script>
-    <script src="../js/responsive.js?v=8"></script>
+    <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

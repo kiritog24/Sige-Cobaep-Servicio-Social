@@ -104,6 +104,6 @@ $url_regreso = ($return_to === 'expediente') ? "expediente_alumnos.php?matricula
             </div>
         </form>
     </div>
-    <script src="../js/responsive.js?v=8"></script>
+    <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

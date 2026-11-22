@@ -198,6 +198,6 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
             filtrarTarjetas('inicio');
         });
     </script>
-    <script src="../js/responsive.js?v=8"></script>
+    <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

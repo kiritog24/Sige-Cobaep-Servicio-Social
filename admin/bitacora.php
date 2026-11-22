@@ -113,8 +113,9 @@ $colores_accion = ['eliminacion' => 'rojo', 'fallido' => 'rojo', 'baja_grupo' =>
         .bt-pag a, .bt-pag span { padding: 7px 12px; border-radius: 9px; border: 1px solid #e2e8f0; text-decoration: none; color: #334155; font-size: .85rem; font-weight: 600; }
         .bt-pag span.actual { background: #16a05d; color: #fff; border-color: #16a05d; }
         @media (max-width: 1100px) { .bt-filtros { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+        @media (max-width: 420px) { .bt-filtros { grid-template-columns: minmax(0, 1fr) !important; } .bt-filtros input, .bt-filtros select { min-width: 0; } }
         @media (max-width: 640px) {
-            .bt-filtros { grid-template-columns: 1fr 1fr; }
+            .bt-filtros { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
             .bt-filtros .bt-buscar, .bt-filtros .bt-acc { grid-column: 1 / -1; }
             .bt-item { grid-template-columns: 36px 1fr; }
             .bt-ico { width: 34px; height: 34px; }
@@ -204,6 +205,6 @@ $colores_accion = ['eliminacion' => 'rojo', 'fallido' => 'rojo', 'baja_grupo' =>
             <?php endif; ?>
         </section>
     </main>
-    <script src="../js/responsive.js?v=8"></script>
+    <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

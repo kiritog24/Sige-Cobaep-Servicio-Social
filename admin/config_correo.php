@@ -112,6 +112,7 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
         .cc-title h1 { margin: 0; font-size: 1.55rem; color: #0f172a; }
         .cc-title p { margin: 3px 0 0; color: #64748b; font-size: .9rem; }
         .cc-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+        .cc-grid > div, .cc-campo, .cc-campo input, .cc-campo select { min-width: 0; max-width: 100%; box-sizing: border-box; }
         .cc-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 18px; padding: 22px; box-shadow: 0 4px 18px rgba(15, 23, 42, .04); margin-bottom: 20px; }
         .cc-card h2 { margin: 0 0 14px; font-size: 1.05rem; color: #0f172a; display: flex; gap: 10px; align-items: center; }
         .cc-card h2 i { color: #16a05d; }
@@ -143,13 +144,14 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
         .cc-alerta.ok { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
         .cc-alerta.err { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
         .cc-pasos { margin: 0; padding-left: 20px; color: #475569; font-size: .86rem; line-height: 1.6; }
-        .cc-pasos li { margin-bottom: 8px; }
+        .cc-pasos li { margin-bottom: 8px; overflow-wrap: anywhere; }
+        .cc-nota, .cc-campo small { overflow-wrap: anywhere; }
         .cc-pasos b { color: #0f172a; }
         .cc-nota { font-size: .8rem; color: #64748b; background: #f8fafc; border-radius: 10px; padding: 10px 12px; margin-top: 12px; line-height: 1.5; }
         .cc-pwd { position: relative; }
         .cc-pwd input { width: 100%; box-sizing: border-box; padding-right: 44px; }
         .cc-pwd button { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); border: none; background: none; color: #64748b; cursor: pointer; padding: 6px; }
-        @media (max-width: 1000px) { .cc-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 1000px) { .cc-grid { grid-template-columns: minmax(0, 1fr); } }
         @media (max-width: 560px) { .cc-campos, .cc-avanzado.visible { grid-template-columns: 1fr; } .cc-btn { width: 100%; } }
     </style>
 </head>
@@ -276,6 +278,6 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
             document.getElementById('avanzado').classList.toggle('visible', this.value === 'otro');
         });
     </script>
-    <script src="../js/responsive.js?v=8"></script>
+    <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

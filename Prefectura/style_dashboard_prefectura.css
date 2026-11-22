@@ -5,7 +5,7 @@ html {
    TARJETAS DE ESTADÍSTICAS COMPACTAS
    ========================================= */
 .stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+    grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)) !important;
     gap: 15px !important;
     margin-bottom: 25px !important;
 }
@@ -85,7 +85,7 @@ td { color: var(--ink); }
    ========================================= */
 .action-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
     gap: 15px;
     margin-bottom: 20px;
 }

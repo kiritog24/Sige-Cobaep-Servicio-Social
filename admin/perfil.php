@@ -51,6 +51,6 @@ date_default_timezone_set('America/Mexico_City');
             if (overlay) overlay.addEventListener('click', cerrar);
         });
     </script>
-    <script src="../js/responsive.js?v=8"></script>
+    <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

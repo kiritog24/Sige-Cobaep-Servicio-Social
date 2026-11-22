@@ -584,6 +584,6 @@ $fecha_actual = new DateTime();
             actualizarHora(); setInterval(actualizarHora, 60000);
         });
     </script>
-    <script src="../js/responsive.js?v=8"></script>
+    <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

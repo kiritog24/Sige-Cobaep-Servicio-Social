@@ -43,6 +43,6 @@ date_default_timezone_set('America/Mexico_City');
     </main>
 
     <script src="../Prefectura/procesos/dashboard_prefecturas.js"></script>
-    <script src="../js/responsive.js?v=8"></script>
+    <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

@@ -324,13 +324,15 @@
         if (!der) return;
         der.style.top = '';
         der.style.marginTop = '';
+        der.style.right = '';
+        der.style.position = '';
         if (window.innerWidth > 900) return;
         const menu = [...document.querySelectorAll('#mobileMenu, .mobile-menu')].find(b => b.offsetWidth > 0 && b.offsetHeight > 0);
         if (!menu) return;
         const a = menu.getBoundingClientRect(), b = der.getBoundingClientRect();
         const dif = Math.round((a.top + a.height / 2) - (b.top + b.height / 2));
-        if (Math.abs(dif) <= 2) return;
         const pos = getComputedStyle(der).position;
+        if (Math.abs(dif) <= 2) { margenDerecho(der, a); return; }
         if (pos === 'absolute' || pos === 'fixed') der.style.top = ((parseFloat(getComputedStyle(der).top) || 0) + dif) + 'px';
         else if (dif < 0 && menu.closest('main, .main-content') === der.closest('main, .main-content')) {
             // Está debajo del menú (en otra fila): se sube a la fila del menú
@@ -338,12 +340,28 @@
             const b2 = der.getBoundingClientRect();
             der.style.top = ((parseFloat(getComputedStyle(der).top) || 0) + Math.round((a.top + a.height / 2) - (b2.top + b2.height / 2))) + 'px';
         }
+        margenDerecho(der, a);
     }
-    let t;
-    const programar = () => { clearTimeout(t); t = setTimeout(alinear, 60); };
+    // Mismo margen a la derecha (foto) que a la izquierda (botón ☰): ni pegada al borde ni metida de más
+    function margenDerecho(der, a) {
+        if (getComputedStyle(der).position !== 'absolute') return;
+        const vw = document.documentElement.clientWidth;
+        const objetivo = Math.round(a.left);
+        const actual = Math.round(vw - der.getBoundingClientRect().right);
+        if (Math.abs(objetivo - actual) <= 2) return;
+        der.style.right = ((parseFloat(getComputedStyle(der).right) || 0) + (objetivo - actual)) + 'px';
+    }
+    // Al cambiar el tamaño (girar el teléfono, achicar la ventana) el menú y el contenido se animan ~300 ms:
+    // se vuelve a medir al terminar la animación para no calcular con posiciones intermedias.
+    let t1, t2;
+    const programar = () => { clearTimeout(t1); clearTimeout(t2); t1 = setTimeout(alinear, 60); t2 = setTimeout(alinear, 480); };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', alinear); else alinear();
     window.addEventListener('load', alinear);
     window.addEventListener('resize', programar);
+    window.addEventListener('orientationchange', programar);
+    document.addEventListener('transitionend', e => {
+        if (e.target && e.target.matches && e.target.matches('#sidebar, .sidebar, .main-content, main')) alinear();
+    });
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(alinear);
 })();
 

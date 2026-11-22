@@ -940,6 +940,6 @@ $render_material = function (array $act) use ($h, $id_clase) { ?>
         });
     });
     </script>
-    <script src="../js/responsive.js?v=8"></script>
+    <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

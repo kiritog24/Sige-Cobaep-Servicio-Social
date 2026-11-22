@@ -57,7 +57,7 @@ try {
         .empty-state h3 { color: #10251d; margin: 0 0 0.5rem 0; font-size: 1.2rem; font-weight: 800;}
         .empty-state p { color: #6d7f77; margin: 0; font-size: 0.95rem; }
 
-        .grid-aulas { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+        .grid-aulas { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); gap: 1.5rem; }
         
         .aula-card { background: #ffffff; border-radius: 20px; border: 1px solid #e8efeb; overflow: hidden; box-shadow: 0 4px 18px rgba(9, 48, 32, 0.05); display: flex; flex-direction: column; transition: 0.3s ease; }
         .aula-card:hover { transform: translateY(-5px); box-shadow: 0 14px 40px rgba(9, 48, 32, 0.08); border-color: #d9e9e1;}
@@ -184,6 +184,6 @@ try {
     </main>
 
     <script src="dashboard_maestro.js"></script>
-    <script src="../js/responsive.js?v=8"></script>
+    <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>
