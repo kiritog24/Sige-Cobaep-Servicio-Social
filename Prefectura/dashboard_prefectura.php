@@ -66,6 +66,9 @@ $nombre_usuario = isset($_SESSION['nombre'])
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/png" sizes="32x32" href="../img/icono-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="../img/icono-192.png">
+    <link rel="apple-touch-icon" href="../img/icono-180.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#063f2b">
     <title>Panel de Prefectura · COBAEP Plantel 27</title>
@@ -79,7 +82,7 @@ $nombre_usuario = isset($_SESSION['nombre'])
     <link rel="stylesheet" href="../admin/style_sidebar.css">
     <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css">
 
-    <link rel="stylesheet" href="css/dashboard_prefectura.css?v=1">
+    <link rel="stylesheet" href="css/dashboard_prefectura.css?v=3">
     <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>
@@ -256,9 +259,9 @@ $nombre_usuario = isset($_SESSION['nombre'])
                         <option value="Fuerza Mayor">Causa de Fuerza Mayor</option>
                     </select>
                 </div>
-                <div class="form-group" style="display: flex; gap: 10px;">
-                    <div style="flex: 1;"><label>Fecha de Inicio</label><input type="date" name="fecha_inicio" id="suspInicio" class="form-control" required></div>
-                    <div style="flex: 1;"><label>Fecha de Fin</label><input type="date" name="fecha_fin" id="suspFin" class="form-control" required></div>
+                <div class="form-group susp-fechas">
+                    <div><label>Fecha de Inicio</label><input type="date" name="fecha_inicio" id="suspInicio" class="form-control" required></div>
+                    <div><label>Fecha de Fin</label><input type="date" name="fecha_fin" id="suspFin" class="form-control" required></div>
                 </div>
                 <?php if ($suspensiones): ?>
                 <div class="susp-lista">

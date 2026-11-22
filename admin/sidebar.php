@@ -1,4 +1,6 @@
 <?php
+// Este archivo solo se incluye desde las páginas de Control Escolar; abierto directo no muestra nada
+if (basename($_SERVER['SCRIPT_FILENAME'] ?? '') === 'sidebar.php') { header('Location: dashboard_admin.php'); exit(); }
 // Obtener el nombre del archivo actual (ej. 'gestion_horarios.php')
 $pagina_actual = basename($_SERVER['PHP_SELF']);
 ?>

@@ -36,3 +36,8 @@
 .susp-item:first-of-type { border-top: 0; }
 .susp-cancelar { flex: 0 0 auto; border: 1px solid #fecaca; background: #fff; color: #dc2626; border-radius: 8px; padding: 4px 10px; font-size: .78rem; font-weight: 700; cursor: pointer; }
 .susp-cancelar:hover { background: #fef2f2; }
+
+/* Fechas de la suspensión: lado a lado si caben, una debajo de otra en celular */
+.susp-fechas { display: flex; gap: 10px; flex-wrap: wrap; }
+.susp-fechas > div { flex: 1 1 170px; min-width: 0; }
+.susp-fechas input { width: 100%; min-width: 0; box-sizing: border-box; }

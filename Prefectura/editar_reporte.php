@@ -40,6 +40,9 @@ $url_regreso = ($return_to === 'expediente') ? "expediente_alumnos.php?matricula
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/png" sizes="32x32" href="../img/icono-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="../img/icono-192.png">
+    <link rel="apple-touch-icon" href="../img/icono-180.png">
     <title>Editar Reporte · COBAEP 27</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">

@@ -27,6 +27,9 @@ $al = $d['al'];
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/png" sizes="32x32" href="../img/icono-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="../img/icono-192.png">
+    <link rel="apple-touch-icon" href="../img/icono-180.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#063f2b">
     <title><?php echo htmlspecialchars($al['nombre'] . ' ' . $al['apellido_paterno']); ?> · Prefectura</title>

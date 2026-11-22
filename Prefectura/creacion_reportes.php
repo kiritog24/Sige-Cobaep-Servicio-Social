@@ -73,6 +73,9 @@ try {
     }
     ?>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/png" sizes="32x32" href="../img/icono-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="../img/icono-192.png">
+    <link rel="apple-touch-icon" href="../img/icono-180.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reportes de Conducta · COBAEP 27</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
