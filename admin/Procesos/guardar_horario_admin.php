@@ -11,8 +11,12 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'administrativo') {
 // 1. Eliminar horario si viene por GET
 if (isset($_GET['eliminar'])) {
     $id_eliminar = intval($_GET['eliminar']);
+    $sth = $pdo->prepare("SELECT id_maestro, id_grupo, ciclo, anio FROM HORARIOS_MAESTRO WHERE id_horario = ?");
+    $sth->execute([$id_eliminar]);
+    $hb = $sth->fetch(PDO::FETCH_ASSOC);
     $stmt = $pdo->prepare("DELETE FROM HORARIOS_MAESTRO WHERE id_horario = ?");
     $stmt->execute([$id_eliminar]);
+    if ($hb) bitacora($pdo, 'horarios', 'eliminacion', 'Eliminó el horario de ' . bitacora_quien($pdo, 'maestros', (int)$hb['id_maestro']) . ' (' . bitacora_quien($pdo, 'grupo', (int)$hb['id_grupo']) . ', ' . $hb['ciclo'] . ' ' . $hb['anio'] . ')', 'horario', $id_eliminar);
     // Subimos un nivel para volver a admin/gestion_horarios.php
     header("Location: ../gestion_horarios.php?msg=eliminado");
     exit();
@@ -64,12 +68,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $sql = "UPDATE HORARIOS_MAESTRO SET id_maestro=?, id_grupo=?, ciclo=?, anio=? WHERE id_horario=?";
             $pdo->prepare($sql)->execute([$id_maestro, $id_grupo, $ciclo, $anio, $id_horario]);
         }
+        bitacora($pdo, 'horarios', 'edicion', 'Actualizó el horario de ' . bitacora_quien($pdo, 'maestros', $id_maestro) . ' (' . bitacora_quien($pdo, 'grupo', $id_grupo) . ", $ciclo $anio)" . ($ruta_pdf ? ' con nuevo PDF' : ''), 'horario', $id_horario);
         header("Location: ../gestion_horarios.php?msg=actualizado");
         exit();
     } else {
         // Insertar nuevo
         $sql = "INSERT INTO HORARIOS_MAESTRO (id_maestro, id_grupo, nombre_archivo, ruta_pdf, ciclo, anio) VALUES (?, ?, ?, ?, ?, ?)";
         $pdo->prepare($sql)->execute([$id_maestro, $id_grupo, $nombre_archivo, $ruta_pdf, $ciclo, $anio]);
+        bitacora($pdo, 'horarios', 'alta', 'Asignó horario a ' . bitacora_quien($pdo, 'maestros', $id_maestro) . ' (' . bitacora_quien($pdo, 'grupo', $id_grupo) . ", $ciclo $anio)", 'horario', (int)$pdo->lastInsertId());
         header("Location: ../gestion_horarios.php?msg=creado");
         exit();
     }

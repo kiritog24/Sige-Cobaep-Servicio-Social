@@ -47,9 +47,11 @@ try {
         exit();
     }
 
+    $antes_grupo = bitacora_quien($pdo, 'grupo', $id_grupo);
     $sql = "UPDATE GRUPOS SET semestre = ?, nombre_grupo = ?, turno = ? WHERE id_grupo = ?";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$semestre, $nombre_grupo, $turno, $id_grupo]);
+    bitacora($pdo, 'grupos', 'edicion', "Editó el grupo $antes_grupo → {$semestre}° \"$nombre_grupo\" $turno", 'grupo', $id_grupo);
 
     header("Location: ../$carpeta_admin/gestion_grupos.php?msg=actualizado");
     exit();

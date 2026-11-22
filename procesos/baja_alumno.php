@@ -15,9 +15,10 @@ if (isset($_GET['id']) && isset($_GET['grupo'])) {
     $id_grupo = intval($_GET['grupo']);
 
     try {
-        $sql = "DELETE FROM GRUPO_ALUMNO WHERE id_alumno = ? AND id_grupo = ?";
-        $stmt = $pdo->prepare($sql);
+        // Baja del grupo conservando el historial (la fecha de baja limita su asistencia en el concentrado)
+        $stmt = $pdo->prepare("UPDATE GRUPO_ALUMNO SET fecha_baja = CURDATE() WHERE id_alumno = ? AND id_grupo = ? AND fecha_baja IS NULL");
         $stmt->execute([$id_alumno, $id_grupo]);
+        bitacora($pdo, 'grupos', 'baja_grupo', 'Dio de baja a ' . bitacora_quien($pdo, 'alumnos', $id_alumno) . ' del grupo ' . bitacora_quien($pdo, 'grupo', $id_grupo), 'alumno', $id_alumno);
 
         // ==========================================
         // AQUÍ ESTÁ LA CLAVE DEL PROBLEMA

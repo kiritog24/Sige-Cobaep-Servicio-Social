@@ -47,6 +47,8 @@ try {
         ->execute([password_hash($provisional, PASSWORD_DEFAULT), $id_usuario]);
     $expira = $pdo->query("SELECT DATE_FORMAT(NOW() + INTERVAL " . PROVISIONAL_HORAS . " HOUR, '%d/%m/%Y %h:%i %p')")->fetchColumn();
 
+    bitacora($pdo, 'password', 'restablecer', 'Generó contraseña provisional para ' . $u['usuario'] . ' · ' . $u['nombre'] . ' (' . $c['etiqueta'] . ')', $tipo, $id_usuario);
+
     // Si estaba bloqueado por intentos fallidos, se le desbloquea
     login_limpiar($pdo, (string)$u['usuario']);
 

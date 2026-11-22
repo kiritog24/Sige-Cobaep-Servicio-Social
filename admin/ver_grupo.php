@@ -44,7 +44,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
     <link rel="stylesheet" href="style_dashboard_admin.css">
     <link rel="stylesheet" href="style-ver_grupo.css">
     <link rel="stylesheet" href="style_sidebar.css">
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -290,6 +290,6 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
             checkboxes.forEach(chk => chk.addEventListener('change', actualizarContador));
         });
     </script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

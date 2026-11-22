@@ -91,7 +91,7 @@ $meses_texto = [
     <link rel="stylesheet" href="style_mis_asistencias.css?v=<?php echo time(); ?>">
 
     
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
 
@@ -133,6 +133,7 @@ $meses_texto = [
     </aside>
 
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <?php include __DIR__ . '/../includes/menu_estado.php'; ?>
 
     <!-- ================= CONTENIDO PRINCIPAL ================= -->
     <main class="main-content">
@@ -363,6 +364,6 @@ $meses_texto = [
             setInterval(actualizarHora, 60000);
         });
     </script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

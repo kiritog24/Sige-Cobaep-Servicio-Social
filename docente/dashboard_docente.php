@@ -85,10 +85,12 @@ $dia_inicial = in_array($numero_dia_hoy, $dias_menu, true) ? $numero_dia_hoy : 1
            ========================================================= */
         .dashboard-panels {
             display: grid;
-            grid-template-columns: 2fr 1fr; /* Panel principal de horario (más ancho) + Panel avisos */
+            grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); /* Panel principal de horario (más ancho) + Panel avisos */
             gap: 20px;
             margin-top: 30px;
         }
+        /* Laptop chica con el menú desplegado: no caben dos columnas, se apilan */
+        @media (max-width: 1150px) { body:not(.sidebar-collapsed) .dashboard-panels { grid-template-columns: minmax(0, 1fr); } }
 
         .panel-card {
             background: #ffffff;
@@ -233,7 +235,7 @@ $dia_inicial = in_array($numero_dia_hoy, $dias_menu, true) ? $numero_dia_hoy : 1
             .btn-asistencia { width: 100%; justify-content: center; }
         }
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 
 <body>
@@ -294,6 +296,7 @@ $dia_inicial = in_array($numero_dia_hoy, $dias_menu, true) ? $numero_dia_hoy : 1
     </aside>
 
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <?php include __DIR__ . '/../includes/menu_estado.php'; ?>
 
     <main class="main-content">
         <!-- TOPBAR -->
@@ -608,6 +611,6 @@ $dia_inicial = in_array($numero_dia_hoy, $dias_menu, true) ? $numero_dia_hoy : 1
         setInterval(actualizar, 20000);
     })();
     </script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

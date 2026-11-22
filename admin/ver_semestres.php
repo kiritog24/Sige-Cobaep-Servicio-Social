@@ -40,7 +40,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
         .btn-back i{background:#f1f5f9;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;transition:background 0.2s;}
         .btn-back:hover i{background:var(--green-soft,#e9f8f0);}
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -130,6 +130,6 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
             filtrarTarjetas('inicio');
         });
     </script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

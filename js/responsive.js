@@ -163,3 +163,153 @@
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', avisarExito); else avisarExito();
 })();
+
+/**
+ * Menú lateral compacto/desplegado — un solo manejador para TODOS los portales
+ * (Administración, Prefectura, Docente y Alumno).
+ *  - Se registra en fase de captura sobre document: corre antes que los manejadores antiguos de cada
+ *    página y los detiene, así el botón nunca se activa dos veces (lo que lo dejaba "trabado").
+ *  - Recuerda el estado (localStorage) al cambiar de página.
+ *  - En modo compacto, cada ícono muestra su nombre al pasar el mouse.
+ */
+(function () {
+    if (window.__sigeMenuCompacto) return;
+    window.__sigeMenuCompacto = true;
+    const CLAVE = 'sidebarCollapsed';
+    function titulos(compacto) {
+        document.querySelectorAll('#sidebar .nav-item, #sidebar .logout, #sidebar .nav-link, #sidebar nav a').forEach(a => {
+            const s = a.querySelector('span');
+            if (!s || !s.textContent.trim()) return;
+            if (compacto) a.setAttribute('title', s.textContent.trim()); else if (a.dataset.tituloPropio !== '1') a.removeAttribute('title');
+        });
+        const btn = document.getElementById('collapseToggle');
+        if (btn) { const t = compacto ? 'Expandir menú' : 'Compactar menú'; btn.setAttribute('aria-label', t); btn.setAttribute('title', t); }
+    }
+    // El modo compacto solo existe en escritorio: si el botón de compactar está oculto (teléfono/tablet),
+    // el menú siempre se abre completo aunque en la computadora se haya dejado compacto.
+    function enEscritorio() {
+        const tog = document.getElementById('collapseToggle');
+        return !!tog && getComputedStyle(tog).display !== 'none' && tog.offsetWidth > 0;
+    }
+    function aplicar() {
+        if (!document.getElementById('collapseToggle')) return;
+        let guardado = false;
+        try { guardado = localStorage.getItem(CLAVE) === 'true'; } catch (e) {}
+        const compacto = guardado && enEscritorio();
+        document.body.classList.toggle('sidebar-collapsed', compacto);
+        titulos(compacto);
+    }
+    let tReajuste;
+    window.addEventListener('resize', () => { clearTimeout(tReajuste); tReajuste = setTimeout(aplicar, 120); });
+    document.addEventListener('click', e => {
+        const t = e.target.closest ? e.target.closest('#collapseToggle') : null;
+        if (!t) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const compacto = document.body.classList.toggle('sidebar-collapsed');
+        try { localStorage.setItem(CLAVE, compacto ? 'true' : 'false'); } catch (err) {}
+        titulos(compacto);
+    }, true);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', aplicar); else aplicar();
+})();
+
+/**
+ * Cierre de sesión por inactividad (todos los roles).
+ *  - El servidor envía la cookie "sige_inactividad" (minutos) solo cuando hay sesión iniciada.
+ *  - Cuenta como actividad: mover el mouse, teclear, hacer clic, desplazarse o tocar la pantalla.
+ *  - Mientras el usuario sigue trabajando en la misma página, se avisa al servidor cada pocos minutos
+ *    para que la sesión no expire (por ejemplo, al escribir una tarea larga).
+ *  - 1 minuto antes muestra un aviso con cuenta regresiva: "Seguir conectado" o "Cerrar sesión".
+ *  - Varias pestañas abiertas comparten la actividad: si usas una, las demás no se cierran.
+ *  - Páginas tipo kiosco (p. ej. el escáner QR) usan <body data-sin-inactividad>: no muestran aviso y
+ *    mantienen la sesión mientras estén abiertas.
+ */
+(function () {
+    const m = document.cookie.match(/(?:^|;\s*)sige_inactividad=(\d+)/);
+    if (!m) return;
+    if (/\/(login\.php|index\.html|error\.php)?$/.test(location.pathname) && !document.getElementById('sidebar')) return;
+    const LIMITE = parseInt(m[1], 10) * 60000, AVISO = 60000, PING_CADA = 4 * 60000;
+    const src = (document.currentScript && document.currentScript.src) || '';
+    const base = src.replace(/js\/responsive\.js.*$/, '');
+    const CLAVE = 'sige_ultima_actividad';
+    const leer = () => { try { return parseInt(localStorage.getItem(CLAVE), 10) || Date.now(); } catch (e) { return Date.now(); } };
+    const guardar = t => { try { localStorage.setItem(CLAVE, String(t)); } catch (e) {} };
+    let ultimoPing = Date.now(), cerrando = false, aviso = null, contador = null;
+    guardar(Date.now());   // cargar una página ya es actividad (el servidor también la registró)
+
+    function ping() {
+        ultimoPing = Date.now();
+        return fetch(base + 'procesos/mantener_sesion.php', { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'fetch' }, cache: 'no-store' })
+            .then(r => r.json().then(d => { if (!r.ok || !d.ok) cerrar(); }))
+            .catch(() => {});
+    }
+    function cerrar() {
+        if (cerrando) return;
+        cerrando = true;
+        location.href = base + 'logout.php?inactividad=1';
+    }
+
+    const quiosco = document.body && document.body.hasAttribute('data-sin-inactividad');
+    if (quiosco) { setInterval(ping, PING_CADA); return; }
+
+    function crearAviso() {
+        const st = document.createElement('style');
+        st.textContent = `
+        .ina-ov{position:fixed;inset:0;background:rgba(15,23,42,.6);backdrop-filter:blur(4px);z-index:20000;display:none;align-items:center;justify-content:center;padding:16px;font-family:'Inter',system-ui,sans-serif;}
+        .ina-ov.abierto{display:flex;}
+        .ina-box{background:#fff;border-radius:22px;max-width:400px;width:100%;padding:28px 24px 22px;text-align:center;box-shadow:0 30px 70px rgba(0,0,0,.3);}
+        .ina-reloj{width:86px;height:86px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#16a05d var(--p,100%),#e2e8f0 0);}
+        .ina-reloj span{width:70px;height:70px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:1.6rem;font-weight:800;color:#063f2b;}
+        .ina-box h3{margin:0 0 6px;font-size:1.15rem;color:#0f172a;}
+        .ina-box p{margin:0 0 18px;color:#64748b;font-size:.9rem;line-height:1.5;}
+        .ina-acc{display:flex;gap:10px;flex-wrap:wrap;}
+        .ina-acc button{flex:1;min-width:140px;padding:12px 16px;border-radius:12px;font-weight:700;font-size:.9rem;cursor:pointer;font-family:inherit;border:none;}
+        .ina-seguir{background:#16a05d;color:#fff;}
+        .ina-salir{background:#fff;color:#b91c1c;border:1px solid #fecaca !important;}`;
+        document.head.appendChild(st);
+        aviso = document.createElement('div');
+        aviso.className = 'ina-ov';
+        aviso.setAttribute('role', 'alertdialog');
+        aviso.setAttribute('aria-modal', 'true');
+        aviso.innerHTML = '<div class="ina-box"><div class="ina-reloj"><span id="inaSeg">60</span></div>'
+            + '<h3>¿Sigues ahí?</h3><p>Por seguridad, tu sesión se cerrará en <b id="inaTexto">60 segundos</b> por inactividad.</p>'
+            + '<div class="ina-acc"><button type="button" class="ina-salir" id="inaSalir">Cerrar sesión</button>'
+            + '<button type="button" class="ina-seguir" id="inaSeguir">Seguir conectado</button></div></div>';
+        document.body.appendChild(aviso);
+        aviso.querySelector('#inaSeguir').addEventListener('click', () => { guardar(Date.now()); ocultarAviso(); ping(); });
+        aviso.querySelector('#inaSalir').addEventListener('click', () => { location.href = base + 'logout.php'; });
+    }
+    function mostrarAviso(restante) {
+        if (!aviso) crearAviso();
+        const s = Math.max(0, Math.ceil(restante / 1000));
+        aviso.querySelector('#inaSeg').textContent = s;
+        aviso.querySelector('#inaTexto').textContent = s + (s === 1 ? ' segundo' : ' segundos');
+        aviso.querySelector('.ina-reloj').style.setProperty('--p', Math.round(restante / AVISO * 100) + '%');
+        if (!aviso.classList.contains('abierto')) { aviso.classList.add('abierto'); aviso.querySelector('#inaSeguir').focus(); }
+    }
+    function ocultarAviso() { if (aviso) aviso.classList.remove('abierto'); }
+    const avisoAbierto = () => aviso && aviso.classList.contains('abierto');
+
+    // Actividad del usuario (se ignora mientras el aviso está abierto: ahí debe elegir una opción)
+    let ultimaMarca = 0;
+    const marcar = () => {
+        if (avisoAbierto()) return;
+        const ahora = Date.now();
+        if (ahora - ultimaMarca < 5000) return;
+        ultimaMarca = ahora;
+        guardar(ahora);
+        if (ahora - ultimoPing > PING_CADA) ping();
+    };
+    ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'wheel'].forEach(ev => window.addEventListener(ev, marcar, { passive: true, capture: true }));
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) revisar(); });
+    window.addEventListener('storage', e => { if (e.key === CLAVE && avisoAbierto() && Date.now() - leer() < LIMITE - AVISO) ocultarAviso(); });
+
+    function revisar() {
+        if (cerrando) return;
+        const inactivo = Date.now() - leer();
+        if (inactivo >= LIMITE) { ocultarAviso(); cerrar(); }
+        else if (inactivo >= LIMITE - AVISO) mostrarAviso(LIMITE - inactivo);
+        else if (avisoAbierto()) ocultarAviso();
+    }
+    contador = setInterval(revisar, 1000);
+})();

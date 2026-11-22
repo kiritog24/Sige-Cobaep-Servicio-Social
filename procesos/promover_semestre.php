@@ -41,6 +41,7 @@ try {
     $pdo->exec("UPDATE ALUMNOS SET semestre = semestre + 1 WHERE estatus = 'Alta' AND semestre IS NOT NULL AND semestre < 6");
 
     $pdo->commit();
+    bitacora($pdo, 'grupos', 'cierre_ciclo', 'Cerró el ciclo: ' . (int)$promovidos . ' grupos promovidos al siguiente semestre y ' . (int)ceil($egresados / 2) . ' alumnos egresados');
     // Nota: el UPDATE multitabla cuenta filas de ALUMNOS y GRUPO_ALUMNO; cada egresado modifica 2 filas
     volver_grupos('msg=ciclo_cerrado&promovidos=' . (int)$promovidos . '&egresados=' . (int)ceil($egresados / 2));
 } catch (PDOException $e) {

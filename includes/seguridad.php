@@ -180,3 +180,46 @@ function exigir_cambio_password(PDO $pdo): void {
     header('Location: ' . $destino);
     exit();
 }
+
+/* ---------- Cierre de sesión por inactividad (todos los roles) ---------- */
+const SESION_INACTIVIDAD_MIN = 30;   // minutos sin usar el sistema antes de cerrar la sesión
+
+/** Rol de sesión → valor de ?rol= en login.php */
+function sesion_rol_login(string $rol): string {
+    return ['administrativo' => 'admin', 'docente' => 'docente', 'prefectos' => 'prefectos'][$rol] ?? 'estudiante';
+}
+
+/**
+ * Se ejecuta en cada petición con sesión iniciada. Si pasaron más de SESION_INACTIVIDAD_MIN minutos
+ * desde la última actividad, cierra la sesión y lleva al inicio de sesión con un aviso.
+ * El navegador recibe la cookie "sige_inactividad" (minutos) para mostrar el aviso con cuenta regresiva.
+ */
+function controlar_inactividad(): void {
+    if (PHP_SAPI === 'cli' || session_status() !== PHP_SESSION_ACTIVE || empty($_SESSION['id_usuario'])) return;
+    $ahora = time();
+    $ultima = (int)($_SESSION['ultima_actividad'] ?? $ahora);
+    $ruta_cookie = (seguridad_base_url() ?: '') . '/';
+
+    if ($ahora - $ultima > SESION_INACTIVIDAD_MIN * 60) {
+        $rol = sesion_rol_login((string)($_SESSION['rol'] ?? ''));
+        session_unset();
+        session_destroy();
+        setcookie('sige_inactividad', '', ['expires' => time() - 3600, 'path' => $ruta_cookie, 'samesite' => 'Lax']);
+        $destino = seguridad_base_url() . '/login.php?rol=' . $rol . '&inactividad=1';
+        $es_ajax = ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') !== '' || stripos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false
+                || stripos($_SERVER['CONTENT_TYPE'] ?? '', 'json') !== false;
+        if ($es_ajax) {
+            http_response_code(401);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'success' => false, 'error' => 'Tu sesión se cerró por inactividad.', 'redirect' => $destino]);
+            exit();
+        }
+        header('Location: ' . $destino);
+        exit();
+    }
+    $_SESSION['ultima_actividad'] = $ahora;
+    if (!headers_sent()) {
+        setcookie('sige_inactividad', (string)SESION_INACTIVIDAD_MIN, ['expires' => 0, 'path' => $ruta_cookie, 'samesite' => 'Lax']);
+    }
+}
+controlar_inactividad();

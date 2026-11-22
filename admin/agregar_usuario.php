@@ -2,6 +2,7 @@
 session_start();
 require_once '../config/database.php';
 require_once __DIR__ . '/../includes/topbar_usuario.php';
+require_once __DIR__ . '/../includes/credenciales_lote.php';
 
 if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'administrativo') {
     header("Location: ../login.php");
@@ -15,6 +16,7 @@ try {
     die("Error al cargar los grupos: " . $e->getMessage());
 }
 
+$alta = credenciales_lote('credenciales_alta');   // cuenta recién creada (contraseña generada por el sistema)
 $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombre'], ENT_QUOTES, 'UTF-8') : 'Administrador';
 ?>
 <!DOCTYPE html>
@@ -32,7 +34,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
     <link href="style_dashboard_admin.css?v=<?php echo time(); ?>" rel="stylesheet">
     <link href="style_sidebar.css?v=<?php echo time(); ?>" rel="stylesheet">
     <link href="style_agregar_usuario.css?v=<?php echo time(); ?>" rel="stylesheet">
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
 
@@ -57,7 +59,30 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
             <?php topbar_usuario($pdo); ?>
         </div>
 
-        <?php if (isset($_GET['exito'])): ?>
+        <?php if ($alta): $cu = $alta['alumnos'][0]; ?>
+            <div class="alta-cred" id="altaCred">
+                <div class="alta-cred-head">
+                    <div class="alta-cred-ico"><i class="fas fa-user-check"></i></div>
+                    <div>
+                        <h3><?php echo isset($_GET['exito']) ? '¡Usuario registrado correctamente!' : 'Última cuenta registrada'; ?></h3>
+                        <p><?php echo htmlspecialchars($cu['nombre']); ?> · <?php echo htmlspecialchars($cu['grupo']); ?></p>
+                    </div>
+                </div>
+                <div class="alta-cred-datos">
+                    <div><span>Usuario</span><b id="altaUsuario"><?php echo htmlspecialchars($cu['matricula']); ?></b></div>
+                    <div class="pwd"><span>Contraseña provisional</span><b id="altaPwd"><?php echo htmlspecialchars($cu['password']); ?></b></div>
+                </div>
+                <p class="alta-cred-nota"><i class="fas fa-shield-halved"></i> Generada por el sistema. Vence el <b><?php echo htmlspecialchars($alta['expira']); ?></b> y en su primer acceso deberá crear su propia contraseña. Entrégala ahora: por seguridad no se vuelve a mostrar.</p>
+                <div class="alta-cred-acciones">
+                    <button type="button" class="alta-btn" onclick="copiarAcceso(this)"><i class="fas fa-copy"></i> Copiar datos</button>
+                    <a class="alta-btn" href="../procesos/descargar_credenciales.php?lote=alta&amp;formato=fichas"><i class="fas fa-file-pdf"></i> Ficha para imprimir (PDF)</a>
+                    <form action="../procesos/credenciales_alumnos.php" method="POST" style="margin:0">
+                        <input type="hidden" name="accion" value="descartar_alta">
+                        <button type="submit" class="alta-btn sec"><i class="fas fa-check"></i> Ya la entregué</button>
+                    </form>
+                </div>
+            </div>
+        <?php elseif (isset($_GET['exito'])): ?>
             <div class="alert alert-success">
                 <i class="fas fa-check-circle"></i> ¡Usuario guardado y asignado correctamente!
             </div>
@@ -131,7 +156,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
                         <div class="form-group">
                             <label for="codigo_qr"><i class="fas fa-qrcode"></i> Código QR</label>
                             <input type="text" name="codigo_qr" id="codigo_qr" placeholder="Ej. QR-24B0012">
-                            <div class="help-text">Opcional, recomendado para escáner.</div>
+                            <div class="help-text">Opcional. Si lo dejas vacío se genera con la matrícula.</div>
                         </div>
                     </div>
 
@@ -146,7 +171,6 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
                                 <option value="">Selecciona...</option>
                                 <option value="M">Masculino</option>
                                 <option value="F">Femenino</option>
-                                <option value="Otro">Otro</option>
                             </select>
                         </div>
                     </div>
@@ -170,10 +194,9 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
                 </div>
 
                 <!-- CONTRASEÑA -->
-                <div class="form-group" style="margin-top: 15px;">
-                    <label for="password"><i class="fas fa-lock"></i> Contraseña Provisional</label>
-                    <input type="password" name="password" id="password" placeholder="Mínimo 6 caracteres" required>
-                    <div class="help-text">El usuario deberá cambiarla en su primer acceso.</div>
+                <div class="alta-info-pwd">
+                    <i class="fas fa-key"></i>
+                    <div><b>Contraseña provisional automática.</b> Al guardar, el sistema genera una contraseña única para este usuario (vence en <?php echo IMPORTACION_DIAS; ?> días) y te la muestra para que se la entregues. En su primer acceso deberá crear la suya.</div>
                 </div>
 
                 <button type="submit" class="btn-submit">
@@ -188,8 +211,35 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
         </div>
     </main>
 
+    <style>
+        .alta-cred { background:#fff; border:1px solid #a7f3d0; border-radius:16px; padding:20px; margin-bottom:22px; box-shadow:0 6px 18px rgba(22,160,93,.08); }
+        .alta-cred-head { display:flex; gap:14px; align-items:center; }
+        .alta-cred-ico { width:46px; height:46px; border-radius:12px; background:#dcfce7; color:#15803d; display:grid; place-items:center; font-size:1.2rem; flex-shrink:0; }
+        .alta-cred h3 { margin:0; font-size:1.05rem; color:#14532d; }
+        .alta-cred-head p { margin:3px 0 0; font-size:.86rem; color:#475569; }
+        .alta-cred-datos { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:16px 0 12px; }
+        .alta-cred-datos div { background:#f1f5f9; border-radius:12px; padding:10px 14px; }
+        .alta-cred-datos .pwd { background:#ecfdf5; }
+        .alta-cred-datos span { display:block; font-size:.72rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.04em; }
+        .alta-cred-datos b { font-size:1.15rem; color:#0f172a; font-family:Consolas, 'Courier New', monospace; letter-spacing:.04em; word-break:break-all; }
+        .alta-cred-nota { font-size:.84rem; color:#92400e; background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:10px 12px; margin:0 0 14px; line-height:1.5; }
+        .alta-cred-acciones { display:flex; gap:10px; flex-wrap:wrap; }
+        .alta-btn { display:inline-flex; align-items:center; gap:8px; padding:10px 16px; border-radius:10px; background:#16a05d; color:#fff; text-decoration:none; font-weight:600; font-size:.88rem; border:none; cursor:pointer; font-family:inherit; }
+        .alta-btn:hover { background:#12804b; }
+        .alta-btn.sec { background:#fff; color:#334155; border:1px solid #cbd5e1; }
+        .alta-info-pwd { display:flex; gap:12px; align-items:flex-start; margin-top:15px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:12px 14px; font-size:.86rem; color:#166534; line-height:1.5; }
+        .alta-info-pwd i { color:#16a05d; margin-top:3px; }
+        @media (max-width:600px) { .alta-cred-datos { grid-template-columns:1fr; } .alta-btn { width:100%; justify-content:center; } .alta-cred-acciones form { width:100%; } }
+    </style>
     <!-- SCRIPTS -->
     <script>
+        function copiarAcceso(btn) {
+            const u = document.getElementById('altaUsuario').textContent, p = document.getElementById('altaPwd').textContent;
+            const texto = 'SIGE-COBAEP Plantel 27\nUsuario: ' + u + '\nContraseña provisional: ' + p + '\nAl entrar, el sistema te pedirá crear tu propia contraseña.';
+            const ok = () => { btn.innerHTML = '<i class="fas fa-check"></i> Copiado'; setTimeout(() => btn.innerHTML = '<i class="fas fa-copy"></i> Copiar datos', 2000); };
+            if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(texto).then(ok);
+            else { const t = document.createElement('textarea'); t.value = texto; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); ok(); }
+        }
         function toggleCampos() {
             const tipo = document.getElementById("tipo_usuario").value;
             const camposAlumno = document.getElementById("campos_alumno");
@@ -256,6 +306,6 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
             setInterval(actualizarHora, 60000);
         });
     </script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

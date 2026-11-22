@@ -49,6 +49,8 @@ try {
         $sync->execute([$grupo['semestre'], $grupo['turno'], $id_alumno]);
     }
     $pdo->commit();
+    bitacora($pdo, 'grupos', 'inscripcion', 'Inscribió ' . count($alumnos) . ' alumno(s) en el grupo ' . bitacora_quien($pdo, 'grupo', $id_grupo) . ($cambiados ? " ($cambiados venían de otro grupo)" : ''),
+             'grupo', $id_grupo, ['alumnos' => array_map(fn($i) => bitacora_quien($pdo, 'alumnos', $i), $alumnos)]);
     header("Location: ../ver_grupo.php?id=$id_grupo&msg=inscritos_multiples&cantidad=" . count($alumnos) . "&cambiados=$cambiados");
     exit();
 } catch (PDOException $e) {

@@ -32,6 +32,8 @@ try {
     $pdo->commit();
 
     $duplicados = count($maestros) - $nuevos;
+    if ($nuevos) bitacora($pdo, 'docentes', 'asignacion', "Asignó $nuevos docente(s) al grupo " . bitacora_quien($pdo, 'grupo', $id_grupo), 'grupo', $id_grupo,
+                          ['docentes' => array_map(fn($i) => bitacora_quien($pdo, 'maestros', $i), $maestros)]);
     header("Location: ../asignacion_masiva.php?msg=exito&nuevos=$nuevos&duplicados=$duplicados&grupo=$id_grupo");
     exit();
 } catch (PDOException $e) {

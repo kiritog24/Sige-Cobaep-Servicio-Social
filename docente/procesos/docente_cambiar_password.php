@@ -37,6 +37,7 @@ try {
     $st = $pdo->prepare("UPDATE MAESTROS SET contrasena_hash = ? WHERE id_maestro = ?");
     $st->execute([password_hash($nueva, PASSWORD_DEFAULT), (int)$_SESSION['id_usuario']]);
     session_regenerate_id(true);
+    bitacora($pdo, 'password', 'cambio_propio', 'Cambió su contraseña');
     volver_pwd('ok', 'Tu contraseña se cambió correctamente. Úsala la próxima vez que inicies sesión.');
 } catch (PDOException $e) {
     error_log('Cambiar contraseña docente: ' . $e->getMessage());

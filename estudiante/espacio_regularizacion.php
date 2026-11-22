@@ -295,7 +295,7 @@ if (!empty($clase['imagen_portada'])) {
         }
         @media (max-width: 400px) { .topbar-right { grid-template-columns: 1fr; } }
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
 
@@ -337,6 +337,7 @@ if (!empty($clase['imagen_portada'])) {
     </aside>
 
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <?php include __DIR__ . '/../includes/menu_estado.php'; ?>
 
     <!-- ================= CONTENIDO PRINCIPAL ================= -->
     <main class="main-content">
@@ -641,6 +642,6 @@ $render_act = function (array $act) use ($mis_entregas, $clase_recibe, $id_clase
             setInterval(actualizarHora, 60000);
         });
     </script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

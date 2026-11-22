@@ -218,7 +218,7 @@ $fecha_actual = new DateTime();
             .actividad-card { flex-direction: column; }
         }
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
 
@@ -265,6 +265,7 @@ $fecha_actual = new DateTime();
     </aside>
 
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <?php include __DIR__ . '/../includes/menu_estado.php'; ?>
 
     <main class="main-content">
         <div class="dashboard-container">
@@ -583,6 +584,6 @@ $fecha_actual = new DateTime();
             actualizarHora(); setInterval(actualizarHora, 60000);
         });
     </script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

@@ -39,6 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         ]);
 
         // Procesar Sanción Extra
+        $id_reporte_nuevo = (int)$pdo->lastInsertId();
         $stmt_verificar = $pdo->prepare("SELECT tipo_sancion FROM tipos_falta WHERE id_tipo_falta = :id_tipo_falta LIMIT 1");
         $stmt_verificar->execute([':id_tipo_falta' => $id_tipo_falta]);
         $tipo_sancion = $stmt_verificar->fetchColumn();
@@ -54,6 +55,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
 
+        bitacora($pdo, 'conducta', 'reporte', 'Levantó reporte de conducta a ' . bitacora_quien($pdo, 'alumnos', (int)$id_alumno)
+                 . ($tipo_sancion === 'Suspension' ? ($es_baja_definitiva ? ' con baja definitiva' : ($dias_suspension > 0 ? " con suspensión de $dias_suspension día(s)" : '')) : ''), 'reporte', $id_reporte_nuevo);
+        // Aviso por correo al padre, madre o tutor
+        require_once __DIR__ . '/../../includes/avisos_tutor.php';
+        aviso_tutor_conducta($pdo, $id_reporte_nuevo);
         header("Location: ../creacion_reportes.php?msg=exito_reporte");
         exit();
 

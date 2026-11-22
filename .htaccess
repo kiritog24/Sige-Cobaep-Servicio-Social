@@ -3,6 +3,17 @@
 # No listar el contenido de las carpetas
 Options -Indexes
 
+# Páginas de error del sistema (si mueves el sistema a otra carpeta, cambia "/sige_cobaep1")
+ErrorDocument 400 /sige_cobaep1/error.php
+ErrorDocument 401 /sige_cobaep1/error.php
+ErrorDocument 403 /sige_cobaep1/error.php
+ErrorDocument 404 /sige_cobaep1/error.php
+ErrorDocument 405 /sige_cobaep1/error.php
+ErrorDocument 408 /sige_cobaep1/error.php
+ErrorDocument 500 /sige_cobaep1/error.php
+ErrorDocument 502 /sige_cobaep1/error.php
+ErrorDocument 503 /sige_cobaep1/error.php
+
 # Nunca ejecutar scripts que alguien haya subido a una carpeta "uploads"
 <If "%{REQUEST_URI} =~ m#/uploads/.*\.(php[0-9]?|phtml|phar|pht|cgi|pl|py|sh|htaccess)$#i">
     Require all denied

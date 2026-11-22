@@ -19,7 +19,7 @@ if ($rol_esperado == 'admin') {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/responsive.css?v=3">
+    <link rel="stylesheet" href="css/responsive.css?v=4">
 </head>
 <body>
 
@@ -33,6 +33,11 @@ if ($rol_esperado == 'admin') {
         <div class="toast-notification" id="errorToast">
             <i class="fas fa-hourglass-end" style="font-size: 1.2rem;"></i>
             <span>Tu contraseña provisional ya venció. Acude a control escolar para que te generen una nueva.</span>
+        </div>
+    <?php elseif (isset($_GET['inactividad'])): ?>
+        <div class="toast-notification" id="errorToast" style="background:#0f766e;">
+            <i class="fas fa-clock" style="font-size: 1.2rem;"></i>
+            <span>Tu sesión se cerró por inactividad (<?php echo defined('SESION_INACTIVIDAD_MIN') ? SESION_INACTIVIDAD_MIN : 30; ?> minutos sin uso). Inicia sesión de nuevo.</span>
         </div>
     <?php elseif (isset($_GET['error'])): ?>
         <div class="toast-notification" id="errorToast">
@@ -108,11 +113,7 @@ if ($rol_esperado == 'admin') {
                             </div>
                         </div>
 
-                        <div class="form-options">
-                            <label class="checkbox-container">
-                                <input type="checkbox" name="remember">
-                                Recordar sesión
-                            </label>
+                        <div class="form-options" style="justify-content:flex-end;">
                             <a href="#" class="forgot-link" id="forgotLink">¿Olvidaste tu contraseña?</a>
                         </div>
 
@@ -160,6 +161,6 @@ if ($rol_esperado == 'admin') {
         </section>
     </main>
     <script src="js/app.js"></script>
-    <script src="js/responsive.js?v=3"></script>
+    <script src="js/responsive.js?v=6"></script>
 </body>
 </html>

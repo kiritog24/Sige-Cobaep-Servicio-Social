@@ -82,6 +82,7 @@ function ficha_alumno_render(array $d, array $opt = []): void {
     foreach (['telefono' => 'teléfono', 'correo_personal' => 'correo', 'fecha_nacimiento' => 'fecha de nacimiento'] as $k => $txt) if (empty($al[$k])) $faltan[] = $txt;
     if (empty($dom['calle'])) $faltan[] = 'domicilio';
     if (empty($tutor['nombre_tutor'])) $faltan[] = 'tutor';
+    elseif (empty($tutor['correo_tutor'])) $faltan[] = 'correo del tutor';
     ?>
     <style>
         .pa-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;}
@@ -170,6 +171,7 @@ function ficha_alumno_render(array $d, array $opt = []): void {
                 <dt>Nombre</dt><dd><?php echo $v($tutor['nombre_tutor'] ?? null); ?></dd>
                 <dt>Teléfono</dt><dd><?php echo $v($tutor['telefono_1'] ?? null); ?></dd>
                 <dt>Teléfono alterno</dt><dd><?php echo $v($tutor['telefono_2'] ?? null); ?></dd>
+                <dt>Correo</dt><dd><?php echo $v($tutor['correo_tutor'] ?? null); ?></dd>
             </dl>
         </div>
         <div class="pa-card">

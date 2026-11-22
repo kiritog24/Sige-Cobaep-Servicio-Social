@@ -170,7 +170,7 @@ try {
         }
         @media (max-width: 400px) { .topbar-right { grid-template-columns: 1fr; } }
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
 
@@ -212,6 +212,7 @@ try {
     </aside>
 
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <?php include __DIR__ . '/../includes/menu_estado.php'; ?>
 
     <main class="main-content">
         <div class="dashboard-container">
@@ -356,6 +357,6 @@ try {
             setInterval(actualizarHora, 60000);
         });
     </script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

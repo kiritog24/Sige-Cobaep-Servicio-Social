@@ -19,7 +19,7 @@ $etiquetas_rol = ['alumnos' => 'Alumno / Estudiante', 'maestros' => 'Personal Do
 $nombre_rol_visual = $etiquetas_rol[$tipo] ?? strtoupper($tipo);
 try {
     if ($tipo === 'alumnos') {
-        $sql = "SELECT a.id_alumno AS id, a.matricula AS identificador, a.codigo_qr, a.turno, a.nombre, a.apellido_paterno, a.apellido_materno, a.estatus, a.puntos_conducta, ga.id_grupo FROM ALUMNOS a LEFT JOIN GRUPO_ALUMNO ga ON a.id_alumno = ga.id_alumno AND ga.fecha_baja IS NULL WHERE a.id_alumno = ?";
+        $sql = "SELECT a.id_alumno AS id, a.matricula AS identificador, a.codigo_qr, a.turno, a.nombre, a.apellido_paterno, a.apellido_materno, a.correo_institucional, a.estatus, a.puntos_conducta, ga.id_grupo, t.nombre_tutor, t.correo_tutor FROM ALUMNOS a LEFT JOIN TUTOR_ALUMNO t ON t.id_alumno = a.id_alumno LEFT JOIN GRUPO_ALUMNO ga ON a.id_alumno = ga.id_alumno AND ga.fecha_baja IS NULL WHERE a.id_alumno = ?";
         $stmt = $pdo->prepare($sql);
         $grupos = $pdo->query("SELECT id_grupo, semestre, nombre_grupo, turno FROM GRUPOS ORDER BY semestre, nombre_grupo ASC")->fetchAll();
         $turnos_catalogo = $pdo->query("SELECT turno, hora_entrada, hora_corte FROM HORARIOS_TURNO")->fetchAll();
@@ -59,7 +59,7 @@ $nombre_admin = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombre'
     <link rel="stylesheet" href="style_dashboard_admin.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="style-editar_usuario.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="style_sidebar.css">
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -123,6 +123,21 @@ $nombre_admin = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombre'
                             <div class="field-group">
                                 <label for="codigo_qr">Código QR de Acceso</label>
                                 <div class="input-icon-wrap"><i class="fas fa-qrcode"></i><input type="text" name="codigo_qr" id="codigo_qr" value="<?php echo htmlspecialchars($usuario['codigo_qr']); ?>" required></div>
+                            </div>
+                        </div>
+                        <div class="field-group">
+                            <label for="correo_institucional">Correo institucional</label>
+                            <div class="input-icon-wrap"><i class="fas fa-envelope-open-text"></i><input type="email" name="correo_institucional" id="correo_institucional" maxlength="150" value="<?php echo htmlspecialchars($usuario['correo_institucional'] ?? ''); ?>" placeholder="Sin asignar"></div>
+                            <small class="field-hint">Para asignarlos a muchos alumnos a la vez usa <b>Directorio › Correos institucionales</b> (Excel o CSV).</small>
+                        </div>
+                        <div class="fields-grid-2">
+                            <div class="field-group">
+                                <label for="nombre_tutor">Padre, madre o tutor</label>
+                                <div class="input-icon-wrap"><i class="fas fa-user-shield"></i><input type="text" name="nombre_tutor" id="nombre_tutor" maxlength="200" value="<?php echo htmlspecialchars($usuario['nombre_tutor'] ?? ''); ?>" placeholder="Nombre completo"></div>
+                            </div>
+                            <div class="field-group">
+                                <label for="correo_tutor">Correo del tutor</label>
+                                <div class="input-icon-wrap"><i class="fas fa-envelope"></i><input type="email" name="correo_tutor" id="correo_tutor" maxlength="150" value="<?php echo htmlspecialchars($usuario['correo_tutor'] ?? ''); ?>" placeholder="Para avisos de faltas y conducta"></div>
                             </div>
                         </div>
                         <div class="fields-grid-2">
@@ -318,6 +333,6 @@ $nombre_admin = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombre'
             if (selTurno) selTurno.addEventListener('change', actualizarTarjetaViva);
         });
     </script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

@@ -96,6 +96,20 @@
     color: #aebbb6;
 }
 
+.breadcrumb a {
+    color: inherit;
+    text-decoration: none;
+    border-radius: 6px;
+    padding: 2px 4px;
+    transition: color .2s, background .2s;
+}
+
+.breadcrumb a:hover,
+.breadcrumb a:focus-visible {
+    color: #16a05d;
+    background: #ecfdf5;
+}
+
 .breadcrumb strong {
     color: var(--group-ink);
     font-weight: 700;

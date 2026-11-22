@@ -28,9 +28,16 @@ if (isset($_GET['id']) && is_numeric($_GET['id']) && isset($_GET['tipo'])) {
             $stmt = $pdo->prepare("DELETE FROM MAESTROS WHERE id_maestro = ?");
         } elseif ($tipo === 'admin') {
             $stmt = $pdo->prepare("DELETE FROM ADMINISTRATIVOS WHERE id_admin = ?");
+        } elseif ($tipo === 'prefectos') {
+            $stmt = $pdo->prepare("DELETE FROM PREFECTOS WHERE id_prefecto = ?");
+        } else {
+            header("Location: ../admin/gestion_usuarios.php");
+            exit();
         }
+        $quien = bitacora_quien($pdo, $tipo, (int)$id_eliminar);
         
         $stmt->execute([$id_eliminar]);
+        bitacora($pdo, 'usuarios', 'eliminacion', 'Eliminó la cuenta de ' . $quien, $tipo, (int)$id_eliminar);
 
         // Redirigir con mensaje
         header("Location: ../admin/gestion_usuarios.php?tipo=$tipo&msg=eliminado");

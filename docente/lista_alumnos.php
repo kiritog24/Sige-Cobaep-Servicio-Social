@@ -76,7 +76,7 @@ try {
         .val-r { color: #d97706; font-weight: bold; }
         .val-f { color: #dc3545; font-weight: bold; }
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
     <div class="container">
@@ -205,6 +205,6 @@ try {
 </html>
 
  
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

@@ -69,7 +69,7 @@ try {
     $telefono = !empty($alumno['telefono']) ? htmlspecialchars($alumno['telefono']) : '-- Sin registro --';
     
     $domicilio_str = '-- Sin registro --';
-    $tutor_str = !empty($tutor['nombre_tutor']) ? htmlspecialchars($tutor['nombre_tutor'] . (!empty($tutor['telefono_1']) ? ' · ' . $tutor['telefono_1'] : '')) : '-- Sin registro --';
+    $tutor_str = !empty($tutor['nombre_tutor']) ? htmlspecialchars($tutor['nombre_tutor'] . (!empty($tutor['telefono_1']) ? ' · ' . $tutor['telefono_1'] : '') . (!empty($tutor['correo_tutor']) ? ' · ' . $tutor['correo_tutor'] : '')) : '-- Sin registro --';
     if ($domicilio) {
         $calle = htmlspecialchars($domicilio['calle'] ?? '');
         $num = htmlspecialchars($domicilio['num_exterior'] ?? '');
@@ -288,7 +288,7 @@ try {
             .actions-grid { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
 
@@ -334,6 +334,7 @@ try {
         </div>
     </aside>
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <?php include __DIR__ . '/../includes/menu_estado.php'; ?>
 
     <main class="main-content">
         <div class="dashboard-container">
@@ -621,6 +622,8 @@ try {
                         <div class="form-group" style="grid-column: 1 / -1;"><label>Nombre completo del tutor *</label><input type="text" name="nombre_tutor" class="form-control" maxlength="200" value="<?php echo htmlspecialchars($tutor['nombre_tutor'] ?? ''); ?>" required></div>
                         <div class="form-group"><label>Teléfono del tutor *</label><input type="tel" name="telefono_tutor_1" class="form-control" pattern="[0-9]{10}" maxlength="10" value="<?php echo htmlspecialchars($tutor['telefono_1'] ?? ''); ?>" required></div>
                         <div class="form-group"><label>Teléfono alterno</label><input type="tel" name="telefono_tutor_2" class="form-control" pattern="[0-9]{10}" maxlength="10" value="<?php echo htmlspecialchars($tutor['telefono_2'] ?? ''); ?>"></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><label>Correo electrónico del tutor *</label><input type="email" name="correo_tutor" class="form-control" maxlength="150" placeholder="correo@ejemplo.com" value="<?php echo htmlspecialchars($tutor['correo_tutor'] ?? ''); ?>" required>
+                            <small style="display:block; font-size:.75rem; color:#64748b; margin-top:4px;"><i class="fas fa-envelope"></i> La escuela le enviará avisos de faltas y reportes de conducta a este correo.</small></div>
                     </div>
                     <p style="font-size: 0.75rem; color: #94a3b8; margin-top: 10px;"><i class="fas fa-info-circle"></i> Para corregir tu nombre, matrícula o correo institucional acude a control escolar. Los campos con * son obligatorios.</p>
                 </div>
@@ -816,10 +819,18 @@ try {
         function abrirModal(id) {
             document.getElementById(id).classList.add('active');
         }
+        // Desde el aviso "Registra el correo de tu tutor": abre el formulario directamente en ese campo
+        if (new URLSearchParams(location.search).get('completar') === 'tutor') {
+            window.addEventListener('load', () => {
+                abrirModal('modalContacto');
+                const c = document.querySelector('#modalContacto [name="correo_tutor"]');
+                if (c) { setTimeout(() => { c.scrollIntoView({ block: 'center', behavior: 'smooth' }); c.focus(); }, 250); }
+            });
+        }
         function cerrarModal(id) {
             document.getElementById(id).classList.remove('active');
         }
     </script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

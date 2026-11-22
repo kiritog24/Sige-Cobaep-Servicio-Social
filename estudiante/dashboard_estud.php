@@ -141,7 +141,7 @@ try {
     
     <!-- Archivo base -->
     <link rel="stylesheet" href="style_dashboard_estud.css?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
 
@@ -189,6 +189,7 @@ try {
     </aside>
 
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <?php include __DIR__ . '/../includes/menu_estado.php'; ?>
 
     <main class="main-content">
         <div class="dashboard-container">
@@ -239,6 +240,26 @@ try {
                 <div style="display:flex; gap:10px; align-items:center; background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; padding:12px 16px; border-radius:12px; margin-bottom:12px; font-weight:600; font-size:.9rem;">
                     <i class="fas fa-circle-check"></i> <?php echo htmlspecialchars($_GET['exito']); ?>
                 </div>
+            <?php endif; ?>
+            <?php if (alumno_falta_correo_tutor($pdo, (int)$id_alumno)): ?>
+                <div class="aviso-tutor" role="alert">
+                    <div class="aviso-tutor-ico"><i class="fas fa-envelope-circle-check"></i></div>
+                    <div class="aviso-tutor-txt">
+                        <strong>Falta el correo de tu padre, madre o tutor</strong>
+                        <span>La escuela lo usará para avisarle de tus faltas y reportes de conducta. Regístralo en tu perfil, solo toma un minuto.</span>
+                    </div>
+                    <a class="aviso-tutor-btn" href="perfil.php?completar=tutor"><i class="fas fa-pen"></i> Registrarlo ahora</a>
+                </div>
+                <style>
+                    .aviso-tutor { display: flex; align-items: center; gap: 14px; background: #fffbeb; border: 1px solid #fde68a; border-left: 5px solid #f59e0b; border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; }
+                    .aviso-tutor-ico { width: 44px; height: 44px; border-radius: 12px; background: #fef3c7; color: #b45309; display: grid; place-items: center; font-size: 1.2rem; flex-shrink: 0; }
+                    .aviso-tutor-txt { flex: 1; min-width: 0; }
+                    .aviso-tutor-txt strong { display: block; color: #78350f; font-size: .95rem; }
+                    .aviso-tutor-txt span { display: block; color: #92400e; font-size: .84rem; line-height: 1.45; margin-top: 2px; }
+                    .aviso-tutor-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 10px; background: #d97706; color: #fff; font-weight: 700; font-size: .86rem; text-decoration: none; white-space: nowrap; }
+                    .aviso-tutor-btn:hover { background: #b45309; }
+                    @media (max-width: 640px) { .aviso-tutor { flex-wrap: wrap; } .aviso-tutor-btn { width: 100%; justify-content: center; } }
+                </style>
             <?php endif; ?>
             <div class="info-banner">
                 <i class="fas fa-graduation-cap"></i>
@@ -446,6 +467,6 @@ try {
             setInterval(actualizarHora, 60000);
         });
     </script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

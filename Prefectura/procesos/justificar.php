@@ -43,6 +43,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // AQUÍ SE ACTUALIZA EL ESTATUS Y SE INSERTA EL MOTIVO EN LA NUEVA COLUMNA
                 $update = $pdo->prepare("UPDATE asistencias SET estatus = ?, motivo_justificacion = ? WHERE id_asistencia = ?");
                 $update->execute([$nuevo_estatus, $motivo_final, $id_asistencia]);
+                $sta = $pdo->prepare("SELECT id_alumno, DATE_FORMAT(fecha_hora_escaneo, '%d/%m/%Y') FROM asistencias WHERE id_asistencia = ?");
+                $sta->execute([$id_asistencia]);
+                [$id_al_j, $fecha_j] = $sta->fetch(PDO::FETCH_NUM);
+                bitacora($pdo, 'asistencia', 'justificacion', "Justificó ($nuevo_estatus) el $fecha_j a " . bitacora_quien($pdo, 'alumnos', (int)$id_al_j) . ': ' . mb_substr($motivo_final, 0, 150), 'alumno', (int)$id_al_j);
                 
                 header("Location: ../historial_asistencias.php?msg=exito_justificante");
                 exit();

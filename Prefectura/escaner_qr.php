@@ -36,9 +36,9 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'prefectos') {
 
         @keyframes parpadeo { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
-<body>
+<body data-sin-inactividad>
 
     <div class="header">
         <h1><i class="fas fa-qrcode"></i> Control de Acceso</h1>
@@ -146,6 +146,6 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'prefectos') {
 
         html5QrcodeScanner.render(onScanSuccess);
     </script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

@@ -79,7 +79,7 @@ if (!empty($matricula_buscada)) {
         .btn-delete:hover { background: #fee2e2; color: #dc2626; }
         #modalEditarReporte .custom-select-options { z-index: 2050; }
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
     
@@ -364,6 +364,6 @@ if (!empty($matricula_buscada)) {
             document.getElementById('modalEliminarReporte').style.display = 'none';
         }
     </script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

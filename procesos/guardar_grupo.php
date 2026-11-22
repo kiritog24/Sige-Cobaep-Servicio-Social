@@ -50,6 +50,7 @@ try {
     $sql = "INSERT INTO GRUPOS (semestre, nombre_grupo, turno, id_admin_responsable) VALUES (?, ?, ?, ?)";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$semestre, $nombre_grupo, $turno, $id_admin]);
+    bitacora($pdo, 'grupos', 'alta', "Creó el grupo {$semestre}° \"$nombre_grupo\" $turno", 'grupo', (int)$pdo->lastInsertId());
 
     header("Location: ../$carpeta_admin/gestion_grupos.php?msg=grupo_creado");
     exit();

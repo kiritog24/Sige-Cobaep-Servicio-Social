@@ -38,11 +38,14 @@ $dom = [
 $nombre_tutor = $txt('nombre_tutor', 200);
 $tel_tutor_1  = $dig('telefono_tutor_1');
 $tel_tutor_2  = $dig('telefono_tutor_2');
+$correo_tutor = mb_strtolower($txt('correo_tutor', 150));
 
 // Validaciones
 if ($correo !== '' && !filter_var($correo, FILTER_VALIDATE_EMAIL)) volver_perfil('error', 'El correo electrónico no es válido.');
 if ($telefono !== '' && strlen($telefono) !== 10)                  volver_perfil('error', 'Tu teléfono debe tener 10 dígitos.');
 if ($tel_tutor_1 !== '' && strlen($tel_tutor_1) !== 10)            volver_perfil('error', 'El teléfono del tutor debe tener 10 dígitos.');
+if ($correo_tutor !== '' && !filter_var($correo_tutor, FILTER_VALIDATE_EMAIL)) volver_perfil('error', 'El correo del tutor no es válido.');
+if ($nombre_tutor !== '' && $correo_tutor === '')                  volver_perfil('error', 'Escribe el correo electrónico de tu padre, madre o tutor.');
 if ($tel_tutor_2 !== '' && strlen($tel_tutor_2) !== 10)            volver_perfil('error', 'El teléfono alterno del tutor debe tener 10 dígitos.');
 if ($dom['codigo_postal'] !== '' && strlen($dom['codigo_postal']) !== 5) volver_perfil('error', 'El código postal debe tener 5 dígitos.');
 
@@ -70,12 +73,13 @@ try {
 
     // Tutor (UNIQUE id_alumno; nombre_tutor es obligatorio en la tabla)
     if ($nombre_tutor !== '') {
-        $pdo->prepare("INSERT INTO TUTOR_ALUMNO (id_alumno, nombre_tutor, telefono_1, telefono_2) VALUES (?, ?, ?, ?)
-                       ON DUPLICATE KEY UPDATE nombre_tutor = VALUES(nombre_tutor), telefono_1 = VALUES(telefono_1), telefono_2 = VALUES(telefono_2)")
-            ->execute([$id_alumno, $nombre_tutor, $nul($tel_tutor_1), $nul($tel_tutor_2)]);
+        $pdo->prepare("INSERT INTO TUTOR_ALUMNO (id_alumno, nombre_tutor, telefono_1, telefono_2, correo_tutor) VALUES (?, ?, ?, ?, ?)
+                       ON DUPLICATE KEY UPDATE nombre_tutor = VALUES(nombre_tutor), telefono_1 = VALUES(telefono_1), telefono_2 = VALUES(telefono_2), correo_tutor = VALUES(correo_tutor)")
+            ->execute([$id_alumno, $nombre_tutor, $nul($tel_tutor_1), $nul($tel_tutor_2), $nul($correo_tutor)]);
     }
 
     $pdo->commit();
+    bitacora($pdo, 'perfil', 'datos_contacto', 'Actualizó sus datos de contacto y los de su tutor', 'alumno', $id_alumno);
     volver_perfil('exito', 'Tus datos se guardaron correctamente.');
 } catch (PDOException $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();

@@ -73,6 +73,7 @@ try {
             $st->execute([$id]);
             if (!password_verify($actual, (string)$st->fetchColumn())) volver_perfil_u('error', 'La contraseña actual es incorrecta.', '#seguridad');
             $pdo->prepare("UPDATE $tabla SET contrasena_hash = ? WHERE $idcol = ?")->execute([password_hash($nueva, PASSWORD_DEFAULT), $id]);
+            bitacora($pdo, 'password', 'cambio_propio', 'Cambió su contraseña');
             volver_perfil_u('exito', 'Tu contraseña se actualizó.', '#seguridad');
 
         default:

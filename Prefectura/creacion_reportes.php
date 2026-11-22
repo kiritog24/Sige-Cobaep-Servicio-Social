@@ -98,7 +98,7 @@ try {
         /* Ajuste para el custom-select dentro del modal para que no se oculte */
         #modalEditarReporte .custom-select-options { z-index: 2050; }
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
     
@@ -534,6 +534,6 @@ try {
             document.getElementById('modalEliminarReporte').style.display = 'none';
         }
     </script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

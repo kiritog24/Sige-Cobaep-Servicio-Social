@@ -42,7 +42,7 @@ if (!preg_match('#^https?://' . preg_quote($_SERVER['HTTP_HOST'] ?? 'localhost',
     <style>
         .btn-back{display:inline-flex;align-items:center;gap:8px;color:#6d7f77;text-decoration:none;font-weight:600;font-size:.85rem;margin-bottom:6px;}
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
     <script>if (localStorage.getItem('sidebarCollapsed') === 'true') document.body.classList.add('sidebar-collapsed', 'preload-transitions');</script>
@@ -91,6 +91,7 @@ if (!preg_match('#^https?://' . preg_quote($_SERVER['HTTP_HOST'] ?? 'localhost',
         </div>
     </aside>
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <?php include __DIR__ . '/../includes/menu_estado.php'; ?>
 
     <main class="main-content">
         <header class="topbar">
@@ -109,6 +110,6 @@ if (!preg_match('#^https?://' . preg_quote($_SERVER['HTTP_HOST'] ?? 'localhost',
         </section>
     </main>
     <script src="dashboard_maestro.js"></script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

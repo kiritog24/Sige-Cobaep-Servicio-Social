@@ -62,7 +62,7 @@ try {
     <link rel="stylesheet" href="../admin/style_sidebar.css">
     <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css">
     <link rel="stylesheet" href="../Prefectura/style_historial_asistencias.css">
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
     
@@ -341,7 +341,7 @@ try {
     
     <script src="../Prefectura/procesos/dashboard_prefecturas.js"></script>
     <script src="../Prefectura/procesos/modaldejustificacion.js"></script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>
 

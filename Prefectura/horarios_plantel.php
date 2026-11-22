@@ -29,7 +29,7 @@ try {
     <link rel="stylesheet" href="../admin/style_dashboard_admin.css">
     <link rel="stylesheet" href="../admin/style_sidebar.css">
     <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css">
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
     <?php include __DIR__ . '/includes/sidebar_prefectura.php'; ?>
@@ -46,6 +46,6 @@ try {
         <?php dh_render($datos); ?>
     </main>
     <script src="../Prefectura/procesos/dashboard_prefecturas.js"></script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

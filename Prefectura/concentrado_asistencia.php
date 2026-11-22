@@ -204,7 +204,7 @@ if ($grupo && in_array($formato, ['pdf', 'xlsx'], true)) {
             body { background: #fff !important; }
         }
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
     <?php include __DIR__ . '/includes/sidebar_prefectura.php'; ?>
@@ -317,6 +317,6 @@ if ($grupo && in_array($formato, ['pdf', 'xlsx'], true)) {
         })();
     </script>
     <script src="../Prefectura/procesos/dashboard_prefecturas.js"></script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

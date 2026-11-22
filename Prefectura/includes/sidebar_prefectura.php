@@ -24,6 +24,7 @@ $act = fn(array $paginas) => in_array($pp, $paginas, true) ? ' active' : '';
                 <span class="nav-heading">Conducta</span>
                 <a href="creacion_reportes.php" class="nav-item<?php echo $act(['creacion_reportes.php', 'editar_reporte.php']); ?>"><i class="fa-solid fa-file-lines"></i><span>Reportes de Conducta</span></a>
                 <a href="expediente_alumnos.php" class="nav-item<?php echo $act(['expediente_alumnos.php', 'perfil_alumno.php']); ?>"><i class="fas fa-folder-open"></i><span>Expediente de Alumnos</span></a>
+                <a href="avisos_tutores.php" class="nav-item<?php echo $act(['avisos_tutores.php']); ?>"><i class="fas fa-paper-plane"></i><span>Avisos a tutores</span></a>
 
                 <span class="nav-heading">Información</span>
                 <a href="horarios_plantel.php" class="nav-item<?php echo $act(['horarios_plantel.php']); ?>"><i class="fas fa-calendar-week"></i><span>Horarios del Plantel</span></a>
@@ -41,3 +42,4 @@ $act = fn(array $paginas) => in_array($pp, $paginas, true) ? ' active' : '';
             </div>
         </div>
     </aside>
+    <?php include __DIR__ . '/../../includes/menu_estado.php'; ?>

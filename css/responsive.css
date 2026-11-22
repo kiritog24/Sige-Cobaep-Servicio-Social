@@ -218,3 +218,7 @@ body.menu-open { overflow: hidden; }
     .login-layout .brand-divider { margin: .6rem auto !important; }
     .login-layout .top-header { padding: 1rem !important; }
 }
+
+/* Mientras carga la página, el menú toma su estado (compacto/desplegado) sin animación: evita el "salto" */
+.sige-sin-animacion .sidebar, .sige-sin-animacion .sidebar *, .sige-sin-animacion .main-content,
+.sige-sin-animacion .main, .sige-sin-animacion .collapse-toggle, .sige-sin-animacion .topbar { transition: none !important; }

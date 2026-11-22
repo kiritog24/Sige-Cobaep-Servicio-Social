@@ -40,3 +40,56 @@ ALTER TABLE `alumnos`         ADD COLUMN `debe_cambiar_password` TINYINT(1) NOT 
 ALTER TABLE `maestros`        ADD COLUMN `debe_cambiar_password` TINYINT(1) NOT NULL DEFAULT 0, ADD COLUMN `password_provisional_expira` DATETIME NULL DEFAULT NULL;
 ALTER TABLE `administrativos` ADD COLUMN `debe_cambiar_password` TINYINT(1) NOT NULL DEFAULT 0, ADD COLUMN `password_provisional_expira` DATETIME NULL DEFAULT NULL;
 ALTER TABLE `prefectos`       ADD COLUMN `debe_cambiar_password` TINYINT(1) NOT NULL DEFAULT 0, ADD COLUMN `password_provisional_expira` DATETIME NULL DEFAULT NULL;
+
+-- ------------------------------------------------------------------
+-- Correo del tutor, bitácora y avisos a tutores
+-- (también lo aplica automáticamente database/actualizar_bd.php)
+-- ------------------------------------------------------------------
+ALTER TABLE `TUTOR_ALUMNO` ADD COLUMN IF NOT EXISTS `correo_tutor` VARCHAR(150) NULL DEFAULT NULL;
+
+CREATE TABLE IF NOT EXISTS `BITACORA` (
+    `id_bitacora` INT AUTO_INCREMENT PRIMARY KEY,
+    `fecha` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `rol` VARCHAR(20) NOT NULL,
+    `id_usuario` INT NULL,
+    `usuario` VARCHAR(100) NULL,
+    `nombre_usuario` VARCHAR(200) NULL,
+    `modulo` VARCHAR(40) NOT NULL,
+    `accion` VARCHAR(40) NOT NULL,
+    `descripcion` VARCHAR(500) NOT NULL,
+    `entidad` VARCHAR(40) NULL,
+    `id_entidad` INT NULL,
+    `detalle` TEXT NULL,
+    `ip` VARCHAR(45) NULL,
+    KEY `idx_fecha` (`fecha`),
+    KEY `idx_modulo` (`modulo`, `fecha`),
+    KEY `idx_usuario` (`rol`, `id_usuario`),
+    KEY `idx_entidad` (`entidad`, `id_entidad`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `AVISOS_TUTOR` (
+    `id_aviso` INT AUTO_INCREMENT PRIMARY KEY,
+    `id_alumno` INT NOT NULL,
+    `tipo` ENUM('conducta','faltas') NOT NULL,
+    `referencia` VARCHAR(60) NOT NULL,
+    `correo_destino` VARCHAR(150) NULL,
+    `asunto` VARCHAR(200) NOT NULL,
+    `cuerpo` TEXT NOT NULL,
+    `estatus` ENUM('pendiente','enviado','fallido','sin_correo') NOT NULL DEFAULT 'pendiente',
+    `error` VARCHAR(255) NULL,
+    `intentos` TINYINT NOT NULL DEFAULT 0,
+    `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `fecha_envio` DATETIME NULL,
+    `rol_genero` VARCHAR(20) NULL,
+    `id_usuario_genero` INT NULL,
+    UNIQUE KEY `uq_aviso` (`tipo`, `id_alumno`, `referencia`),
+    KEY `idx_estatus` (`estatus`),
+    CONSTRAINT `fk_aviso_alumno` FOREIGN KEY (`id_alumno`) REFERENCES `ALUMNOS` (`id_alumno`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `CONFIGURACION` (
+    `clave` VARCHAR(60) PRIMARY KEY,
+    `valor` TEXT NULL,
+    `actualizado` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `id_admin` INT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -35,7 +35,7 @@ try {
     
     <link rel="stylesheet" href="style_dashboard_docente.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="style_horario.css?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 
 <body>
@@ -81,6 +81,7 @@ try {
     </aside>
 
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <?php include __DIR__ . '/../includes/menu_estado.php'; ?>
 
     <main class="main-content">
         <header class="topbar">
@@ -191,6 +192,6 @@ try {
             }
         });
     </script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

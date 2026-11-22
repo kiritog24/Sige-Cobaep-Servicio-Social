@@ -2,12 +2,16 @@
 session_start();
 require_once '../config/database.php';
 require_once __DIR__ . '/../includes/topbar_usuario.php';
+require_once __DIR__ . '/../includes/credenciales_lote.php';
 if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'administrativo') {
     header("Location: ../login.php");
     exit();
 }
 $tipo = isset($_GET['tipo']) ? $_GET['tipo'] : 'maestros';
 $registros = []; $generaciones_unicas = [];
+$lote_credenciales = credenciales_lote();
+$lote_es_personal = $lote_credenciales && isset($lote_credenciales['alumnos'][0]['etiqueta']);
+$grupos_pendientes = []; $total_pendientes = 0;
 try {
     if ($tipo == 'admin') {
         $stmt = $pdo->query("SELECT id_admin AS id, usuario AS identificador, CONCAT_WS(' ', nombre, apellido_paterno, apellido_materno) AS nombre_completo, 'Administrativo' AS rol, foto_perfil AS foto FROM ADMINISTRATIVOS ORDER BY nombre ASC");
@@ -21,6 +25,14 @@ try {
             if (preg_match('/(20\d{2})/', $texto_anio, $matches)) $generaciones_unicas[$matches[1]] = $matches[1];
         }
         rsort($generaciones_unicas);
+        // Grupos con alumnos que aún no cambian su contraseña (para generar sus credenciales)
+        $grupos_pendientes = $pdo->query("SELECT g.id_grupo, g.semestre, g.nombre_grupo, g.turno, COUNT(DISTINCT a.id_alumno) AS pendientes
+            FROM GRUPOS g
+            INNER JOIN GRUPO_ALUMNO ga ON ga.id_grupo = g.id_grupo AND ga.fecha_baja IS NULL
+            INNER JOIN ALUMNOS a ON a.id_alumno = ga.id_alumno AND a.debe_cambiar_password = 1 AND a.estatus <> 'Baja'
+            WHERE g.estatus = 'Activo'
+            GROUP BY g.id_grupo ORDER BY g.semestre, g.turno, g.nombre_grupo")->fetchAll();
+        $total_pendientes = (int)$pdo->query("SELECT COUNT(*) FROM ALUMNOS WHERE debe_cambiar_password = 1 AND estatus <> 'Baja'")->fetchColumn();
     } elseif ($tipo == 'prefectos') {
         $stmt = $pdo->query("SELECT id_prefecto AS id, usuario AS identificador, CONCAT_WS(' ', nombre, apellido_paterno, apellido_materno) AS nombre_completo, 'Prefecto' AS rol, foto_perfil AS foto FROM PREFECTOS ORDER BY nombre ASC");
         $registros = $stmt->fetchAll();
@@ -46,7 +58,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
     <link rel="stylesheet" href="style_dashboard_admin.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="style-gestion-usuarios.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="style_sidebar.css">
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -58,7 +70,8 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
                 <div class="pill"><i class="fas fa-users"></i><span id="contadorRegistros">Total: <?php echo count($registros); ?> registros en esta categoría</span></div>
             </div>
             <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                <button type="button" class="btn-primary-add" style="background:#0d9488; border:none; cursor:pointer; box-shadow:0 4px 12px rgba(13,148,136,0.2);" onclick="abrirModalImportar()"><i class="fas fa-file-import"></i> Importar Lista</button>
+                <?php if ($tipo == 'alumnos'): ?><button type="button" class="btn-primary-add" style="background:#0d9488; border:none; cursor:pointer; box-shadow:0 4px 12px rgba(13,148,136,0.2);" onclick="abrirModalImportar()"><i class="fas fa-file-import"></i> Importar Lista</button><?php else: ?><a href="importar_personal.php?tipo=<?php echo urlencode($tipo); ?>" class="btn-primary-add" style="background:#0d9488; border:none; box-shadow:0 4px 12px rgba(13,148,136,0.2);"><i class="fas fa-file-import"></i> Importar Lista</a><?php endif; ?>
+                <?php if ($tipo == 'alumnos'): ?><button type="button" class="btn-primary-add" style="background:#fff; color:#0d9488; border:1px solid #99f6e4; cursor:pointer;" onclick="abrirModal('modalCredenciales')"><i class="fas fa-key"></i> Credenciales</button><a href="correos_institucionales.php" class="btn-primary-add" style="background:#fff; color:#0369a1; border:1px solid #bae6fd;"><i class="fas fa-envelope-open-text"></i> Correos institucionales</a><?php endif; ?>
                 <a href="agregar_usuario.php" class="btn-primary-add"><i class="fas fa-plus"></i> Nuevo Registro</a>
             </div>
         </div>
@@ -70,6 +83,30 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
                     <?php if(isset($_GET['grp']) && $_GET['grp'] > 0): ?><li><i class="fas fa-users-rectangle" style="width:20px; color:#059669;"></i> <strong><?php echo htmlspecialchars($_GET['grp']); ?></strong> grupos nuevos creados.</li><?php endif; ?>
                     <?php if(isset($_GET['dup']) && $_GET['dup'] > 0): ?><li><i class="fas fa-exclamation-triangle" style="width:20px; color:#d97706;"></i> <strong><?php echo htmlspecialchars($_GET['dup']); ?></strong> alumnos omitidos (ya existía).</li><?php endif; ?>
                 </ul>
+            </div>
+        <?php endif; ?>
+        <?php if (!empty($_GET['error'])): ?>
+            <div class="alert alert-error" style="background:#fef2f2; color:#991b1b; padding:15px; border-radius:12px; margin-top:15px; margin-bottom:20px; border:1px solid #fecaca;"><i class="fas fa-times-circle" style="margin-right:8px;"></i> <?php echo htmlspecialchars($_GET['error']); ?></div>
+        <?php endif; ?>
+        <?php if ($lote_credenciales): ?>
+            <div id="credenciales" class="cred-panel">
+                <div class="cred-panel-head">
+                    <div class="cred-ico"><i class="fas fa-key"></i></div>
+                    <div>
+                        <h3>Contraseñas provisionales listas para entregar</h3>
+                        <p><b><?php echo count($lote_credenciales['alumnos']); ?></b> <?php echo $lote_es_personal ? 'personas' : 'alumnos'; ?> · <?php echo htmlspecialchars($lote_credenciales['origen']); ?> · vencen el <b><?php echo htmlspecialchars($lote_credenciales['expira']); ?></b></p>
+                    </div>
+                </div>
+                <p class="cred-aviso"><i class="fas fa-shield-halved"></i> Cada <?php echo $lote_es_personal ? 'persona' : 'alumno'; ?> tiene una contraseña única generada por el sistema. Solo se guarda cifrada, así que <b>descárgalas ahora</b>: estarán disponibles durante esta sesión (máx. <?php echo CREDENCIALES_LOTE_HORAS; ?> h). Si las pierdes, <?php echo $lote_es_personal ? 'restablécelas desde <b>Editar</b> de cada usuario' : 'usa <b>Credenciales</b> para generar nuevas'; ?>.</p>
+                <div class="cred-acciones">
+                    <a class="cred-btn" href="../procesos/descargar_credenciales.php?formato=fichas"><i class="fas fa-scissors"></i> Fichas recortables (PDF)</a>
+                    <a class="cred-btn" href="../procesos/descargar_credenciales.php?formato=lista"><i class="fas fa-file-pdf"></i> <?php echo $lote_es_personal ? 'Lista con firma (PDF)' : 'Lista por grupo con firma (PDF)'; ?></a>
+                    <a class="cred-btn" href="../procesos/descargar_credenciales.php?formato=xlsx"><i class="fas fa-file-excel"></i> Excel</a>
+                    <form action="../procesos/credenciales_alumnos.php" method="POST" style="margin:0" onsubmit="return confirmarDescartar(this);">
+                        <input type="hidden" name="accion" value="descartar">
+                        <button type="submit" class="cred-btn sec"><i class="fas fa-check"></i> Ya las descargué</button>
+                    </form>
+                </div>
             </div>
         <?php endif; ?>
         <?php if(isset($_GET['msg']) && $_GET['msg'] == 'import_error'): ?>
@@ -136,7 +173,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
                 <button type="button" onclick="cerrarModalImportar()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#6b7280; padding:0;">&times;</button>
             </div>
             <div style="background:#f0fdf4; border-left:4px solid #22c55e; padding:15px; border-radius:6px; margin-bottom:20px;">
-                <p style="margin:0; font-size:0.85rem; color:#166534; line-height:1.5;"><strong>Paso previo:</strong> Abre tu lista en Excel y guárdala como <strong>"CSV (delimitado por comas)"</strong>.<br><br>El sistema ignorará los encabezados, evitará duplicados por matrícula, separará los nombres y asignará la contraseña temporal <strong>Cobaep2026!</strong></p>
+                <p style="margin:0; font-size:0.85rem; color:#166534; line-height:1.5;"><strong>Paso previo:</strong> Abre tu lista en Excel y guárdala como <strong>"CSV (delimitado por comas)"</strong>.<br><br>El sistema ignorará los encabezados, evitará duplicados por matrícula y separará los nombres.<br><br><strong>Contraseñas:</strong> a cada alumno se le genera una <strong>contraseña provisional única</strong> (vence en <?php echo IMPORTACION_DIAS; ?> días). Al terminar podrás descargar las <strong>fichas recortables</strong> o la lista en PDF/Excel para entregarlas. En su primer ingreso, el alumno deberá crear su propia contraseña.</p>
             </div>
             <form action="../procesos/importar_alumnos.php" method="POST" enctype="multipart/form-data">
                 <input type="file" name="archivo_csv" accept=".csv" required style="width:100%; padding:12px; border:2px dashed #cbd5e1; border-radius:8px; margin-bottom:20px; background:#f8fafc; cursor:pointer; box-sizing:border-box; color:#4b5563;">
@@ -144,6 +181,66 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
             </form>
         </div>
     </div>
+    <?php if ($tipo == 'alumnos'): ?>
+    <div id="modalCredenciales" class="cred-modal" onclick="if(event.target===this) cerrarModal('modalCredenciales')">
+        <div class="cred-modal-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h2 style="margin:0; color:#111827; font-size:1.25rem;"><i class="fas fa-key" style="color:#0d9488; margin-right:8px;"></i> Credenciales provisionales</h2>
+                <button type="button" onclick="cerrarModal('modalCredenciales')" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#6b7280; padding:0;" aria-label="Cerrar">&times;</button>
+            </div>
+            <div style="background:#f0fdfa; border-left:4px solid #14b8a6; padding:14px; border-radius:6px; margin-bottom:16px; font-size:.85rem; color:#115e59; line-height:1.5;">
+                Genera una <b>contraseña provisional única</b> para cada alumno que <b>todavía no ha cambiado</b> su contraseña y descarga las fichas para entregarlas.
+                Los alumnos que ya crearon su propia contraseña <b>no se modifican</b>.
+            </div>
+            <form action="../procesos/credenciales_alumnos.php" method="POST" onsubmit="return confirmarGenerar(this);">
+                <input type="hidden" name="accion" value="generar">
+                <label for="credGrupo" style="display:block; font-size:.82rem; font-weight:700; color:#475569; margin-bottom:6px;">Grupo</label>
+                <select name="id_grupo" id="credGrupo" style="width:100%; padding:11px 12px; border:1px solid #cbd5e1; border-radius:10px; font-family:inherit; font-size:.92rem; margin-bottom:8px;">
+                    <option value="0" data-n="<?php echo $total_pendientes; ?>">Todos los grupos (<?php echo $total_pendientes; ?> pendientes)</option>
+                    <?php foreach ($grupos_pendientes as $gp): ?>
+                        <option value="<?php echo (int)$gp['id_grupo']; ?>" data-n="<?php echo (int)$gp['pendientes']; ?>"><?php echo htmlspecialchars(credenciales_grupo_txt((int)$gp['semestre'], $gp['nombre_grupo'], $gp['turno'])); ?> (<?php echo (int)$gp['pendientes']; ?> pendientes)</option>
+                    <?php endforeach; ?>
+                </select>
+                <p style="font-size:.78rem; color:#b45309; margin:0 0 16px;"><i class="fas fa-triangle-exclamation"></i> Si ya habías entregado contraseñas provisionales a ese grupo, las anteriores dejarán de funcionar.</p>
+                <button type="submit" <?php echo $total_pendientes ? '' : 'disabled'; ?> style="width:100%; padding:13px; border-radius:12px; background:#0d9488; color:#fff; border:none; font-weight:600; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;"><i class="fas fa-wand-magic-sparkles"></i> Generar y preparar descarga</button>
+            </form>
+        </div>
+    </div>
+    <?php endif; ?>
+    <style>
+        .cred-panel { background:#fff; border:1px solid #99f6e4; border-radius:16px; padding:20px; margin:15px 0 25px; box-shadow:0 6px 18px rgba(13,148,136,.08); }
+        .cred-panel-head { display:flex; gap:14px; align-items:center; }
+        .cred-ico { width:46px; height:46px; border-radius:12px; background:#ccfbf1; color:#0f766e; display:grid; place-items:center; font-size:1.2rem; flex-shrink:0; }
+        .cred-panel h3 { margin:0; font-size:1.05rem; color:#134e4a; }
+        .cred-panel-head p { margin:3px 0 0; font-size:.86rem; color:#475569; }
+        .cred-aviso { font-size:.84rem; color:#92400e; background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:10px 12px; margin:14px 0; line-height:1.5; }
+        .cred-acciones { display:flex; gap:10px; flex-wrap:wrap; }
+        .cred-btn { display:inline-flex; align-items:center; gap:8px; padding:10px 16px; border-radius:10px; background:#0d9488; color:#fff; text-decoration:none; font-weight:600; font-size:.88rem; border:none; cursor:pointer; font-family:inherit; }
+        .cred-btn:hover { background:#0f766e; }
+        .cred-btn.sec { background:#fff; color:#334155; border:1px solid #cbd5e1; }
+        .cred-btn.sec:hover { background:#f1f5f9; }
+        .cred-modal { display:none; position:fixed; inset:0; background:rgba(3,43,30,.6); z-index:3000; align-items:center; justify-content:center; backdrop-filter:blur(4px); padding:16px; }
+        .cred-modal.abierto { display:flex; }
+        .cred-modal-box { background:#fff; padding:26px; border-radius:16px; max-width:500px; width:100%; box-shadow:0 24px 60px rgba(0,0,0,.2); max-height:90vh; overflow:auto; }
+        @media (max-width:600px) { .cred-btn { width:100%; justify-content:center; } .cred-acciones form { width:100%; } }
+    </style>
+    <script>
+        function abrirModal(id){ document.getElementById(id).classList.add('abierto'); }
+        function cerrarModal(id){ document.getElementById(id).classList.remove('abierto'); }
+        function preguntar(form, msg, titulo, aceptar){
+            if (form.dataset.ok) return true;
+            const seguir = () => { form.dataset.ok = '1'; const b = form.querySelector('button[type=submit]'); if (b) b.disabled = true; form.submit(); };
+            if (window.sigeConfirm) { window.sigeConfirm(msg, { titulo: titulo, aceptar: aceptar }).then(ok => { if (ok) seguir(); }); return false; }
+            return confirm(msg);
+        }
+        function confirmarGenerar(form){
+            const op = document.getElementById('credGrupo').selectedOptions[0];
+            return preguntar(form, 'Se generarán ' + (op ? op.dataset.n : 0) + ' contraseñas provisionales nuevas. Las provisionales anteriores de esos alumnos dejarán de funcionar. ¿Continuar?', 'Generar credenciales', 'Generar');
+        }
+        function confirmarDescartar(form){
+            return preguntar(form, 'Después de esto ya no podrás volver a descargar estas contraseñas. ¿Ya guardaste las fichas o la lista?', 'Borrar de la sesión', 'Sí, ya las guardé');
+        }
+    </script>
     <script src="../js/ficha_modal.js"></script>
     <script>
         function abrirModalImportar(){ const m=document.getElementById('modalImportar'), c=document.getElementById('modalImportarContent'); m.style.display='flex'; setTimeout(()=>{ m.style.opacity='1'; c.style.transform='translateY(0)'; },10); }
@@ -179,6 +276,6 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
             if (alertas.length > 0) setTimeout(() => alertas.forEach(alerta => { alerta.style.transition = 'opacity 0.5s ease, transform 0.5s ease'; alerta.style.opacity = '0'; alerta.style.transform = 'translateY(-10px)'; setTimeout(() => alerta.style.display = 'none', 500); }), 5000);
         });
     </script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

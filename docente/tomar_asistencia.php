@@ -89,7 +89,7 @@ try {
             .radio-label { width: 100%; border-radius: 8px; height: 45px; }
         }
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body style="background: #f1f5f9; padding: 2rem;">
     
@@ -157,6 +157,6 @@ try {
 
     </div>
 
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

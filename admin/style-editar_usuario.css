@@ -583,6 +583,14 @@
     }
 }
 
+/* El contenido usa 25px de margen interno entre 993 y 1150px: la barra debe compensar lo mismo */
+@media (min-width: 993px) and (max-width: 1150px) {
+    .edit-topbar {
+        margin: -27px -25px 26px -25px;
+        padding: 0 25px;
+    }
+}
+
 @media (max-width: 992px) {
     .edit-topbar {
         margin: -20px -18px 22px -18px;

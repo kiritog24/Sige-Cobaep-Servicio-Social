@@ -31,8 +31,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_baja->execute([$id_alumno]);
 
             // 3. Inscribir al alumno en el nuevo grupo
-            $stmt_inscripcion = $pdo->prepare("INSERT INTO GRUPO_ALUMNO (id_grupo, id_alumno, fecha_asignacion) VALUES (?, ?, CURDATE())");
+            $stmt_inscripcion = $pdo->prepare("INSERT INTO GRUPO_ALUMNO (id_grupo, id_alumno, fecha_asignacion) VALUES (?, ?, CURDATE()) ON DUPLICATE KEY UPDATE fecha_baja = NULL, fecha_asignacion = CURDATE()");
             $stmt_inscripcion->execute([$id_grupo_nuevo, $id_alumno]);
+            bitacora($pdo, 'grupos', 'inscripcion', 'Inscribió a ' . bitacora_quien($pdo, 'alumnos', (int)$id_alumno) . ' en el grupo ' . bitacora_quien($pdo, 'grupo', (int)$id_grupo_nuevo), 'alumno', (int)$id_alumno);
 
             header("Location: ../ver_grupo.php?id=$id_grupo_nuevo&msg=alumno_inscrito");
             exit();

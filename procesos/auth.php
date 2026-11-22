@@ -91,6 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Si el rol de la base de datos NO es igual al de la tarjeta elegida:
         if ($rol_real !== $rol_esperado) {
             login_registrar_fallo($pdo, $username_ingresado);
+            bitacora($pdo, 'sesion', 'fallido', 'Intento fallido de inicio de sesión con el usuario "' . mb_substr($username_ingresado, 0, 60) . '" (portal equivocado)');
             header("Location: ../login.php?rol=" . $rol_url . "&error=1");
             exit();
         }
@@ -105,16 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Nuevo ID de sesión al iniciar (evita fijación de sesión)
         session_regenerate_id(true);
 
-        // "Recordar sesión": la cookie dura 30 días en lugar de borrarse al cerrar el navegador
-        if (!empty($_POST['remember'])) {
-            $p = session_get_cookie_params();
-            setcookie(session_name(), session_id(), [
-                'expires'  => time() + 60 * 60 * 24 * 30,
-                'path'     => $p['path'] ?: '/',
-                'httponly' => true,
-                'samesite' => 'Lax',
-            ]);
-        }
+        // Sin "Recordar sesión": la sesión termina al cerrar el navegador (equipos compartidos del plantel)
 
         // Configurar el "Gafete VIP" (Sesiones) unificadas
         $_SESSION['id_usuario'] = $usuario_encontrado['id_usuario'];
@@ -124,6 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $_SESSION['grado']      = $usuario_encontrado['grado'];
         $_SESSION['grupo']      = $usuario_encontrado['grupo'];
         $_SESSION['pwd_revisada'] = 1;
+        bitacora($pdo, 'sesion', 'inicio', 'Inició sesión');
         // Contraseña provisional o temporal: primero debe crear la suya (cualquier rol)
         if ((int)($usuario_encontrado['debe_cambiar_password'] ?? 0) === 1) {
             $_SESSION['debe_cambiar_password'] = 1;
@@ -150,6 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         exit();
     } else {
         login_registrar_fallo($pdo, $username_ingresado);
+        bitacora($pdo, 'sesion', 'fallido', 'Intento fallido de inicio de sesión con el usuario "' . mb_substr($username_ingresado, 0, 60) . '"');
         header("Location: ../login.php?rol=" . $rol_url . "&error=1");
         exit();
     }

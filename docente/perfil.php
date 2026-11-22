@@ -253,7 +253,7 @@ try {
         .fuerza { height: 5px; background: #e2e8f0; border-radius: 4px; margin-top: 8px; overflow: hidden; }
         .fuerza span { display: block; height: 100%; width: 0; transition: .25s; }
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 
 <body>
@@ -313,6 +313,7 @@ try {
     </aside>
 
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <?php include __DIR__ . '/../includes/menu_estado.php'; ?>
 
     <main class="main-content">
         <!-- TOPBAR -->
@@ -495,6 +496,6 @@ try {
             if (nueva.value !== conf.value) { e.preventDefault(); revisar(); conf.focus(); }
         });
     </script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

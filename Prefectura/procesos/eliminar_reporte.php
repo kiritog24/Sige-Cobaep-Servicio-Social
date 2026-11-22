@@ -63,6 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 
                 $stmt_update->execute([':puntos' => $puntos_a_devolver, ':id_alumno' => $id_alumno]);
                 $pdo->commit();
+                bitacora($pdo, 'conducta', 'eliminacion', "Eliminó el reporte de conducta #$id_reporte de " . bitacora_quien($pdo, 'alumnos', (int)$id_alumno) . " (se devolvieron $puntos_a_devolver puntos)", 'reporte', (int)$id_reporte);
             }
             
             $separador = (strpos($return_url, '?') !== false) ? '&' : '?';

@@ -30,9 +30,9 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="style_dashboard_admin.css">
-    <link rel="stylesheet" href="style-agregar-grupos.css">
+    <link rel="stylesheet" href="style-agregar-grupos.css?v=2">
     <link rel="stylesheet" href="style_sidebar.css">
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -40,7 +40,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
         <header class="group-topbar">
             <div class="group-topbar-left">
                 <div class="breadcrumb">
-                    <a href="gestion_grupos.php" style="text-decoration:none; color:inherit;">Gestión de Grupos</a>
+                    <a href="gestion_grupos.php">Gestión de Grupos</a>
                     <i class="fas fa-chevron-right"></i><strong>Editar Grupo</strong>
                 </div>
             </div>
@@ -133,6 +133,6 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
         sem.addEventListener('change', updatePreview);
         trn.addEventListener('change', updatePreview);
     </script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

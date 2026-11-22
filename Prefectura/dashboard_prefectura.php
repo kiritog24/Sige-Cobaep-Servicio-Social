@@ -97,7 +97,7 @@ $nombre_usuario = isset($_SESSION['nombre'])
         .status-suspendido { background-color: #000000; color: #ffffff; }
         @keyframes popIn { 0% { opacity: 0; transform: scale(0.95) translateY(10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
 
@@ -343,6 +343,6 @@ $nombre_usuario = isset($_SESSION['nombre'])
 
     <script src="../Prefectura/procesos/dashboard_prefecturas.js"></script>
 
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

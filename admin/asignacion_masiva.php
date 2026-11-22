@@ -42,7 +42,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
     <link rel="stylesheet" href="style_dashboard_admin.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="style_sidebar.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="style-asignacion_masiva.css?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
 
@@ -211,6 +211,6 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
             });
         });
     </script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

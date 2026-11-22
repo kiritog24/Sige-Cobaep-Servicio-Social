@@ -7,7 +7,7 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'administrativo') {
     exit();
 }
 try {
-    $sql = "SELECT hm.id_horario, hm.id_maestro, hm.id_grupo, hm.nombre_archivo, hm.ruta_pdf, hm.fecha_subida, hm.ciclo, hm.anio, CONCAT_WS(' ', m.nombre, m.apellido_paterno, m.apellido_materno) AS docente_nombre, m.usuario AS docente_usuario, g.semestre, g.nombre_grupo, g.turno FROM HORARIOS_MAESTRO hm INNER JOIN MAESTROS m ON hm.id_maestro = m.id_maestro INNER JOIN GRUPOS g ON hm.id_grupo = g.id_grupo ORDER BY hm.anio DESC, hm.fecha_subida DESC";
+    $sql = "SELECT hm.id_horario, hm.id_maestro, hm.id_grupo, hm.nombre_archivo, hm.ruta_pdf, hm.fecha_subida, hm.ciclo, hm.anio, CONCAT_WS(' ', m.nombre, m.apellido_paterno, m.apellido_materno) AS docente_nombre, m.usuario AS docente_usuario, m.foto_perfil AS docente_foto, g.semestre, g.nombre_grupo, g.turno FROM HORARIOS_MAESTRO hm INNER JOIN MAESTROS m ON hm.id_maestro = m.id_maestro INNER JOIN GRUPOS g ON hm.id_grupo = g.id_grupo ORDER BY hm.anio DESC, hm.fecha_subida DESC";
     $horarios = $pdo->query($sql)->fetchAll();
     $maestros = $pdo->query("SELECT id_maestro, CONCAT_WS(' ', nombre, apellido_paterno, apellido_materno) AS nombre_completo, usuario, horario_archivo FROM MAESTROS ORDER BY nombre ASC")->fetchAll();
     $grupos = $pdo->query("SELECT id_grupo, semestre, nombre_grupo, turno FROM GRUPOS ORDER BY semestre, nombre_grupo ASC")->fetchAll();
@@ -27,7 +27,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
     <link rel="stylesheet" href="style_dashboard_admin.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="style-gestion-usuarios.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="style_sidebar.css">
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -68,7 +68,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
                         <?php if(count($horarios) > 0): ?>
                             <?php foreach($horarios as $h): ?>
                                 <tr class="fila-horario" data-maestro="<?php echo strtolower(htmlspecialchars($h['docente_nombre'])); ?>" data-turno="<?php echo strtolower(htmlspecialchars($h['turno'])); ?>">
-                                    <td><div class="user-cell"><div class="user-avatar docente-avatar"><i class="fas fa-user-tie"></i></div><div class="user-info"><strong><?php echo htmlspecialchars($h['docente_nombre']); ?></strong><span>Usuario: <?php echo htmlspecialchars($h['docente_usuario']); ?></span></div></div></td>
+                                    <td><div class="user-cell" data-ficha-tipo="maestros" data-ficha-id="<?php echo (int)$h['id_maestro']; ?>" tabindex="0" title="Ver perfil del docente"><?php echo avatar_html($h['docente_foto'] ?? null, $h['docente_nombre'], 'user-avatar docente-avatar', 'overflow:hidden;'); ?><div class="user-info"><strong><?php echo htmlspecialchars($h['docente_nombre']); ?> <i class="fas fa-circle-info" style="color:#0d9488; font-size:.75rem;"></i></strong><span>Usuario: <?php echo htmlspecialchars($h['docente_usuario']); ?></span></div></div></td>
                                     <td><strong><?php echo htmlspecialchars($h['semestre'] . '° "' . $h['nombre_grupo'] . '"'); ?></strong><br><small style="color:#6b7280;">Turno <?php echo htmlspecialchars($h['turno']); ?></small></td>
                                     <td><span class="badge-role docente"><?php echo htmlspecialchars($h['ciclo'] . ' ' . $h['anio']); ?></span></td>
                                     <td>
@@ -80,6 +80,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
                                     </td>
                                     <td>
                                         <div class="action-buttons">
+                                            <button type="button" class="btn-action view" data-ficha-tipo="maestros" data-ficha-id="<?php echo (int)$h['id_maestro']; ?>" style="background:#ecfdf5; color:#047857; border:none; cursor:pointer; font-family:inherit;"><i class="fas fa-eye"></i> Ver perfil</button>
                                             <button type="button" class="btn-action edit" style="border:none; cursor:pointer;" onclick="editarHorario(<?php echo $h['id_horario']; ?>, <?php echo $h['id_maestro']; ?>, <?php echo $h['id_grupo']; ?>, '<?php echo $h['ciclo']; ?>', '<?php echo $h['anio']; ?>')"><i class="fas fa-pen"></i> Editar</button>
                                             <a href="Procesos/guardar_horario_admin.php?eliminar=<?php echo $h['id_horario']; ?>" class="btn-action delete" onclick="return confirm('¿Seguro que deseas eliminar este registro de horario?');"><i class="fas fa-trash"></i> Eliminar</a>
                                         </div>
@@ -168,6 +169,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
             if(filtroT) filtroT.addEventListener('change', filtrar);
         });
     </script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/ficha_modal.js"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

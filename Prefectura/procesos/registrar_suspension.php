@@ -29,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $stmt = $pdo->prepare("INSERT INTO SUSPENSIONES_CLASES (motivo, fecha_inicio, fecha_fin) VALUES (?, ?, ?)");
         $stmt->execute([$motivo, $fecha_inicio, $fecha_fin]);
+        bitacora($pdo, 'asistencia', 'suspension_clases', 'Registró suspensión de clases del ' . date('d/m/Y', strtotime($fecha_inicio)) . ' al ' . date('d/m/Y', strtotime($fecha_fin)) . ': ' . mb_substr($motivo, 0, 150));
         
         header("Location: ../dashboard_prefectura.php?msg=suspension_registrada");
         exit();

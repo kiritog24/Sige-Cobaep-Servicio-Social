@@ -39,7 +39,7 @@ $al = $d['al'];
         .btn-back{display:inline-flex;align-items:center;gap:8px;color:#6d7f77;text-decoration:none;font-weight:600;font-size:.9rem;margin-bottom:10px;}
         .btn-back i{background:#f1f5f9;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;}
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
     <?php include __DIR__ . '/includes/sidebar_prefectura.php'; ?>
@@ -62,6 +62,6 @@ $al = $d['al'];
         </section>
     </main>
     <script src="../Prefectura/procesos/dashboard_prefecturas.js"></script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

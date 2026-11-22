@@ -48,6 +48,12 @@ $pagina_actual = basename($_SERVER['PHP_SELF']);
             <a href="horarios_plantel.php" class="nav-item <?php echo ($pagina_actual == 'horarios_plantel.php') ? 'active' : ''; ?>">
                 <i class="fas fa-calendar-week"></i><span>Horarios del Plantel</span>
             </a>
+            <a href="bitacora.php" class="nav-item <?php echo ($pagina_actual == 'bitacora.php') ? 'active' : ''; ?>">
+                <i class="fas fa-clock-rotate-left"></i><span>Bitácora</span>
+            </a>
+            <a href="config_correo.php" class="nav-item <?php echo ($pagina_actual == 'config_correo.php') ? 'active' : ''; ?>">
+                <i class="fas fa-envelope-circle-check"></i><span>Correo de avisos</span>
+            </a>
 
             <span class="nav-heading">Cuenta</span>
             <a href="perfil.php" class="nav-item <?php echo ($pagina_actual == 'perfil.php') ? 'active' : ''; ?>">
@@ -66,3 +72,4 @@ $pagina_actual = basename($_SERVER['PHP_SELF']);
 </aside>
 
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
+<?php include __DIR__ . '/../includes/menu_estado.php'; ?>

@@ -25,6 +25,7 @@ try {
     if (($_POST['accion'] ?? '') === 'quitar') {
         $id_maestro = (int)($_POST['id_maestro'] ?? 0);
         $pdo->prepare("DELETE FROM GRUPO_MAESTRO WHERE id_grupo = ? AND id_maestro = ?")->execute([$id_grupo, $id_maestro]);
+        bitacora($pdo, 'docentes', 'quitar', 'Quitó a ' . bitacora_quien($pdo, 'maestros', $id_maestro) . ' del grupo ' . bitacora_quien($pdo, 'grupo', $id_grupo), 'grupo', $id_grupo);
         header("Location: ../admin/ver_grupo.php?id=$id_grupo&msg=docente_quitado");
         exit();
     }
@@ -55,6 +56,10 @@ try {
     }
 
     $pdo->commit();
+    if ($nuevos || $quitados) {
+        bitacora($pdo, 'docentes', 'asignacion', 'Actualizó los docentes del grupo ' . bitacora_quien($pdo, 'grupo', $id_grupo) . ': ' . count($nuevos) . ' asignados, ' . count($quitados) . ' quitados', 'grupo', $id_grupo,
+                 ['asignados' => array_map(fn($i) => bitacora_quien($pdo, 'maestros', $i), array_values($nuevos)), 'quitados' => array_map(fn($i) => bitacora_quien($pdo, 'maestros', $i), array_values($quitados))]);
+    }
     header("Location: ../admin/ver_grupo.php?id=$id_grupo&msg=docentes_asignados&nuevos=" . count($nuevos) . "&quitados=" . count($quitados));
     exit();
 } catch (PDOException $e) {

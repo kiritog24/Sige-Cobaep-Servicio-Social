@@ -50,6 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ->execute([password_hash($nueva, PASSWORD_DEFAULT), $id_usuario]);
             unset($_SESSION['debe_cambiar_password']);
             session_regenerate_id(true);
+            bitacora($pdo, 'password', 'cambio_propio', 'Cambió su contraseña' . ($obligatorio ? ' (era provisional)' : ''));
             header("Location: " . $c['inicio'] . "?exito=" . urlencode('Tu contraseña se actualizó correctamente.'));
             exit();
         } catch (PDOException $e) {

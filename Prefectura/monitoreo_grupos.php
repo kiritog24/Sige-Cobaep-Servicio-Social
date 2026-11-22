@@ -127,7 +127,7 @@ try {
         .btn-folder { background-color: #f1f5f9; color: #334155; }
         .btn-folder:hover { background-color: #e2e8f0; color: #0f172a; }
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 
 <body>
@@ -244,6 +244,6 @@ try {
             document.getElementById('modalFechaLista').style.display = 'flex';
         }
     </script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

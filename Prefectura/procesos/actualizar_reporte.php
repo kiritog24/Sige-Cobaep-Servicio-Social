@@ -45,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Se agregó el ?msg= para el modal
+        bitacora($pdo, 'conducta', 'edicion', "Editó el reporte de conducta #$id_reporte de " . bitacora_quien($pdo, 'alumnos', (int)$id_alumno), 'reporte', (int)$id_reporte);
         $separador = (strpos($return_url, '?') !== false) ? '&' : '?';
         header("Location: ../" . $return_url . $separador . "msg=exito_actualizar");
         exit();

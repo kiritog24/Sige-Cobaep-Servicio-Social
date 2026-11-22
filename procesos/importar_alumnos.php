@@ -1,6 +1,13 @@
 <?php
+/**
+ * procesos/importar_alumnos.php — Importación masiva de alumnos desde CSV.
+ * Cada alumno nuevo recibe una contraseña provisional ÚNICA generada por el sistema (vence en
+ * IMPORTACION_DIAS días y se debe cambiar al primer ingreso). Las contraseñas quedan disponibles
+ * para descargar (fichas PDF / Excel) desde el Directorio durante la sesión del administrativo.
+ */
 session_start();
 require_once '../config/database.php';
+require_once __DIR__ . '/../includes/credenciales_lote.php';
 
 // Validar que sea administrativo
 if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'administrativo') {
@@ -11,13 +18,13 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'administrativo') {
 if (isset($_FILES['archivo_csv']) && $_FILES['archivo_csv']['error'] === UPLOAD_ERR_OK) {
     $fileTmpPath = $_FILES['archivo_csv']['tmp_name'];
     
-    $password_default = "Cobaep2026!";
-    $hash_seguro = password_hash($password_default, PASSWORD_BCRYPT);
+    @set_time_limit(0);   // generar un hash por alumno toma unos milisegundos cada uno
     $id_admin_actual = $_SESSION['id_usuario']; 
     
     $registros_exitosos = 0;
     $registros_duplicados = 0;
     $grupos_creados_auto = 0; 
+    $credenciales = [];   // contraseñas provisionales generadas (para las fichas)
     
     if (($handle = fopen($fileTmpPath, "r")) !== FALSE) {
         
@@ -27,8 +34,8 @@ if (isset($_FILES['archivo_csv']) && $_FILES['archivo_csv']['error'] === UPLOAD_
         $stmtCheck = $pdo->prepare("SELECT COUNT(*) FROM ALUMNOS WHERE matricula = ?");
         
         $sqlAlumno = "INSERT INTO ALUMNOS 
-                (matricula, codigo_qr, contrasena_hash, turno, sexo, nombre, apellido_paterno, apellido_materno, estatus, puntos_conducta, semestre, periodo_ingreso) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 100, ?, ?)";
+                (matricula, codigo_qr, contrasena_hash, debe_cambiar_password, password_provisional_expira, turno, sexo, nombre, apellido_paterno, apellido_materno, estatus, puntos_conducta, semestre, periodo_ingreso) 
+                VALUES (?, ?, ?, 1, NOW() + INTERVAL " . IMPORTACION_DIAS . " DAY, ?, ?, ?, ?, ?, ?, 100, ?, ?)";
         $stmtInsertAlumno = $pdo->prepare($sqlAlumno);
 
         $sqlBuscarGrupo = "SELECT id_grupo FROM GRUPOS WHERE semestre = ? AND UPPER(nombre_grupo) = ? AND turno = ? AND estatus = 'Activo' LIMIT 1";
@@ -110,8 +117,9 @@ if (isset($_FILES['archivo_csv']) && $_FILES['archivo_csv']['error'] === UPLOAD_
             try {
                 $pdo->beginTransaction();
 
-                // 5. INSERTAR AL ALUMNO
-                $stmtInsertAlumno->execute([$matricula, $codigo_qr, $hash_seguro, $turno, $sexo_limpio, $nombre_pila, $apellido_p, $apellido_m, $estatus, $semestre_ingreso, $periodo_ingreso]);
+                // 5. INSERTAR AL ALUMNO (con su propia contraseña provisional)
+                $provisional = generar_password_provisional();
+                $stmtInsertAlumno->execute([$matricula, $codigo_qr, password_hash($provisional, PASSWORD_DEFAULT), $turno, $sexo_limpio, $nombre_pila, $apellido_p, $apellido_m, $estatus, $semestre_ingreso, $periodo_ingreso]);
                 $id_alumno_nuevo = $pdo->lastInsertId();
 
                 // 6. BUSCAR EL GRUPO (Y CREARLO SI NO EXISTE)
@@ -138,12 +146,25 @@ if (isset($_FILES['archivo_csv']) && $_FILES['archivo_csv']['error'] === UPLOAD_
 
                 $pdo->commit();
                 $registros_exitosos++;
+                $credenciales[] = [
+                    'matricula' => $matricula,
+                    'nombre'    => trim("$apellido_p $apellido_m $nombre_pila"),
+                    'grupo'     => !empty($letra_grupo) ? credenciales_grupo_txt($semestre_ingreso, $letra_grupo, $turno) : 'Sin grupo',
+                    'password'  => $provisional,
+                ];
 
             } catch (Exception $e) {
                 $pdo->rollBack();
             }
         }
         fclose($handle);
+    }
+
+    bitacora($pdo, 'usuarios', 'importacion', "Importó lista de alumnos: $registros_exitosos registrados, $registros_duplicados omitidos (ya existían), $grupos_creados_auto grupos creados",
+             'alumno', null, ['matriculas' => array_column($credenciales, 'matricula')]);
+
+    if ($credenciales) {
+        credenciales_guardar_lote($credenciales, 'Importación de lista', credenciales_expira_texto($pdo));
     }
     
     header("Location: ../admin/gestion_usuarios.php?tipo=alumnos&msg=import_success&reg={$registros_exitosos}&grp={$grupos_creados_auto}&dup={$registros_duplicados}");
@@ -154,4 +175,3 @@ if (isset($_FILES['archivo_csv']) && $_FILES['archivo_csv']['error'] === UPLOAD_
     header("Location: ../admin/gestion_usuarios.php?tipo=alumnos&msg=import_error");
     exit();
 }
-?>

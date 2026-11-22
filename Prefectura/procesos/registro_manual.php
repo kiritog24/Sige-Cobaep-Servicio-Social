@@ -70,6 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     $stmtInsert = $pdo->prepare("INSERT INTO asistencias (id_alumno, fecha_hora_escaneo, tipo_registro, estatus, id_prefecto) VALUES (?, NOW(), 'Entrada', ?, ?)");
                     $stmtInsert->execute([$alumno['id_alumno'], $estatus_db, $id_prefecto]);
+                    bitacora($pdo, 'asistencia', 'registro_manual', "Registró manualmente la entrada ($estatus_db) de " . bitacora_quien($pdo, 'alumnos', (int)$alumno['id_alumno']), 'alumno', (int)$alumno['id_alumno']);
 
                     header("Location: ../dashboard_prefectura.php?msg=exito_entrada");
                     exit();
@@ -87,6 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // ÉXITO AL REGISTRAR SALIDA
                     $stmtUpdate = $pdo->prepare("UPDATE asistencias SET fecha_hora_salida = NOW() WHERE id_asistencia = ?");
                     $stmtUpdate->execute([$registro_hoy['id_asistencia']]);
+                    bitacora($pdo, 'asistencia', 'registro_manual', 'Registró manualmente la salida de ' . bitacora_quien($pdo, 'alumnos', (int)$alumno['id_alumno']), 'alumno', (int)$alumno['id_alumno']);
                     
                     header("Location: ../dashboard_prefectura.php?msg=exito_salida");
                     exit();

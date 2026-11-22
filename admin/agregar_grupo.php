@@ -23,8 +23,8 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
     <!-- CSS del sistema -->
     <link rel="stylesheet" href="style_dashboard_admin.css">
     <link rel="stylesheet" href="style_sidebar.css">
-    <link rel="stylesheet" href="style-agregar-grupos.css">
-    <link rel="stylesheet" href="../css/responsive.css?v=3">
+    <link rel="stylesheet" href="style-agregar-grupos.css?v=2">
+    <link rel="stylesheet" href="../css/responsive.css?v=4">
 </head>
 <body>
 
@@ -37,7 +37,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
             <div class="group-topbar-left">
                 <button class="mobile-menu" id="mobileMenu" type="button" aria-label="Abrir menú"><i class="fas fa-bars"></i></button>
                 <div class="breadcrumb">
-                    <span>Académico</span><i class="fas fa-chevron-right"></i><strong>Gestión de Grupos</strong>
+                    <a href="dashboard_admin.php" title="Ir al Panel de Control">Académico</a><i class="fas fa-chevron-right"></i><a href="gestion_grupos.php" title="Volver a Gestión de Grupos">Gestión de Grupos</a><i class="fas fa-chevron-right"></i><strong>Nuevo Grupo</strong>
                 </div>
             </div>
             <?php topbar_usuario($pdo); ?>
@@ -216,6 +216,6 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
         setInterval(actualizarFecha, 30000);
     });
     </script>
-    <script src="../js/responsive.js?v=3"></script>
+    <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

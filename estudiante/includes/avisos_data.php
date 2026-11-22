@@ -6,6 +6,17 @@
  *
  * Cada aviso: ['fecha' => 'Y-m-d H:i:s', 'icono', 'color', 'titulo', 'texto', 'enlace']
  */
+/** ¿Al alumno le falta registrar el correo de su padre, madre o tutor? */
+function alumno_falta_correo_tutor(PDO $pdo, int $id_alumno): bool {
+    try {
+        $st = $pdo->prepare("SELECT correo_tutor FROM TUTOR_ALUMNO WHERE id_alumno = ?");
+        $st->execute([$id_alumno]);
+        return trim((string)$st->fetchColumn()) === '';
+    } catch (PDOException $e) {
+        return false;
+    }
+}
+
 function obtener_avisos_estudiante(PDO $pdo, int $id_alumno, int $limite = 30): array {
     $avisos = [];
     // $extra: datos opcionales del aviso (estado de la actividad, si acepta retardo, etc.)
@@ -126,6 +137,16 @@ function obtener_avisos_estudiante(PDO $pdo, int $id_alumno, int $limite = 30): 
     } catch (PDOException $e) { error_log('Avisos/suspensiones: ' . $e->getMessage()); }
 
     usort($avisos, fn($a, $b) => strcmp((string)$b['fecha'], (string)$a['fecha']));
+
+    // 7. Dato pendiente: correo del tutor (siempre al principio hasta que lo registre)
+    if (alumno_falta_correo_tutor($pdo, $id_alumno)) {
+        array_unshift($avisos, array_merge(['estado' => null, 'acepta_retardo' => null, 'fecha_limite' => null], [
+            'fecha' => date('Y-m-d H:i:s'), 'icono' => 'fas fa-envelope', 'color' => 'amber',
+            'titulo' => 'Registra el correo de tu padre, madre o tutor',
+            'texto' => 'La escuela lo usará para avisarle de faltas y reportes de conducta. Solo toma un minuto.',
+            'enlace' => 'perfil.php?completar=tutor',
+        ]));
+    }
     return array_slice($avisos, 0, $limite);
 }
 
