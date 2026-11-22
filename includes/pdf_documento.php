@@ -21,8 +21,9 @@ function pdf_logo(): string {
 /**
  * Descarga un PDF.
  * $cuerpo: HTML del contenido. $orientacion: 'portrait' | 'landscape'.
+ * $en_linea: true = se abre en el navegador (para imprimirlo); false = se descarga como archivo.
  */
-function pdf_descargar(string $nombre, string $titulo, string $subtitulo, string $cuerpo, string $orientacion = 'portrait'): void {
+function pdf_descargar(string $nombre, string $titulo, string $subtitulo, string $cuerpo, string $orientacion = 'portrait', bool $en_linea = false): void {
     $logo = pdf_logo();
     $fecha = date('d/m/Y h:i a');
     $html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><style>
@@ -59,8 +60,11 @@ function pdf_descargar(string $nombre, string $titulo, string $subtitulo, string
     $dompdf->loadHtml($html, 'UTF-8');
     $dompdf->setPaper('A4', $orientacion);
     $dompdf->render();
-    $nombre = preg_replace('/[^A-Za-z0-9_.-]/', '_', $nombre);
+    // Nombre de archivo sin acentos ni ñ (Español -> Espanol) para que se vea bien en cualquier equipo
+    $nombre = strtr($nombre, ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n',
+                              'Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U', 'Ü' => 'U', 'Ñ' => 'N', ' ' => '_']);
+    $nombre = preg_replace('/_+/', '_', preg_replace('/[^A-Za-z0-9_.-]/', '_', $nombre));
     if (!str_ends_with(strtolower($nombre), '.pdf')) $nombre .= '.pdf';
-    $dompdf->stream($nombre, ['Attachment' => true]);
+    $dompdf->stream($nombre, ['Attachment' => !$en_linea]);
     exit();
 }

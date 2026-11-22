@@ -7,10 +7,10 @@ require_once __DIR__ . '/../includes/bitacora.php';
 // config/database.php
 
 $host     = '127.0.0.1';
-$port     = '3306';              // Puerto MySQL de MAMP
+$port     = '3306';              // Puerto MySQL de XAMPP
 $dbname   = 'sistema_sige_cobaep';
 $username = 'root';
-$password = '';              // MAMP usa root por defecto
+$password = '';              // XAMPP: usuario root sin contraseña
 
 try {
     $pdo = new PDO(

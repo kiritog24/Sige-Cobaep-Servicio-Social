@@ -279,6 +279,28 @@ try {
         if ($n) registrar("➕ $n registro(s) del pase de lista con estatus antiguo actualizados");
     }
 
+    // Tareas programadas antiguas que ponían "Falta" a las 7:30 / 11:00 a quien no había entrado:
+    // no respetaban fines de semana y, si el alumno llegaba después, el escáner tomaba su credencial como SALIDA.
+    // Ya no se necesitan: el sistema cuenta como falta el día de clases sin registro de entrada.
+    foreach (['evt_marcar_faltas_matutino', 'evt_marcar_faltas_intermedio'] as $evento) {
+        $st = $pdo->prepare("SELECT COUNT(*) FROM information_schema.EVENTS WHERE EVENT_SCHEMA = DATABASE() AND EVENT_NAME = ?");
+        $st->execute([$evento]);
+        if ((int)$st->fetchColumn()) {
+            $pdo->exec("DROP EVENT `$evento`");
+            registrar("➖ Tarea programada $evento eliminada (las faltas se calculan sin ella)");
+        }
+    }
+
+    // Instalación nueva: si no hay ningún administrador, se crea uno con contraseña provisional
+    if (tabla_existe($pdo, 'ADMINISTRATIVOS') && (int)$pdo->query("SELECT COUNT(*) FROM ADMINISTRATIVOS")->fetchColumn() === 0) {
+        $pass = generar_password_provisional();
+        $pdo->prepare("INSERT INTO ADMINISTRATIVOS (nombre, apellido_paterno, usuario, contrasena_hash, debe_cambiar_password, password_provisional_expira)
+                       VALUES ('Control', 'Escolar', 'admin', ?, 1, DATE_ADD(NOW(), INTERVAL 72 HOUR))")
+            ->execute([password_hash($pass, PASSWORD_DEFAULT)]);
+        registrar("➕ Primer administrador creado. Usuario: admin · Contraseña provisional: $pass");
+        registrar("   (Anótala ahora: no se vuelve a mostrar. Vence en 72 horas y el sistema pedirá cambiarla al entrar.)");
+    }
+
     registrar("✅ Base de datos actualizada correctamente.");
 } catch (PDOException $e) {
     registrar("❌ Error: " . $e->getMessage());

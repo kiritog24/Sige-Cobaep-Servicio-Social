@@ -4,6 +4,7 @@
 .ac-filtros input, .ac-filtros select { padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 9px; font: inherit; font-size: .9rem; min-width: 0; text-transform: none; }
 .ac-filtros button { padding: 10px 16px; border: 0; border-radius: 9px; background: #063f2b; color: #fff; font-weight: 700; cursor: pointer; font-family: inherit; }
 .ac-resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr)); gap: 12px; margin-bottom: 18px; }
+@media (max-width: 560px) { .ac-resumen { grid-template-columns: 1fr 1fr; gap: 10px; } .ac-num { padding: 12px; gap: 10px; } .ac-num i { width: 36px; height: 36px; flex-basis: 36px; } .ac-num strong { font-size: 1.3rem; } }
 .ac-num { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 16px; display: flex; gap: 12px; align-items: center; }
 .ac-num i { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; font-size: 1.05rem; flex: 0 0 42px; }
 .ac-num strong { display: block; font-size: 1.5rem; line-height: 1; color: #0f172a; }

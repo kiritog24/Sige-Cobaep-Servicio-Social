@@ -53,7 +53,7 @@ $es_hoy = $fecha === $hoy;
     <link rel="stylesheet" href="../admin/style_dashboard_admin.css">
     <link rel="stylesheet" href="../admin/style_sidebar.css">
     <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css">
-    <link rel="stylesheet" href="css/asistencia_clases.css?v=1">
+    <link rel="stylesheet" href="css/asistencia_clases.css?v=2">
     <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>

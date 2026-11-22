@@ -107,6 +107,42 @@ if (in_array($_GET['exportar'] ?? '', ['csv', 'xlsx'], true)) {
 }
 
 $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+
+// ---------- Imprimir: PDF con la lista de alumnos y entregas (se abre en el navegador) ----------
+if (($_GET['exportar'] ?? '') === 'pdf') {
+    require_once __DIR__ . '/../includes/pdf_documento.php';
+    $docente = trim(($_SESSION['nombre'] ?? '') !== '' ? $_SESSION['nombre'] : 'Docente');
+    $info = [];
+    if ($act_sel) {
+        $info[] = '<b>Actividad:</b> ' . $h($act_sel['titulo']);
+        $info[] = '<b>Límite:</b> ' . ($act_sel['fecha_limite'] ? date('d/m/Y h:i a', strtotime($act_sel['fecha_limite'])) : 'Sin fecha límite');
+        $info[] = '<b>Escala:</b> 0-' . $escala;
+        $info[] = $act_sel['acepta_retardo'] ? 'Acepta entregas tarde' : 'No acepta entregas tarde';
+    } else {
+        $info[] = '<b>Entregas generales del curso</b>';
+    }
+    if ($clase['fecha_fin']) $info[] = '<b>Fin del curso:</b> ' . date('d/m/Y', strtotime($clase['fecha_fin']));
+    $cuerpo = '<p style="margin:0 0 8px;">' . implode(' &nbsp;·&nbsp; ', $info) . '</p>'
+        . '<table class="resumen"><tr>'
+        . '<td><b>' . $total . '</b>Inscritos</td><td><b>' . $entregaron . '</b>Entregaron</td><td><b>' . ($total - $entregaron) . '</b>Sin entregar</td>'
+        . '<td><b>' . $tarde . '</b>Entregaron tarde</td><td><b>' . ($promedio !== null ? $promedio : '—') . '</b>Promedio (' . count($calificadas) . ' calif.)</td>'
+        . '</tr></table><br>'
+        . '<table><thead><tr><th style="width:5%">#</th><th style="width:15%">Matrícula</th><th>Alumno</th><th style="width:15%">Grupo</th>'
+        . '<th style="width:14%">Estado</th><th style="width:17%">Entrega</th><th style="width:10%">Calif. (0-' . $escala . ')</th></tr></thead><tbody>';
+    foreach ($alumnos as $n => $a) {
+        $cls = ['tiempo' => 'ok', 'tarde' => 'medio', 'pendiente' => 'bajo'][$a['estado']];
+        $cuerpo .= '<tr><td class="c">' . ($n + 1) . '</td><td class="c">' . $h($a['matricula']) . '</td><td>' . $h($a['nombre_completo']) . '</td>'
+            . '<td class="c">' . $h($a['grupo'] ?? '—') . '</td><td class="c ' . $cls . '">' . $etiquetas[$a['estado']] . '</td>'
+            . '<td class="c">' . ($a['id_entrega'] ? date('d/m/Y', strtotime($a['fecha_entrega'])) . ' ' . $a['hora'] : '—') . '</td>'
+            . '<td class="c">' . ($a['calificacion'] !== null ? $h(regula_num($a['calificacion'])) : '—') . '</td></tr>';
+    }
+    if (!$alumnos) $cuerpo .= '<tr><td colspan="7" class="c">Todavía no hay alumnos inscritos en este curso.</td></tr>';
+    $cuerpo .= '</tbody></table>'
+        . '<br><br><br><table style="width:55%;margin:0 auto"><tr><td style="border:none;border-top:1px solid #333;text-align:center;padding-top:4px">'
+        . $h($docente) . ' · Docente</td></tr></table>';
+    pdf_descargar('Entregas_' . $clase['nombre_materia'] . ($act_sel ? '_' . $act_sel['titulo'] : '') . '_' . date('Ymd') . '.pdf',
+        'Regularización · ' . $clase['nombre_materia'], 'Alumnos y entregas · Generado el ' . date('d/m/Y h:i a'), $cuerpo, 'portrait', true);
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -180,7 +216,7 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
             </div>
             <div class="ra-acciones">
                 <a href="detalle_regularizacion.php?id=<?php echo $id_clase; ?>" class="ra-btn"><i class="fas fa-arrow-left"></i> Volver al curso</a>
-                <button type="button" class="ra-btn" onclick="window.print()"><i class="fas fa-print"></i> Imprimir</button>
+                <a href="?id=<?php echo $id_clase; ?>&act=<?php echo $id_act; ?>&exportar=pdf" class="ra-btn" target="_blank" rel="noopener" title="Abre la lista en PDF para imprimirla o guardarla"><i class="fas fa-print"></i> Imprimir</a>
                 <a href="?id=<?php echo $id_clase; ?>&act=<?php echo $id_act; ?>&exportar=xlsx" class="ra-btn primario"><i class="fas fa-file-excel"></i> Exportar Excel</a>
             </div>
         </section>
