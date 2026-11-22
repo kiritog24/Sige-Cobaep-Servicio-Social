@@ -254,6 +254,17 @@ try {
         CONSTRAINT `fk_aviso_alumno` FOREIGN KEY (`id_alumno`) REFERENCES `ALUMNOS` (`id_alumno`) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
+    // Avisos a tutores: además de conducta y faltas, retardos, citatorios y avisos generales
+    if (tabla_existe($pdo, 'AVISOS_TUTOR')) {
+        $tipo_col = (string)$pdo->query("SELECT COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = 'avisos_tutor' AND COLUMN_NAME = 'tipo'")->fetchColumn();
+        if (strpos($tipo_col, 'citatorio') === false) {
+            $pdo->exec("ALTER TABLE `AVISOS_TUTOR` MODIFY `tipo` ENUM('conducta','faltas','retardos','citatorio','general') NOT NULL");
+            registrar("➕ AVISOS_TUTOR.tipo ahora incluye retardos, citatorio y aviso general");
+        } else {
+            registrar("✔ AVISOS_TUTOR.tipo ya incluye citatorios y avisos generales");
+        }
+    }
+
     registrar("✅ Base de datos actualizada correctamente.");
 } catch (PDOException $e) {
     registrar("❌ Error: " . $e->getMessage());

@@ -31,6 +31,7 @@ function perfil_usuario_contenido(PDO $pdo): void {
         .pu-field input:disabled { background: #f1f5f9; color: #64748b; }
         .pu-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border: none; border-radius: 10px; background: #16a05d; color: #fff; font-weight: 700; cursor: pointer; font-family: inherit; }
         .pu-btn.sec { background: #fff; color: #b91c1c; border: 1px solid #fecaca; }
+        .pu-btn.pu-cred { margin-top: 12px; background: #ecfeff; color: #0e7490; border: 1px solid #a5f3fc; }
         .pu-acciones { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
         .pu-upload { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 14px; cursor: pointer; display: block; color: #64748b; font-size: .85rem; margin-bottom: 10px; }
         .pu-upload input { display: none; }
@@ -49,6 +50,13 @@ function perfil_usuario_contenido(PDO $pdo): void {
             <h2><?php echo $h(trim(($f['nombre'] ?? '') . ' ' . ($f['apellido_paterno'] ?? '') . ' ' . ($f['apellido_materno'] ?? ''))); ?></h2>
             <span class="pu-rol"><?php echo $c['etiqueta']; ?></span>
             <div class="pu-dato"><i class="fas fa-user"></i> Usuario: <b><?php echo $h($f['usuario'] ?? ''); ?></b></div>
+            <?php
+                require_once __DIR__ . '/credencial_personal.php';
+                $tipo_cred = ($_SESSION['rol'] ?? '') === 'prefectos' ? 'prefectos' : 'admin';
+                $id_cred = (int)($_SESSION['id_usuario'] ?? 0);
+                $qr_cred = credencial_qr_texto($tipo_cred, ['usuario' => $f['usuario'] ?? '']);
+            ?>
+            <button type="button" class="pu-btn pu-cred" data-credencial="<?php echo $tipo_cred . ':' . $id_cred; ?>" data-qr="<?php echo $h($qr_cred); ?>" data-modo="ver"><i class="fas fa-id-card"></i> Mi credencial (PDF)</button>
 
             <form action="../procesos/perfil_usuario.php" method="POST" enctype="multipart/form-data" style="margin-top:1.2rem;" id="formFoto">
                 <input type="hidden" name="accion" value="foto">
@@ -96,6 +104,7 @@ function perfil_usuario_contenido(PDO $pdo): void {
             </div>
         </div>
     </div>
+    <script src="../js/credencial_personal.js"></script>
     <script>
         document.getElementById('puFoto').addEventListener('change', function () {
             const f = this.files[0];

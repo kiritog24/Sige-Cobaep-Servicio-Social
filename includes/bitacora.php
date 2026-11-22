@@ -21,6 +21,7 @@ const BITACORA_MODULOS = [
     'correos'    => 'Correos institucionales',
     'avisos'     => 'Avisos a tutores',
     'perfil'     => 'Perfil',
+    'sistema'    => 'Respaldos y cierre de ciclo',
 ];
 
 function bitacora(PDO $pdo, string $modulo, string $accion, string $descripcion, ?string $entidad = null, ?int $id_entidad = null, ?array $detalle = null): void {

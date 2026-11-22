@@ -186,3 +186,74 @@ function faltas_periodo(PDO $pdo, string $desde, string $hasta, int $id_grupo = 
     }
     return $res;
 }
+
+/**
+ * Retardos sin justificar de los alumnos activos en un periodo (primera entrada del día con estatus "Retardo").
+ * Mismo formato que faltas_periodo(): [id_alumno => ['faltas' => total, 'fechas' => [...]]]
+ */
+function retardos_periodo(PDO $pdo, string $desde, string $hasta, int $id_grupo = 0): array {
+    $hasta = min($hasta, date('Y-m-d'));
+    if ($desde > $hasta) return [];
+    $sql = "SELECT x.id_alumno, x.dia FROM (
+                SELECT asi.id_alumno, DATE(asi.fecha_hora_escaneo) AS dia,
+                       SUBSTRING_INDEX(GROUP_CONCAT(asi.estatus ORDER BY asi.fecha_hora_escaneo ASC), ',', 1) AS estatus
+                FROM ASISTENCIAS asi
+                INNER JOIN ALUMNOS a ON a.id_alumno = asi.id_alumno AND a.estatus = 'Alta'
+                INNER JOIN GRUPO_ALUMNO ga ON ga.id_alumno = a.id_alumno AND ga.fecha_baja IS NULL
+                INNER JOIN GRUPOS g ON g.id_grupo = ga.id_grupo AND g.estatus = 'Activo'
+                WHERE asi.tipo_registro = 'Entrada' AND DATE(asi.fecha_hora_escaneo) BETWEEN ? AND ?" . ($id_grupo > 0 ? " AND ga.id_grupo = ?" : '') . "
+                GROUP BY asi.id_alumno, DATE(asi.fecha_hora_escaneo)
+            ) x WHERE x.estatus = 'Retardo' ORDER BY x.dia";
+    $p = [$desde, $hasta];
+    if ($id_grupo > 0) $p[] = $id_grupo;
+    $st = $pdo->prepare($sql);
+    $st->execute($p);
+    $res = [];
+    foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $r) {
+        $id = (int)$r['id_alumno'];
+        $res[$id]['fechas'][] = $r['dia'];
+        $res[$id]['faltas'] = count($res[$id]['fechas']);
+    }
+    return $res;
+}
+
+/** Aviso de retardos acumulados en un periodo. */
+function aviso_tutor_retardos(PDO $pdo, int $id_alumno, string $desde, string $hasta, int $retardos, array $fechas): string {
+    $al = aviso_datos_alumno($pdo, $id_alumno);
+    if (!$al) return 'error';
+    $lista = implode(', ', array_map(fn($f) => date('d/m', strtotime($f)), array_slice($fechas, 0, 40))) . (count($fechas) > 40 ? '…' : '');
+    $html = aviso_html('Estimado(a) ' . ($al['nombre_tutor'] ?: 'padre, madre o tutor') . ':',
+        'Le informamos que su hijo(a) acumula retardos al llegar al plantel:',
+        [['Alumno(a)', $al['alumno']], ['Matrícula', $al['matricula']], ['Grupo', $al['grupo']],
+         ['Periodo', 'Del ' . date('d/m/Y', strtotime($desde)) . ' al ' . date('d/m/Y', strtotime($hasta))],
+         ['Retardos', (string)$retardos], ['Días', $lista]],
+        'Le pedimos apoyarnos para que su hijo(a) llegue a tiempo. Los retardos acumulados pueden generar descuento de puntos de conducta según el reglamento.');
+    return aviso_registrar($pdo, $id_alumno, 'retardos', "retardos-$desde-$hasta", 'Aviso de retardos · ' . $al['alumno'], $html, $al['correo_tutor'] ?: null);
+}
+
+/**
+ * Citatorio o aviso general escrito por Prefectura (a un alumno o a todo un grupo).
+ * $cita: ['fecha' => 'Y-m-d', 'hora' => 'H:i', 'lugar' => '...'] solo para citatorios.
+ */
+function aviso_tutor_mensaje(PDO $pdo, int $id_alumno, string $tipo, string $asunto, string $mensaje, array $cita, string $referencia): string {
+    $al = aviso_datos_alumno($pdo, $id_alumno);
+    if (!$al) return 'error';
+    $tipo = $tipo === 'citatorio' ? 'citatorio' : 'general';
+    $filas = [['Alumno(a)', $al['alumno']], ['Matrícula', $al['matricula']], ['Grupo', $al['grupo']]];
+    if ($tipo === 'citatorio') {
+        $dias = ['', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+        $ts = strtotime($cita['fecha'] . ' ' . ($cita['hora'] ?: '08:00'));
+        $filas[] = ['Fecha de la cita', ucfirst($dias[(int)date('N', $ts)]) . ' ' . date('d/m/Y', $ts) . ($cita['hora'] ? ' a las ' . date('h:i a', $ts) : '')];
+        $filas[] = ['Lugar', $cita['lugar'] ?: 'Prefectura del plantel'];
+    }
+    $filas[] = [$tipo === 'citatorio' ? 'Motivo' : 'Mensaje', $mensaje];
+    $intro = $tipo === 'citatorio'
+        ? 'Por medio de la presente se le cita a presentarse en el plantel para tratar un asunto relacionado con su hijo(a):'
+        : 'Prefectura del plantel le hace llegar el siguiente aviso relacionado con su hijo(a):';
+    $cierre = $tipo === 'citatorio'
+        ? 'Su asistencia es importante. Si no puede acudir en la fecha indicada, comuníquese con Prefectura para acordar otra.'
+        : 'Gracias por su atención.';
+    $html = aviso_html('Estimado(a) ' . ($al['nombre_tutor'] ?: 'padre, madre o tutor') . ':', $intro, $filas, $cierre);
+    $asunto_final = ($tipo === 'citatorio' ? 'Citatorio' : 'Aviso') . ' · ' . ($asunto !== '' ? $asunto . ' · ' : '') . $al['alumno'];
+    return aviso_registrar($pdo, $id_alumno, $tipo, $referencia, mb_substr($asunto_final, 0, 200), $html, $al['correo_tutor'] ?: null);
+}

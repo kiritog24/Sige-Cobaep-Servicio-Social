@@ -61,7 +61,7 @@ $registros = $st->fetchAll(PDO::FETCH_ASSOC);
 $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
 $qs = fn(array $cambios) => '?' . http_build_query(array_merge(['desde' => $desde, 'hasta' => $hasta, 'modulo' => $modulo, 'rol' => $rol, 'q' => $buscar], $cambios));
 $iconos = ['sesion' => 'fa-right-to-bracket', 'usuarios' => 'fa-user-pen', 'password' => 'fa-key', 'grupos' => 'fa-users-rectangle', 'docentes' => 'fa-chalkboard-user',
-           'horarios' => 'fa-calendar-days', 'asistencia' => 'fa-clipboard-check', 'conducta' => 'fa-file-lines', 'correos' => 'fa-envelope-open-text', 'avisos' => 'fa-paper-plane', 'perfil' => 'fa-id-card'];
+           'horarios' => 'fa-calendar-days', 'asistencia' => 'fa-clipboard-check', 'conducta' => 'fa-file-lines', 'correos' => 'fa-envelope-open-text', 'avisos' => 'fa-paper-plane', 'perfil' => 'fa-id-card', 'sistema' => 'fa-box-archive'];
 $colores_accion = ['eliminacion' => 'rojo', 'fallido' => 'rojo', 'baja_grupo' => 'rojo', 'alta' => 'verde', 'importacion' => 'verde', 'inscripcion' => 'verde', 'restablecer' => 'ambar', 'credenciales' => 'ambar', 'cambio_grupo' => 'azul'];
 ?>
 <!DOCTYPE html>

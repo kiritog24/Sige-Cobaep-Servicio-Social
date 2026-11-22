@@ -33,7 +33,10 @@ $hasta_calc = min($hasta, $hoy);
 $umbral = max(1, min(30, (int)($_REQUEST['umbral'] ?? 3)));
 $id_grupo = (int)($_REQUEST['id_grupo'] ?? 0);
 $sin_registro = ($_REQUEST['sin_registro'] ?? '1') === '1';
-$volver = 'avisos_tutores.php?' . http_build_query(['periodo' => $periodo, 'desde' => $desde, 'hasta' => $hasta, 'umbral' => $umbral, 'id_grupo' => $id_grupo, 'sin_registro' => $sin_registro ? 1 : 0]);
+$motivo = ($_REQUEST['motivo'] ?? '') === 'retardos' ? 'retardos' : 'faltas';
+$palabra = $motivo === 'retardos' ? 'retardos' : 'faltas';
+$volver = 'avisos_tutores.php?' . http_build_query(['motivo' => $motivo, 'periodo' => $periodo, 'desde' => $desde, 'hasta' => $hasta, 'umbral' => $umbral, 'id_grupo' => $id_grupo, 'sin_registro' => $sin_registro ? 1 : 0]);
+$conteo_periodo = fn() => $motivo === 'retardos' ? retardos_periodo($pdo, $desde, $hasta_calc, $id_grupo) : faltas_periodo($pdo, $desde, $hasta_calc, $id_grupo, $sin_registro);
 
 // ---------- Acciones ----------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -42,17 +45,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($accion === 'enviar_faltas') {
         $ids = array_values(array_unique(array_filter(array_map('intval', $_POST['alumnos'] ?? []))));
         if (!$ids) { header("Location: $volver&error=" . urlencode('Selecciona al menos un alumno.')); exit(); }
-        $faltas = faltas_periodo($pdo, $desde, $hasta_calc, $id_grupo, $sin_registro);
+        $faltas = $conteo_periodo();
         $cuenta = ['enviado' => 0, 'pendiente' => 0, 'sin_correo' => 0, 'fallido' => 0, 'duplicado' => 0, 'error' => 0];
         foreach ($ids as $id) {
             if (empty($faltas[$id])) continue;
-            $r = aviso_tutor_faltas($pdo, $id, $desde, $hasta_calc, $faltas[$id]['faltas'], $faltas[$id]['fechas']);
+            $r = $motivo === 'retardos'
+                ? aviso_tutor_retardos($pdo, $id, $desde, $hasta_calc, $faltas[$id]['faltas'], $faltas[$id]['fechas'])
+                : aviso_tutor_faltas($pdo, $id, $desde, $hasta_calc, $faltas[$id]['faltas'], $faltas[$id]['fechas']);
             $cuenta[$r] = ($cuenta[$r] ?? 0) + 1;
         }
-        bitacora($pdo, 'avisos', 'faltas', 'Generó avisos de faltas (' . date('d/m', strtotime($desde)) . '–' . date('d/m/Y', strtotime($hasta_calc)) . "): {$cuenta['enviado']} enviados, {$cuenta['pendiente']} pendientes, {$cuenta['sin_correo']} sin correo del tutor, {$cuenta['fallido']} fallidos");
+        bitacora($pdo, 'avisos', $motivo, "Generó avisos de $palabra (" . date('d/m', strtotime($desde)) . '–' . date('d/m/Y', strtotime($hasta_calc)) . "): {$cuenta['enviado']} enviados, {$cuenta['pendiente']} pendientes, {$cuenta['sin_correo']} sin correo del tutor, {$cuenta['fallido']} fallidos");
         $msg = "Avisos procesados: {$cuenta['enviado']} enviados" . ($cuenta['pendiente'] ? ", {$cuenta['pendiente']} pendientes (correo del plantel sin configurar)" : '')
              . ($cuenta['sin_correo'] ? ", {$cuenta['sin_correo']} sin correo del tutor" : '') . ($cuenta['fallido'] ? ", {$cuenta['fallido']} fallidos" : '')
              . ($cuenta['duplicado'] ? ", {$cuenta['duplicado']} ya se habían avisado en este periodo" : '') . '.';
+        header("Location: $volver&exito=" . urlencode($msg) . '#historial');
+        exit();
+    }
+    if ($accion === 'enviar_mensaje') {
+        $tipo_msg = ($_POST['tipo_msg'] ?? '') === 'citatorio' ? 'citatorio' : 'general';
+        $asunto = mb_substr(trim($_POST['asunto'] ?? ''), 0, 90);
+        $mensaje = mb_substr(trim($_POST['mensaje'] ?? ''), 0, 2000);
+        $cita = ['fecha' => $_POST['fecha_cita'] ?? '', 'hora' => $_POST['hora_cita'] ?? '', 'lugar' => mb_substr(trim($_POST['lugar_cita'] ?? ''), 0, 120)];
+        $volver_msg = $volver . '#mensaje';
+        if ($mensaje === '') { header("Location: $volver&error=" . urlencode('Escribe el mensaje o motivo del aviso.') . '#mensaje'); exit(); }
+        if ($tipo_msg === 'citatorio') {
+            if (!$valida($cita['fecha']) || $cita['fecha'] < $hoy) { header("Location: $volver&error=" . urlencode('Elige la fecha de la cita (hoy o después).') . '#mensaje'); exit(); }
+            if ($cita['hora'] !== '' && !preg_match('/^\d{2}:\d{2}$/', $cita['hora'])) $cita['hora'] = '';
+        }
+        // Destinatarios: uno o varios alumnos por matrícula, o un grupo completo
+        $ids = [];
+        if (($_POST['destino'] ?? '') === 'grupo') {
+            $g = (int)($_POST['id_grupo_msg'] ?? 0);
+            $st = $pdo->prepare("SELECT ga.id_alumno FROM GRUPO_ALUMNO ga INNER JOIN ALUMNOS a ON a.id_alumno = ga.id_alumno AND a.estatus = 'Alta' WHERE ga.id_grupo = ? AND ga.fecha_baja IS NULL");
+            $st->execute([$g]);
+            $ids = array_map('intval', $st->fetchAll(PDO::FETCH_COLUMN));
+            $destino_txt = 'del grupo ' . bitacora_quien($pdo, 'grupo', $g);
+        } else {
+            $mats = array_filter(array_map('trim', preg_split('/[\s,;]+/', mb_strtoupper($_POST['matriculas'] ?? ''))));
+            $no_encontradas = [];
+            $st = $pdo->prepare("SELECT id_alumno FROM ALUMNOS WHERE UPPER(matricula) = ? OR REPLACE(UPPER(matricula), '/', '') = REPLACE(?, '/', '')");
+            foreach ($mats as $m) {
+                $st->execute([$m, $m]);
+                $id = (int)$st->fetchColumn();
+                if ($id) $ids[] = $id; else $no_encontradas[] = $m;
+            }
+            if ($no_encontradas) { header("Location: $volver&error=" . urlencode('No se encontraron estas matrículas: ' . implode(', ', array_slice($no_encontradas, 0, 10)) . '.') . '#mensaje'); exit(); }
+            $destino_txt = 'de ' . (count($ids) === 1 ? bitacora_quien($pdo, 'alumnos', $ids[0]) : count($ids) . ' alumnos');
+        }
+        $ids = array_values(array_unique($ids));
+        if (!$ids) { header("Location: $volver&error=" . urlencode('Indica al menos un alumno o elige un grupo con alumnos.') . '#mensaje'); exit(); }
+        $ref = $tipo_msg . '-' . date('YmdHis') . '-' . bin2hex(random_bytes(3));
+        $cuenta = ['enviado' => 0, 'pendiente' => 0, 'sin_correo' => 0, 'fallido' => 0, 'duplicado' => 0, 'error' => 0];
+        foreach ($ids as $id) { $r = aviso_tutor_mensaje($pdo, $id, $tipo_msg, $asunto, $mensaje, $cita, $ref); $cuenta[$r] = ($cuenta[$r] ?? 0) + 1; }
+        bitacora($pdo, 'avisos', $tipo_msg, ($tipo_msg === 'citatorio' ? 'Envió citatorio' : 'Envió aviso general') . ' a los tutores ' . $destino_txt
+                 . ($asunto !== '' ? ' ("' . $asunto . '")' : '') . ": {$cuenta['enviado']} enviados, {$cuenta['pendiente']} pendientes, {$cuenta['sin_correo']} sin correo");
+        $msg = ($tipo_msg === 'citatorio' ? 'Citatorio' : 'Aviso') . " generado para " . count($ids) . " alumno(s): {$cuenta['enviado']} enviados"
+             . ($cuenta['pendiente'] ? ", {$cuenta['pendiente']} pendientes" : '') . ($cuenta['sin_correo'] ? ", {$cuenta['sin_correo']} sin correo del tutor" : '') . ($cuenta['fallido'] ? ", {$cuenta['fallido']} fallidos" : '') . '.';
         header("Location: $volver&exito=" . urlencode($msg) . '#historial');
         exit();
     }
@@ -69,21 +117,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // ---------- Datos ----------
 $grupos = $pdo->query("SELECT id_grupo, semestre, nombre_grupo, turno FROM GRUPOS WHERE estatus = 'Activo' ORDER BY semestre, turno, nombre_grupo")->fetchAll(PDO::FETCH_ASSOC);
-$faltas = faltas_periodo($pdo, $desde, $hasta_calc, $id_grupo, $sin_registro);
+$faltas = $conteo_periodo();
 $faltas = array_filter($faltas, fn($f) => $f['faltas'] >= $umbral);
 $lista = [];
 if ($faltas) {
     $ids = implode(',', array_map('intval', array_keys($faltas)));
-    $ref = "faltas-$desde-$hasta_calc";
+    $ref = "$motivo-$desde-$hasta_calc";
     $st = $pdo->prepare("SELECT a.id_alumno, a.matricula, CONCAT_WS(' ', a.apellido_paterno, a.apellido_materno, a.nombre) AS alumno,
                                 t.nombre_tutor, t.correo_tutor,
                                 IF(g.id_grupo IS NULL, '—', CONCAT(g.semestre, '° ', g.nombre_grupo, ' · ', g.turno)) AS grupo,
-                                (SELECT estatus FROM AVISOS_TUTOR av WHERE av.id_alumno = a.id_alumno AND av.tipo = 'faltas' AND av.referencia = ?) AS aviso_periodo
+                                (SELECT estatus FROM AVISOS_TUTOR av WHERE av.id_alumno = a.id_alumno AND av.tipo = ? AND av.referencia = ?) AS aviso_periodo
                          FROM ALUMNOS a LEFT JOIN TUTOR_ALUMNO t ON t.id_alumno = a.id_alumno
                          LEFT JOIN GRUPO_ALUMNO ga ON ga.id_alumno = a.id_alumno AND ga.fecha_baja IS NULL
                          LEFT JOIN GRUPOS g ON g.id_grupo = ga.id_grupo
                          WHERE a.id_alumno IN ($ids) GROUP BY a.id_alumno ORDER BY g.semestre, g.turno, g.nombre_grupo, a.apellido_paterno, a.nombre");
-    $st->execute([$ref]);
+    $st->execute([$motivo, $ref]);
     foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $r) $lista[] = $r + $faltas[(int)$r['id_alumno']];
     usort($lista, fn($a, $b) => $b['faltas'] <=> $a['faltas']);
 }
@@ -95,6 +143,8 @@ $total_alumnos = (int)$pdo->query("SELECT COUNT(*) FROM ALUMNOS WHERE estatus = 
 $tutores_con_correo = (int)$pdo->query("SELECT COUNT(*) FROM ALUMNOS a INNER JOIN TUTOR_ALUMNO t ON t.id_alumno = a.id_alumno WHERE a.estatus = 'Alta' AND t.correo_tutor IS NOT NULL AND t.correo_tutor <> ''")->fetchColumn();
 
 $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+$tipos_aviso = ['conducta' => ['fa-file-lines', '#b45309', 'Conducta'], 'faltas' => ['fa-user-clock', '#b91c1c', 'Faltas'], 'retardos' => ['fa-clock', '#c2410c', 'Retardos'],
+                'citatorio' => ['fa-handshake', '#1d4ed8', 'Citatorio'], 'general' => ['fa-bullhorn', '#0f766e', 'Aviso general']];
 $chips = ['enviado' => ['Enviado', 'ok'], 'pendiente' => ['Pendiente', 'pend'], 'fallido' => ['Falló', 'err'], 'sin_correo' => ['Sin correo', 'warn']];
 ?>
 <!DOCTYPE html>
@@ -144,6 +194,18 @@ $chips = ['enviado' => ['Enviado', 'ok'], 'pendiente' => ['Pendiente', 'pend'], 
         .at-chip.err { background: #fef2f2; color: #b91c1c; } .at-chip.warn { background: #fffbeb; color: #b45309; }
         .at-pie { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; font-size: .85rem; color: #475569; }
         .at-vacio { text-align: center; padding: 34px 10px; color: #94a3b8; }
+        .at-motivo { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; }
+        .at-motivo label { display: inline-flex !important; align-items: center; gap: 7px; padding: 9px 14px; border: 1px solid #cbd5e1; border-radius: 10px; cursor: pointer; font-size: .86rem !important; font-weight: 700; color: #334155 !important; text-transform: none !important; letter-spacing: 0 !important; margin: 0 !important; background: #fff; }
+        .at-motivo label.activo { background: #ecfdf5; border-color: #16a05d; color: #047857 !important; }
+        .at-motivo input { display: none; }
+        .at-msg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+        .at-msg .ancho { grid-column: 1 / -1; }
+        .at-campo { display: flex; flex-direction: column; gap: 5px; }
+        .at-campo label { font-size: .74rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .03em; }
+        .at-campo input, .at-campo select, .at-campo textarea { width: 100%; box-sizing: border-box; padding: 10px 11px; border: 1px solid #cbd5e1; border-radius: 10px; font-family: inherit; font-size: .9rem; background: #fff; }
+        .at-cita { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 12px; padding: 12px; background: #eff6ff; border-radius: 12px; }
+        .at-cita[hidden] { display: none; }
+        @media (max-width: 760px) { .at-msg, .at-cita { grid-template-columns: 1fr; } }
         @media (max-width: 1000px) { .at-filtros { grid-template-columns: 1fr 1fr; } .at-filtros .at-acc { grid-column: 1 / -1; } }
         @media (max-width: 560px) { .at-stats { grid-template-columns: 1fr; } .at-btn { width: 100%; } }
     </style>
@@ -158,7 +220,7 @@ $chips = ['enviado' => ['Enviado', 'ok'], 'pendiente' => ['Pendiente', 'pend'], 
                 <div>
                     <span class="eyebrow">CONDUCTA · PREFECTURA</span>
                     <h1>Avisos a tutores</h1>
-                    <p>Correos al padre, madre o tutor por faltas acumuladas y reportes de conducta.</p>
+                    <p>Correos al padre, madre o tutor: faltas, retardos, reportes de conducta, citatorios y avisos generales.</p>
                 </div>
             </div>
             <?php topbar_usuario($pdo); ?>
@@ -177,9 +239,13 @@ $chips = ['enviado' => ['Enviado', 'ok'], 'pendiente' => ['Pendiente', 'pend'], 
         </div>
 
         <section class="at-card">
-            <h2><i class="fas fa-user-clock"></i> Avisos por faltas</h2>
-            <p class="sub">Alumnos con <b><?php echo $umbral; ?> o más</b> faltas sin justificar del <?php echo date('d/m/Y', strtotime($desde)); ?> al <?php echo date('d/m/Y', strtotime($hasta_calc)); ?>. Revisa la lista y elige a quién avisar.</p>
+            <h2><i class="fas fa-user-clock"></i> Avisos por faltas o retardos</h2>
+            <p class="sub">Alumnos con <b><?php echo $umbral; ?> o más</b> <?php echo $palabra; ?> sin justificar del <?php echo date('d/m/Y', strtotime($desde)); ?> al <?php echo date('d/m/Y', strtotime($hasta_calc)); ?>. Revisa la lista y elige a quién avisar.</p>
             <form method="GET" class="at-filtros" id="formFiltros">
+                <div class="at-motivo">
+                    <label class="<?php echo $motivo === 'faltas' ? 'activo' : ''; ?>"><input type="radio" name="motivo" value="faltas" <?php echo $motivo === 'faltas' ? 'checked' : ''; ?>><i class="fas fa-user-xmark"></i> Faltas</label>
+                    <label class="<?php echo $motivo === 'retardos' ? 'activo' : ''; ?>"><input type="radio" name="motivo" value="retardos" <?php echo $motivo === 'retardos' ? 'checked' : ''; ?>><i class="fas fa-clock"></i> Retardos</label>
+                </div>
                 <div><label for="fPeriodo">Periodo</label>
                     <select id="fPeriodo" name="periodo">
                         <option value="semana" <?php echo $periodo === 'semana' ? 'selected' : ''; ?>>Esta semana</option>
@@ -187,7 +253,7 @@ $chips = ['enviado' => ['Enviado', 'ok'], 'pendiente' => ['Pendiente', 'pend'], 
                         <option value="mes" <?php echo $periodo === 'mes' ? 'selected' : ''; ?>>Este mes</option>
                         <option value="personalizado" <?php echo $periodo === 'personalizado' ? 'selected' : ''; ?>>Otras fechas</option>
                     </select></div>
-                <div><label for="fUmbral">Faltas mínimas</label><input type="number" id="fUmbral" name="umbral" min="1" max="30" value="<?php echo $umbral; ?>"></div>
+                <div><label for="fUmbral"><?php echo ucfirst($palabra); ?> mínimas</label><input type="number" id="fUmbral" name="umbral" min="1" max="30" value="<?php echo $umbral; ?>"></div>
                 <div><label for="fGrupo">Grupo</label>
                     <select id="fGrupo" name="id_grupo"><option value="0">Todos</option>
                         <?php foreach ($grupos as $g): ?><option value="<?php echo (int)$g['id_grupo']; ?>" <?php echo $id_grupo === (int)$g['id_grupo'] ? 'selected' : ''; ?>><?php echo $h($g['semestre'] . '° ' . $g['nombre_grupo'] . ' · ' . $g['turno']); ?></option><?php endforeach; ?>
@@ -197,17 +263,17 @@ $chips = ['enviado' => ['Enviado', 'ok'], 'pendiente' => ['Pendiente', 'pend'], 
                     <div><label>Desde</label><input type="date" name="desde" value="<?php echo $h($desde); ?>" max="<?php echo $hoy; ?>"></div>
                     <div><label>Hasta</label><input type="date" name="hasta" value="<?php echo $h($hasta); ?>" max="<?php echo $hoy; ?>"></div>
                 </div>
-                <label class="at-check"><input type="hidden" name="sin_registro" value="0"><input type="checkbox" name="sin_registro" value="1" <?php echo $sin_registro ? 'checked' : ''; ?>> Contar como falta los días sin registro de entrada (igual que el concentrado)</label>
+                <label class="at-check" <?php echo $motivo === 'retardos' ? 'hidden' : ''; ?>><input type="hidden" name="sin_registro" value="0"><input type="checkbox" name="sin_registro" value="1" <?php echo $sin_registro ? 'checked' : ''; ?>> Contar como falta los días sin registro de entrada (igual que el concentrado)</label>
             </form>
 
             <?php if (!$lista): ?>
-                <div class="at-vacio"><i class="fas fa-face-smile" style="font-size:1.8rem; display:block; margin-bottom:8px;"></i>Ningún alumno llega a <?php echo $umbral; ?> faltas en este periodo.</div>
+                <div class="at-vacio"><i class="fas fa-face-smile" style="font-size:1.8rem; display:block; margin-bottom:8px;"></i>Ningún alumno llega a <?php echo $umbral; ?> <?php echo $palabra; ?> en este periodo.</div>
             <?php else: ?>
                 <form method="POST" action="<?php echo $h($volver); ?>" onsubmit="return confirmarEnvio(this);">
                     <input type="hidden" name="accion" value="enviar_faltas">
                     <div class="at-tabla-wrap">
                         <table class="at-tabla">
-                            <thead><tr><th style="width:34px"><input type="checkbox" id="todos" aria-label="Seleccionar todos"></th><th>Alumno</th><th>Grupo</th><th>Faltas</th><th>Padre, madre o tutor</th><th>Aviso de este periodo</th></tr></thead>
+                            <thead><tr><th style="width:34px"><input type="checkbox" id="todos" aria-label="Seleccionar todos"></th><th>Alumno</th><th>Grupo</th><th><?php echo ucfirst($palabra); ?></th><th>Padre, madre o tutor</th><th>Aviso de este periodo</th></tr></thead>
                             <tbody>
                             <?php foreach ($lista as $r): $ya = $r['aviso_periodo']; ?>
                                 <tr>
@@ -230,9 +296,55 @@ $chips = ['enviado' => ['Enviado', 'ok'], 'pendiente' => ['Pendiente', 'pend'], 
             <?php endif; ?>
         </section>
 
+        <section class="at-card" id="mensaje">
+            <h2><i class="fas fa-handshake"></i> Citatorio o aviso a padres</h2>
+            <p class="sub">Para cualquier otro asunto: citar al tutor (por ejemplo, a una reunión por bajo rendimiento) o enviar un aviso general a uno o varios alumnos, o a todo un grupo.</p>
+            <form method="POST" action="<?php echo $h($volver); ?>" onsubmit="return confirmarMensaje(this);" class="at-msg">
+                <input type="hidden" name="accion" value="enviar_mensaje">
+                <div class="at-motivo ancho">
+                    <label class="activo"><input type="radio" name="tipo_msg" value="citatorio" checked><i class="fas fa-handshake"></i> Citatorio (cita en el plantel)</label>
+                    <label><input type="radio" name="tipo_msg" value="general"><i class="fas fa-bullhorn"></i> Aviso general</label>
+                </div>
+                <div class="at-campo">
+                    <label>Para</label>
+                    <select name="destino" id="mDestino">
+                        <option value="alumnos">Uno o varios alumnos (por matrícula)</option>
+                        <option value="grupo">Todo un grupo</option>
+                    </select>
+                </div>
+                <div class="at-campo" id="mMatriculas">
+                    <label for="mMat">Matrícula(s)</label>
+                    <input type="text" name="matriculas" id="mMat" placeholder="27/2026B0001, 27/2026B0002…">
+                </div>
+                <div class="at-campo" id="mGrupo" hidden>
+                    <label for="mGrupoSel">Grupo</label>
+                    <select name="id_grupo_msg" id="mGrupoSel">
+                        <?php foreach ($grupos as $g): ?><option value="<?php echo (int)$g['id_grupo']; ?>"><?php echo $h($g['semestre'] . '° ' . $g['nombre_grupo'] . ' · ' . $g['turno']); ?></option><?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="at-campo">
+                    <label for="mAsunto">Asunto (opcional)</label>
+                    <input type="text" name="asunto" id="mAsunto" maxlength="90" placeholder="Ej. Reunión por bajo rendimiento">
+                </div>
+                <div class="at-cita">
+                    <div class="at-campo"><label for="mFecha">Fecha de la cita</label><input type="date" name="fecha_cita" id="mFecha" min="<?php echo $hoy; ?>" value="<?php echo date('Y-m-d', strtotime('+1 weekday')); ?>"></div>
+                    <div class="at-campo"><label for="mHora">Hora</label><input type="time" name="hora_cita" id="mHora" value="09:00"></div>
+                    <div class="at-campo"><label for="mLugar">Lugar</label><input type="text" name="lugar_cita" id="mLugar" maxlength="120" value="Prefectura del plantel"></div>
+                </div>
+                <div class="at-campo ancho">
+                    <label for="mMensaje" id="mMensajeLbl">Motivo de la cita</label>
+                    <textarea name="mensaje" id="mMensaje" rows="4" maxlength="2000" required placeholder="Escribe el motivo o el mensaje para el padre, madre o tutor…"></textarea>
+                </div>
+                <div class="at-pie ancho" style="margin-top:4px">
+                    <span><i class="fas fa-circle-info"></i> Los alumnos sin correo del tutor quedan registrados como "Sin correo".</span>
+                    <button type="submit" class="at-btn" id="btnMensaje"><i class="fas fa-paper-plane"></i> <?php echo correo_activo() ? 'Enviar' : 'Guardar (pendiente)'; ?></button>
+                </div>
+            </form>
+        </section>
+
         <section class="at-card" id="historial">
             <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:flex-start;">
-                <div><h2><i class="fas fa-paper-plane"></i> Historial de avisos</h2><p class="sub" style="margin:0 0 14px; color:#64748b; font-size:.86rem;">Incluye los avisos de reportes de conducta, que se generan solos al levantar el reporte.</p></div>
+                <div><h2><i class="fas fa-paper-plane"></i> Historial de avisos</h2><p class="sub" style="margin:0 0 14px; color:#64748b; font-size:.86rem;">Todos los avisos: faltas, retardos, citatorios, avisos generales y reportes de conducta (estos se generan solos al levantar el reporte).</p></div>
                 <?php if ($pendientes): ?>
                     <form method="POST" action="<?php echo $h($volver); ?>"><input type="hidden" name="accion" value="reenviar"><button type="submit" class="at-btn" <?php echo correo_activo() ? '' : 'disabled title="Administración debe registrar primero la cuenta de correo"'; ?>><i class="fas fa-rotate"></i> Enviar <?php echo $pendientes; ?> pendiente(s)</button></form>
                 <?php endif; ?>
@@ -247,7 +359,7 @@ $chips = ['enviado' => ['Enviado', 'ok'], 'pendiente' => ['Pendiente', 'pend'], 
                         <?php foreach ($historial as $a): ?>
                             <tr>
                                 <td><?php echo date('d/m/Y', strtotime($a['fecha_creacion'])); ?><small><?php echo date('h:i a', strtotime($a['fecha_creacion'])); ?></small></td>
-                                <td><?php echo $a['tipo'] === 'conducta' ? '<i class="fas fa-file-lines" style="color:#b45309"></i> Conducta' : '<i class="fas fa-user-clock" style="color:#b91c1c"></i> Faltas'; ?></td>
+                                <td><?php [$ti, $tc, $tt] = $tipos_aviso[$a['tipo']] ?? ['fa-envelope', '#475569', $a['tipo']]; echo '<i class="fas ' . $ti . '" style="color:' . $tc . '"></i> ' . $tt; ?></td>
                                 <td><?php echo $h($a['asunto']); ?><small><?php echo $h($a['matricula']); ?></small></td>
                                 <td><?php echo $h($a['correo_destino'] ?: '—'); ?></td>
                                 <td><span class="at-chip <?php echo $chips[$a['estatus']][1]; ?>"><?php echo $chips[$a['estatus']][0]; ?></span><?php if ($a['estatus'] === 'fallido' && $a['error']): ?><small><?php echo $h(mb_substr($a['error'], 0, 90)); ?></small><?php endif; ?><?php if ($a['fecha_envio']): ?><small><?php echo date('d/m h:i a', strtotime($a['fecha_envio'])); ?></small><?php endif; ?></td>
@@ -267,11 +379,35 @@ $chips = ['enviado' => ['Enviado', 'ok'], 'pendiente' => ['Pendiente', 'pend'], 
         });
         const todos = document.getElementById('todos');
         if (todos) todos.addEventListener('change', () => document.querySelectorAll('.sel:not(:disabled)').forEach(c => c.checked = todos.checked));
+        document.querySelectorAll('.at-motivo input').forEach(r => r.addEventListener('change', () => {
+            r.closest('.at-motivo').querySelectorAll('label').forEach(l => l.classList.toggle('activo', l.querySelector('input').checked));
+            if (r.name === 'motivo') document.getElementById('formFiltros').submit();
+            if (r.name === 'tipo_msg') {
+                const cit = r.value === 'citatorio';
+                document.querySelector('.at-cita').hidden = !cit;
+                document.getElementById('mMensajeLbl').textContent = cit ? 'Motivo de la cita' : 'Mensaje';
+            }
+        }));
+        document.getElementById('mDestino').addEventListener('change', function () {
+            document.getElementById('mMatriculas').hidden = this.value !== 'alumnos';
+            document.getElementById('mGrupo').hidden = this.value !== 'grupo';
+        });
+        function confirmarMensaje(form) {
+            if (form.dataset.ok) return true;
+            const grupo = form.destino.value === 'grupo';
+            if (!grupo && !form.matriculas.value.trim()) { (window.sigeAlert || alert)('Escribe al menos una matrícula.', 'aviso'); return false; }
+            const quien = grupo ? 'todos los alumnos del grupo ' + form.id_grupo_msg.selectedOptions[0].textContent : 'los alumnos indicados';
+            const tipo = form.tipo_msg.value === 'citatorio' ? 'el citatorio' : 'el aviso';
+            const msg = 'Se enviará ' + tipo + ' a los tutores de ' + quien + '.' + <?php echo json_encode(correo_activo() ? '' : ' Quedará pendiente hasta que se configure el correo del plantel.'); ?>;
+            const seguir = () => { form.dataset.ok = '1'; document.getElementById('btnMensaje').disabled = true; form.submit(); };
+            if (window.sigeConfirm) { window.sigeConfirm(msg, { titulo: 'Avisos a tutores', aceptar: 'Enviar' }).then(ok => { if (ok) seguir(); }); return false; }
+            return confirm(msg);
+        }
         function confirmarEnvio(form) {
             if (form.dataset.ok) return true;
             const n = form.querySelectorAll('.sel:checked').length;
             if (!n) { (window.sigeAlert || alert)('Selecciona al menos un alumno.', 'aviso'); return false; }
-            const msg = 'Se generará el aviso de faltas para ' + n + ' alumno(s).' + <?php echo json_encode(correo_activo() ? ' Se enviará por correo a sus tutores.' : ' Quedarán pendientes hasta que se configure el correo del plantel.'); ?>;
+            const msg = 'Se generará el aviso de <?php echo $palabra; ?> para ' + n + ' alumno(s).' + <?php echo json_encode(correo_activo() ? ' Se enviará por correo a sus tutores.' : ' Quedarán pendientes hasta que se configure el correo del plantel.'); ?>;
             const seguir = () => { form.dataset.ok = '1'; document.getElementById('btnEnviar').disabled = true; form.submit(); };
             if (window.sigeConfirm) { window.sigeConfirm(msg, { titulo: 'Avisos a tutores', aceptar: 'Continuar' }).then(ok => { if (ok) seguir(); }); return false; }
             return confirm(msg);

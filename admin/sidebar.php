@@ -54,6 +54,9 @@ $pagina_actual = basename($_SERVER['PHP_SELF']);
             <a href="config_correo.php" class="nav-item <?php echo ($pagina_actual == 'config_correo.php') ? 'active' : ''; ?>">
                 <i class="fas fa-envelope-circle-check"></i><span>Correo de avisos</span>
             </a>
+            <a href="cierre_ciclo.php" class="nav-item <?php echo ($pagina_actual == 'cierre_ciclo.php') ? 'active' : ''; ?>">
+                <i class="fas fa-box-archive"></i><span>Cierre de ciclo</span>
+            </a>
 
             <span class="nav-heading">Cuenta</span>
             <a href="perfil.php" class="nav-item <?php echo ($pagina_actual == 'perfil.php') ? 'active' : ''; ?>">

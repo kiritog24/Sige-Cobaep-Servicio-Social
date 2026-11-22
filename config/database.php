@@ -1,4 +1,6 @@
 <?php
+// Hora de Puebla para todo el sistema (XAMPP trae Europe/Berlin por defecto)
+date_default_timezone_set('America/Mexico_City');
 require_once __DIR__ . '/../includes/seguridad.php';
 require_once __DIR__ . '/../includes/fotos.php';
 require_once __DIR__ . '/../includes/bitacora.php';

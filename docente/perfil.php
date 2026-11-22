@@ -198,6 +198,8 @@ try {
             font-size: 0.95rem;
         }
         
+        .btn-credencial { display: inline-flex; align-items: center; gap: 8px; margin: 6px 0 4px; padding: 8px 14px; border-radius: 10px; border: 1px solid #a5f3fc; background: #ecfeff; color: #0e7490; font-weight: 700; font-size: .85rem; cursor: pointer; font-family: inherit; }
+        .btn-credencial:hover { background: #cffafe; }
         .btn-guardar:hover {
             background: var(--green-800);
             transform: translateY(-2px);
@@ -359,6 +361,8 @@ try {
                         <div class="perfil-info-titles">
                             <h2><?php echo htmlspecialchars($maestro['nombre'] . ' ' . $maestro['apellido_paterno'] . ' ' . $maestro['apellido_materno']); ?></h2>
                             <p>Docente - COBAEP Plantel 27</p>
+                            <?php require_once __DIR__ . '/../includes/credencial_personal.php'; ?>
+                            <button type="button" class="btn-credencial" data-credencial="maestros:<?php echo (int)$maestro['id_maestro']; ?>" data-qr="<?php echo htmlspecialchars(credencial_qr_texto('maestros', $maestro)); ?>" data-modo="ver"><i class="fas fa-id-card"></i> Mi credencial (PDF)</button>
                             <small class="foto-ayuda"><i class="fas fa-camera"></i> Haz clic en tu foto para cambiarla (JPG, PNG o WEBP · máx. 2 MB · mín. 400×400 px). Se mostrará en todo el sistema.</small>
                         </div>
                     </div>
@@ -496,6 +500,7 @@ try {
             if (nueva.value !== conf.value) { e.preventDefault(); revisar(); conf.focus(); }
         });
     </script>
+    <script src="../js/credencial_personal.js"></script>
     <script src="../js/responsive.js?v=6"></script>
 </body>
 </html>

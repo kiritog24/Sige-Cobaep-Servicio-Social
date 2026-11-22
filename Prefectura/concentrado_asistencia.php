@@ -10,6 +10,7 @@
  */
 session_start();
 require_once '../config/database.php';
+require_once __DIR__ . '/../includes/archivo_ciclo.php';
 require_once __DIR__ . '/../includes/topbar_usuario.php';
 
 if (!isset($_SESSION['id_usuario']) || ($_SESSION['rol'] ?? '') !== 'prefectos') {
@@ -75,13 +76,13 @@ if ($grupo && $desde <= $hasta_calculo) {
     $st->execute([$id_grupo, $hasta_calculo, $desde]);
     $alumnos = $st->fetchAll(PDO::FETCH_ASSOC);
 
-    // Primera entrada de cada alumno por día dentro del periodo
+    // Primera entrada de cada alumno por día dentro del periodo (incluye ciclos archivados)
     $registros = [];
     if ($alumnos) {
         $ids = implode(',', array_map(fn($a) => (int)$a['id_alumno'], $alumnos));
         $st = $pdo->prepare("SELECT id_alumno, DATE(fecha_hora_escaneo) AS dia,
                                     SUBSTRING_INDEX(GROUP_CONCAT(estatus ORDER BY fecha_hora_escaneo ASC), ',', 1) AS estatus
-                             FROM ASISTENCIAS
+                             FROM " . asistencias_fuente_sql($pdo) . " asi_fuente
                              WHERE id_alumno IN ($ids) AND tipo_registro = 'Entrada' AND DATE(fecha_hora_escaneo) BETWEEN ? AND ?
                              GROUP BY id_alumno, DATE(fecha_hora_escaneo)");
         $st->execute([$desde, $hasta_calculo]);
