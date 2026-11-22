@@ -2,6 +2,8 @@
 session_start();
 require_once '../config/database.php';
 require_once __DIR__ . '/../includes/topbar_usuario.php';
+require_once __DIR__ . '/../includes/avisos_tutor.php';   // faltas_periodo(): misma regla que el concentrado
+require_once __DIR__ . '/../includes/asistencia.php';
 if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'administrativo') {
     header("Location: ../login.php");
     exit();
@@ -29,7 +31,7 @@ try {
             SELECT a.id_alumno, a.matricula, a.nombre, a.apellido_paterno, a.apellido_materno, a.estatus, a.puntos_conducta,
                    SUM(asi.estatus = 'Puntual') AS puntuales,
                    SUM(asi.estatus IN ('Retardo', 'Retardo Justificado')) AS retardos,
-                   SUM(asi.estatus IN ('Falta', 'Falta Justificada')) AS faltas
+                   SUM(asi.estatus = 'Falta Justificada') AS justificadas
             FROM GRUPO_ALUMNO ga
             INNER JOIN ALUMNOS a ON a.id_alumno = ga.id_alumno
             LEFT JOIN ASISTENCIAS asi ON asi.id_alumno = a.id_alumno AND DATE(asi.fecha_hora_escaneo) BETWEEN ? AND ?
@@ -39,6 +41,15 @@ try {
         ");
         $st->execute([$fecha_desde, $fecha_hasta, $id_grupo]);
         $alumnos = $st->fetchAll();
+
+        // Faltas sin justificar: registros "Falta" + días de clase sin entrada (sin fines de semana ni suspensiones)
+        $faltas_reales = faltas_periodo($pdo, $fecha_desde, $fecha_hasta, $id_grupo);
+        $clases_periodo = faltas_clases_periodo($pdo, array_column($alumnos, 'id_alumno'), $fecha_desde, min($fecha_hasta, date('Y-m-d')));
+        foreach ($alumnos as &$a_rep) {
+            $a_rep['faltas'] = $faltas_reales[(int)$a_rep['id_alumno']]['faltas'] ?? 0;
+            $a_rep += $clases_periodo[(int)$a_rep['id_alumno']] ?? ['faltas_clase' => 0, 'dias_pinta' => 0];
+        }
+        unset($a_rep);
     }
 
     // Descargar la lista en Excel (.xlsx real) o PDF (Dompdf)
@@ -50,19 +61,19 @@ try {
         if ($formato_rep !== 'pdf') {
             require_once __DIR__ . '/../includes/xlsx_simple.php';
             $filas_x = [];
-            foreach ($alumnos as $i => $a) $filas_x[] = [$i + 1, $a['matricula'], $a['apellido_paterno'], $a['apellido_materno'], $a['nombre'], $a['estatus'], (int)$a['puntos_conducta'], (int)$a['puntuales'], (int)$a['retardos'], (int)$a['faltas']];
+            foreach ($alumnos as $i => $a) $filas_x[] = [$i + 1, $a['matricula'], $a['apellido_paterno'], $a['apellido_materno'], $a['nombre'], $a['estatus'], (int)$a['puntos_conducta'], (int)$a['puntuales'], (int)$a['retardos'], (int)$a['faltas'], (int)$a['justificadas'], (int)$a['faltas_clase'], (int)$a['dias_pinta']];
             xlsx_descargar($archivo_rep . '.xlsx', 'Lista', ['COBAEP Plantel 27 · ' . $titulo_rep, $periodo_rep],
-                ['No.', 'Matrícula', 'Apellido paterno', 'Apellido materno', 'Nombre(s)', 'Estatus', 'Puntos de conducta', 'Puntuales', 'Retardos', 'Faltas'],
-                $filas_x, [6, 16, 18, 18, 24, 11, 12, 11, 10, 9]);
+                ['No.', 'Matrícula', 'Apellido paterno', 'Apellido materno', 'Nombre(s)', 'Estatus', 'Puntos de conducta', 'Puntuales', 'Retardos', 'Faltas', 'Justificadas', 'Faltas a clases', 'Días con pinta'],
+                $filas_x, [6, 16, 18, 18, 24, 11, 12, 11, 10, 9, 12, 14, 14]);
         }
         require_once __DIR__ . '/../includes/pdf_documento.php';
         $e = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
-        $cuerpo = '<table><thead><tr><th>No.</th><th>Matrícula</th><th>Alumno</th><th>Estatus</th><th>Puntos</th><th>Puntuales</th><th>Retardos</th><th>Faltas</th></tr></thead><tbody>';
+        $cuerpo = '<table><thead><tr><th>No.</th><th>Matrícula</th><th>Alumno</th><th>Estatus</th><th>Puntos</th><th>Puntuales</th><th>Retardos</th><th>Faltas</th><th>Just.</th><th>Faltas a clases</th><th>Días con pinta</th></tr></thead><tbody>';
         foreach ($alumnos as $i => $a) {
             $cuerpo .= '<tr><td class="c">' . ($i + 1) . '</td><td class="c">' . $e($a['matricula']) . '</td><td>' . $e(trim($a['apellido_paterno'] . ' ' . $a['apellido_materno'] . ' ' . $a['nombre'])) . '</td>'
-                . '<td class="c">' . $e($a['estatus']) . '</td><td class="c">' . (int)$a['puntos_conducta'] . '</td><td class="c">' . (int)$a['puntuales'] . '</td><td class="c">' . (int)$a['retardos'] . '</td><td class="c">' . (int)$a['faltas'] . '</td></tr>';
+                . '<td class="c">' . $e($a['estatus']) . '</td><td class="c">' . (int)$a['puntos_conducta'] . '</td><td class="c">' . (int)$a['puntuales'] . '</td><td class="c">' . (int)$a['retardos'] . '</td><td class="c">' . (int)$a['faltas'] . '</td><td class="c">' . (int)$a['justificadas'] . '</td><td class="c">' . (int)$a['faltas_clase'] . '</td><td class="c">' . (int)$a['dias_pinta'] . '</td></tr>';
         }
-        if (!$alumnos) $cuerpo .= '<tr><td colspan="8" class="c">Este grupo no tiene alumnos inscritos.</td></tr>';
+        if (!$alumnos) $cuerpo .= '<tr><td colspan="11" class="c">Este grupo no tiene alumnos inscritos.</td></tr>';
         $cuerpo .= '</tbody></table>';
         pdf_descargar($archivo_rep . '.pdf', $titulo_rep, $periodo_rep . ' · ' . count($alumnos) . ' alumnos', $cuerpo, 'portrait');
     }
@@ -72,8 +83,7 @@ try {
         SELECT g.id_grupo, g.semestre, g.nombre_grupo, g.turno,
                COUNT(DISTINCT ga.id_alumno) AS alumnos,
                SUM(asi.estatus = 'Puntual') AS puntuales,
-               SUM(asi.estatus IN ('Retardo', 'Retardo Justificado')) AS retardos,
-               SUM(asi.estatus IN ('Falta', 'Falta Justificada')) AS faltas
+               SUM(asi.estatus IN ('Retardo', 'Retardo Justificado')) AS retardos
         FROM GRUPOS g
         LEFT JOIN GRUPO_ALUMNO ga ON ga.id_grupo = g.id_grupo AND ga.fecha_baja IS NULL
         LEFT JOIN ASISTENCIAS asi ON asi.id_alumno = ga.id_alumno AND DATE(asi.fecha_hora_escaneo) BETWEEN ? AND ?
@@ -83,6 +93,19 @@ try {
     ");
     $st->execute([$fecha_desde, $fecha_hasta]);
     $resumen = $st->fetchAll();
+
+    // Faltas (misma regla que el concentrado) y asistencia a clases, sumadas por grupo
+    $faltas_todos = faltas_periodo($pdo, $fecha_desde, $fecha_hasta);
+    $miembros = $pdo->query("SELECT id_alumno, id_grupo FROM GRUPO_ALUMNO WHERE fecha_baja IS NULL")->fetchAll(PDO::FETCH_KEY_PAIR);
+    $clases_todos = faltas_clases_periodo($pdo, array_keys($miembros), $fecha_desde, min($fecha_hasta, date('Y-m-d')));
+    $por_grupo = [];
+    foreach ($miembros as $id_al => $id_gr) {
+        $por_grupo[$id_gr]['faltas'] = ($por_grupo[$id_gr]['faltas'] ?? 0) + ($faltas_todos[$id_al]['faltas'] ?? 0);
+        $por_grupo[$id_gr]['faltas_clase'] = ($por_grupo[$id_gr]['faltas_clase'] ?? 0) + ($clases_todos[$id_al]['faltas_clase'] ?? 0);
+        $por_grupo[$id_gr]['dias_pinta'] = ($por_grupo[$id_gr]['dias_pinta'] ?? 0) + ($clases_todos[$id_al]['dias_pinta'] ?? 0);
+    }
+    foreach ($resumen as &$r_rep) $r_rep += $por_grupo[(int)$r_rep['id_grupo']] ?? ['faltas' => 0, 'faltas_clase' => 0, 'dias_pinta' => 0];
+    unset($r_rep);
 
     // Reportes de conducta del periodo
     $st = $pdo->prepare("
@@ -228,7 +251,7 @@ $qs_periodo = 'desde=' . urlencode($fecha_desde) . '&hasta=' . urlencode($fecha_
                     <?php else: ?>
                         <div class="rep-wrap">
                             <table class="rep-table">
-                                <thead><tr><th>No.</th><th>Matrícula</th><th>Alumno</th><th>Estatus</th><th class="num">Conducta</th><th class="num">Puntuales</th><th class="num">Retardos</th><th class="num">Faltas</th></tr></thead>
+                                <thead><tr><th>No.</th><th>Matrícula</th><th>Alumno</th><th>Estatus</th><th class="num">Conducta</th><th class="num">Puntuales</th><th class="num">Retardos</th><th class="num">Faltas</th><th class="num" title="Faltas con justificante de Prefectura">Just.</th><th class="num" title="Faltas sin justificar en el pase de lista de los docentes">Faltas a clases</th><th class="num" title="Días que entró al plantel y faltó a alguna clase">Días con pinta</th></tr></thead>
                                 <tbody>
                                 <?php foreach ($alumnos as $i => $a):
                                     $pts = (int)$a['puntos_conducta'];
@@ -242,6 +265,9 @@ $qs_periodo = 'desde=' . urlencode($fecha_desde) . '&hasta=' . urlencode($fecha_
                                         <td class="num"><?php echo (int)$a['puntuales']; ?></td>
                                         <td class="num"><?php echo (int)$a['retardos']; ?></td>
                                         <td class="num"><?php echo (int)$a['faltas']; ?></td>
+                                        <td class="num"><?php echo (int)$a['justificadas']; ?></td>
+                                        <td class="num"><?php echo (int)$a['faltas_clase']; ?></td>
+                                        <td class="num"><?php echo (int)$a['dias_pinta'] ? '<span class="pill bad">' . (int)$a['dias_pinta'] . '</span>' : '0'; ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                                 </tbody>
@@ -254,13 +280,13 @@ $qs_periodo = 'desde=' . urlencode($fecha_desde) . '&hasta=' . urlencode($fecha_
             <!-- Resumen de asistencia -->
             <div class="rep-card">
                 <h2><i class="fas fa-chart-column"></i> Asistencia por grupo</h2>
-                <p class="desc">Registros de entrada del <?php echo date('d/m/Y', strtotime($fecha_desde)); ?> al <?php echo date('d/m/Y', strtotime($fecha_hasta)); ?>.</p>
+                <p class="desc">Entrada al plantel y pase de lista de los docentes del <?php echo date('d/m/Y', strtotime($fecha_desde)); ?> al <?php echo date('d/m/Y', strtotime($fecha_hasta)); ?>. Un día de clases sin registro de entrada cuenta como falta (sin fines de semana ni suspensiones).</p>
                 <?php if (empty($resumen)): ?>
                     <p class="rep-empty">No hay grupos activos.</p>
                 <?php else: ?>
                     <div class="rep-wrap">
                         <table class="rep-table">
-                            <thead><tr><th>Grupo</th><th>Turno</th><th class="num">Alumnos</th><th class="num">Puntuales</th><th class="num">Retardos</th><th class="num">Faltas</th><th class="num">Puntualidad</th></tr></thead>
+                            <thead><tr><th>Grupo</th><th>Turno</th><th class="num">Alumnos</th><th class="num">Puntuales</th><th class="num">Retardos</th><th class="num">Faltas</th><th class="num">Puntualidad</th><th class="num">Faltas a clases</th><th class="num">Días con pinta</th></tr></thead>
                             <tbody>
                             <?php foreach ($resumen as $r):
                                 $total = (int)$r['puntuales'] + (int)$r['retardos'] + (int)$r['faltas'];
@@ -273,6 +299,8 @@ $qs_periodo = 'desde=' . urlencode($fecha_desde) . '&hasta=' . urlencode($fecha_
                                     <td class="num"><?php echo (int)$r['retardos']; ?></td>
                                     <td class="num"><?php echo (int)$r['faltas']; ?></td>
                                     <td class="num"><?php echo $pct === null ? '<span style="color:#94a3b8">—</span>' : '<span class="pill ' . ($pct >= 85 ? 'ok' : ($pct >= 70 ? 'warn' : 'bad')) . '">' . $pct . '%</span>'; ?></td>
+                                    <td class="num"><?php echo (int)$r['faltas_clase']; ?></td>
+                                    <td class="num"><?php echo (int)$r['dias_pinta'] ? '<span class="pill bad">' . (int)$r['dias_pinta'] . '</span>' : '0'; ?></td>
                                 </tr>
                             <?php endforeach; ?>
                             </tbody>

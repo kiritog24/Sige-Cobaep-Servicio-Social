@@ -105,6 +105,13 @@ function obtener_avisos_estudiante(PDO $pdo, int $id_alumno, int $limite = 30): 
         ");
         $st->execute([$id_alumno]);
         $r = $st->fetch(PDO::FETCH_ASSOC);
+        // Los días de clase sin ningún registro de entrada también son faltas (misma regla que Mis Asistencias)
+        require_once __DIR__ . '/../../includes/asistencia.php';
+        $dias_sin = dias_sin_entrada_alumno($pdo, (int)$id_alumno, date('Y-m-01'), date('Y-m-d'));
+        if ($r && $dias_sin) {
+            $r['faltas'] = (int)$r['faltas'] + count($dias_sin);
+            $r['ultima'] = max((string)$r['ultima'], end($dias_sin) . ' 08:00:00');
+        }
         if ($r && ((int)$r['retardos'] > 0 || (int)$r['faltas'] > 0)) {
             $agregar($r['ultima'], 'far fa-calendar-xmark', 'amber', 'Tu asistencia de este mes',
                 'Llevas ' . (int)$r['retardos'] . ' retardo(s) y ' . (int)$r['faltas'] . ' falta(s) sin justificar este mes.', 'mis_asistencias.php');

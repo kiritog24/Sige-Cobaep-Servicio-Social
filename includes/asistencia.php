@@ -244,17 +244,15 @@ function pases_de_lista_del_dia(PDO $pdo, string $fecha, int $id_grupo = 0): arr
  */
 function dias_sin_entrada_alumno(PDO $pdo, int $id_alumno, string $desde, string $hasta): array {
     $hasta = min($hasta, date('Y-m-d'));
-    // Lo que ya se archivó en un cierre de ciclo no está en ASISTENCIAS: esos días no se pueden contar como falta
-    if (($archivado = asistencia_archivada_hasta($pdo)) && $desde <= $archivado) {
-        $desde = date('Y-m-d', strtotime($archivado . ' +1 day'));
-    }
+
     if (!fecha_valida($desde) || !fecha_valida($hasta) || $desde > $hasta) return [];
     $st = $pdo->prepare("SELECT ga.fecha_asignacion, ga.fecha_baja FROM GRUPO_ALUMNO ga INNER JOIN GRUPOS g ON g.id_grupo = ga.id_grupo
                          WHERE ga.id_alumno = ? AND ga.fecha_asignacion <= ? AND (ga.fecha_baja IS NULL OR ga.fecha_baja > ?)");
     $st->execute([$id_alumno, $hasta, $desde]);
     $periodos = $st->fetchAll(PDO::FETCH_ASSOC);
     if (!$periodos) return [];
-    $st = $pdo->prepare("SELECT DISTINCT DATE(fecha_hora_escaneo) FROM ASISTENCIAS WHERE id_alumno = ? AND tipo_registro = 'Entrada' AND DATE(fecha_hora_escaneo) BETWEEN ? AND ?");
+    // Incluye lo archivado en un cierre de ciclo, para que esos días no aparezcan como falta
+    $st = $pdo->prepare("SELECT DISTINCT DATE(fecha_hora_escaneo) FROM " . fuente_asistencias_plantel($pdo) . " f WHERE id_alumno = ? AND tipo_registro = 'Entrada' AND DATE(fecha_hora_escaneo) BETWEEN ? AND ?");
     $st->execute([$id_alumno, $desde, $hasta]);
     $con_registro = array_flip($st->fetchAll(PDO::FETCH_COLUMN));
     $st = $pdo->prepare("SELECT fecha_inicio, fecha_fin FROM SUSPENSIONES_CLASES WHERE fecha_fin >= ? AND fecha_inicio <= ?");
@@ -272,19 +270,59 @@ function dias_sin_entrada_alumno(PDO $pdo, int $id_alumno, string $desde, string
     return $dias;
 }
 
-/** Último día cuyas asistencias de plantel se movieron al archivo en un cierre de ciclo (null si nunca se ha archivado). */
-function asistencia_archivada_hasta(PDO $pdo): ?string {
-    static $cache = false;
-    if ($cache !== false) return $cache;
-    $cache = null;
-    try {
-        $existe = (int)$pdo->query("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = 'asistencias_archivo'")->fetchColumn();
-        if ($existe) {
-            $f = $pdo->query("SELECT DATE(MAX(fecha_hora_escaneo)) FROM ASISTENCIAS_ARCHIVO")->fetchColumn();
-            $cache = $f ?: null;
+/** ¿Ya existe la tabla de archivo indicada (se crea en el primer cierre de ciclo)? */
+function tabla_archivo_existe(PDO $pdo, string $tabla): bool {
+    static $cache = [];
+    $t = strtolower($tabla);
+    if (!isset($cache[$t])) {
+        try {
+            $st = $pdo->prepare("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = ?");
+            $st->execute([$t]);
+            $cache[$t] = (int)$st->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            $cache[$t] = false;
         }
-    } catch (PDOException $e) {
-        error_log('asistencia_archivada_hasta: ' . $e->getMessage());
     }
-    return $cache;
+    return $cache[$t];
+}
+
+/** Entradas al plantel del día a día más las archivadas en cierres de ciclo (para consultas por periodo). */
+function fuente_asistencias_plantel(PDO $pdo): string {
+    if (!tabla_archivo_existe($pdo, 'asistencias_archivo')) return 'ASISTENCIAS';
+    return "(SELECT id_alumno, fecha_hora_escaneo, tipo_registro, estatus FROM ASISTENCIAS
+             UNION ALL SELECT id_alumno, fecha_hora_escaneo, tipo_registro, estatus FROM ASISTENCIAS_ARCHIVO)";
+}
+
+/** Pase de lista de los docentes del día a día más el archivado en cierres de ciclo. */
+function fuente_asistencias_clases(PDO $pdo): string {
+    if (!tabla_archivo_existe($pdo, 'asistencias_clases_archivo')) return 'ASISTENCIAS_CLASES';
+    return "(SELECT id_clase, id_alumno, fecha, estatus FROM ASISTENCIAS_CLASES
+             UNION ALL SELECT id_clase, id_alumno, fecha, estatus FROM ASISTENCIAS_CLASES_ARCHIVO)";
+}
+
+/**
+ * Faltas a clases (pase de lista del docente) de varios alumnos en un periodo.
+ * - faltas_clase: faltas sin justificar en cualquier materia.
+ * - dias_pinta: días en que entró al plantel y aun así tuvo falta en alguna clase.
+ * @return array<int, array{faltas_clase:int, dias_pinta:int}>
+ */
+function faltas_clases_periodo(PDO $pdo, array $ids, string $desde, string $hasta): array {
+    $ids = array_values(array_filter(array_map('intval', $ids)));
+    if (!$ids || !fecha_valida($desde) || !fecha_valida($hasta)) return [];
+    $in = implode(',', $ids);
+    $res = array_fill_keys($ids, ['faltas_clase' => 0, 'dias_pinta' => 0]);
+    $st = $pdo->prepare("SELECT id_alumno, COUNT(*) FROM " . fuente_asistencias_clases($pdo) . " c
+                         WHERE id_alumno IN ($in) AND fecha BETWEEN ? AND ? AND estatus IN ('Falta', 'Ausente') GROUP BY id_alumno");
+    $st->execute([$desde, $hasta]);
+    foreach ($st->fetchAll(PDO::FETCH_KEY_PAIR) as $id => $n) $res[(int)$id]['faltas_clase'] = (int)$n;
+    $st = $pdo->prepare("SELECT c.id_alumno, COUNT(DISTINCT c.fecha)
+                         FROM " . fuente_asistencias_clases($pdo) . " c
+                         INNER JOIN " . fuente_asistencias_plantel($pdo) . " p
+                                 ON p.id_alumno = c.id_alumno AND DATE(p.fecha_hora_escaneo) = c.fecha AND p.tipo_registro = 'Entrada'
+                                AND p.estatus IN ('Puntual', 'Retardo', 'Retardo Justificado')
+                         WHERE c.id_alumno IN ($in) AND c.fecha BETWEEN ? AND ? AND c.estatus IN ('Falta', 'Ausente')
+                         GROUP BY c.id_alumno");
+    $st->execute([$desde, $hasta]);
+    foreach ($st->fetchAll(PDO::FETCH_KEY_PAIR) as $id => $n) $res[(int)$id]['dias_pinta'] = (int)$n;
+    return $res;
 }

@@ -11,6 +11,7 @@
 session_start();
 require_once '../config/database.php';
 require_once __DIR__ . '/../includes/archivo_ciclo.php';
+require_once __DIR__ . '/../includes/asistencia.php';
 require_once __DIR__ . '/../includes/topbar_usuario.php';
 
 if (!isset($_SESSION['id_usuario']) || ($_SESSION['rol'] ?? '') !== 'prefectos') {
@@ -65,7 +66,7 @@ $id_grupo = (int)($_GET['id_grupo'] ?? 0);
 $grupo = null;
 foreach ($grupos as $g) if ((int)$g['id_grupo'] === $id_grupo) $grupo = $g;
 
-$filas = []; $totales = ['dias' => 0, 'puntual' => 0, 'retardo' => 0, 'justif' => 0, 'falta' => 0, 'susp' => 0];
+$filas = []; $totales = ['dias' => 0, 'puntual' => 0, 'retardo' => 0, 'justif' => 0, 'falta' => 0, 'susp' => 0, 'faltas_clase' => 0, 'dias_pinta' => 0];
 $dias_habiles = [];
 if ($grupo && $desde <= $hasta_calculo) {
     $st = $pdo->prepare("
@@ -101,8 +102,12 @@ if ($grupo && $desde <= $hasta_calculo) {
     }
 
 
+    // Pase de lista de los docentes en el mismo periodo: faltas a clases y días que entró al plantel pero faltó a alguna clase
+    $clases_periodo = faltas_clases_periodo($pdo, array_column($alumnos, 'id_alumno'), $desde, $hasta_calculo);
+
     foreach ($alumnos as $a) {
-        $c = ['dias' => 0, 'puntual' => 0, 'retardo' => 0, 'justif' => 0, 'falta' => 0, 'susp' => 0];
+        $c = ['dias' => 0, 'puntual' => 0, 'retardo' => 0, 'justif' => 0, 'falta' => 0, 'susp' => 0]
+           + ($clases_periodo[(int)$a['id_alumno']] ?? ['faltas_clase' => 0, 'dias_pinta' => 0]);
         foreach ($dias_habiles as $dia) {
             // Solo cuenta mientras el alumno pertenece al grupo
             if ($dia < $a['fecha_asignacion'] || ($a['fecha_baja'] && $dia >= $a['fecha_baja'])) continue;
@@ -133,28 +138,29 @@ if ($grupo && in_array($formato, ['pdf', 'xlsx'], true)) {
         foreach ($filas as $i => $f) {
             $datos[] = [$i + 1, trim($f['apellido_paterno'] . ' ' . $f['apellido_materno'] . ' ' . $f['nombre']), $f['matricula'],
                         (int)$f['dias'], (int)$f['puntual'], (int)$f['retardo'], (int)$f['justif'], (int)$f['falta'], (int)$f['susp'],
-                        $f['porcentaje'] !== null ? (float)$f['porcentaje'] : ''];
+                        $f['porcentaje'] !== null ? (float)$f['porcentaje'] : '', (int)$f['faltas_clase'], (int)$f['dias_pinta']];
         }
-        $datos[] = ['', 'TOTAL DEL GRUPO', '', (int)$totales['dias'], (int)$totales['puntual'], (int)$totales['retardo'], (int)$totales['justif'], (int)$totales['falta'], (int)$totales['susp'], $pct_grupo !== null ? (float)$pct_grupo : ''];
+        $datos[] = ['', 'TOTAL DEL GRUPO', '', (int)$totales['dias'], (int)$totales['puntual'], (int)$totales['retardo'], (int)$totales['justif'], (int)$totales['falta'], (int)$totales['susp'], $pct_grupo !== null ? (float)$pct_grupo : '', (int)$totales['faltas_clase'], (int)$totales['dias_pinta']];
         xlsx_descargar($nombre_archivo . '.xlsx', 'Concentrado',
             ['COBAEP Plantel 27 · Concentrado de asistencia', $titulo_grupo . ' · ' . $etiqueta . ' · ' . $dias_texto],
-            ['#', 'Alumno', 'Matrícula', 'Días', 'Puntual', 'Retardos', 'Justificadas', 'Faltas', 'Suspendido', '% Asistencia'],
-            $datos, [5, 38, 16, 8, 9, 10, 12, 8, 11, 13]);
+            ['#', 'Alumno', 'Matrícula', 'Días', 'Puntual', 'Retardos', 'Justificadas', 'Faltas', 'Suspendido', '% Asistencia', 'Faltas a clases', 'Días con pinta'],
+            $datos, [5, 38, 16, 8, 9, 10, 12, 8, 11, 13, 14, 14]);
     }
     require_once __DIR__ . '/../includes/pdf_documento.php';
     $e = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
     $cuerpo = '<table class="resumen"><tr>'
         . '<td><b>' . count($filas) . '</b>Alumnos</td><td><b>' . $totales['puntual'] . '</b>Puntuales</td><td><b>' . $totales['retardo'] . '</b>Retardos</td>'
-        . '<td><b>' . $totales['justif'] . '</b>Justificadas</td><td><b>' . $totales['falta'] . '</b>Faltas</td><td><b>' . ($pct_grupo !== null ? $pct_grupo . '%' : '—') . '</b>Asistencia del grupo</td>'
-        . '</tr></table><br><table><thead><tr><th>#</th><th>Alumno</th><th>Matrícula</th><th>Días</th><th>Puntual</th><th>Retardos</th><th>Justif.</th><th>Faltas</th><th>Susp.</th><th>% Asist.</th></tr></thead><tbody>';
+        . '<td><b>' . $totales['justif'] . '</b>Justificadas</td><td><b>' . $totales['falta'] . '</b>Faltas</td><td><b>' . ($pct_grupo !== null ? $pct_grupo . '%' : '—') . '</b>Asistencia del grupo</td><td><b>' . $totales['dias_pinta'] . '</b>Días con pinta</td>'
+        . '</tr></table><br><table><thead><tr><th>#</th><th>Alumno</th><th>Matrícula</th><th>Días</th><th>Puntual</th><th>Retardos</th><th>Justif.</th><th>Faltas</th><th>Susp.</th><th>% Asist.</th><th>Faltas a clases</th><th>Días con pinta</th></tr></thead><tbody>';
     foreach ($filas as $i => $f) {
         $cls = $f['porcentaje'] === null ? '' : ($f['porcentaje'] >= 90 ? 'ok' : ($f['porcentaje'] >= 80 ? 'medio' : 'bajo'));
         $cuerpo .= '<tr><td class="c">' . ($i + 1) . '</td><td>' . $e(trim($f['apellido_paterno'] . ' ' . $f['apellido_materno'] . ' ' . $f['nombre'])) . '</td><td class="c">' . $e($f['matricula']) . '</td>'
             . '<td class="c">' . (int)$f['dias'] . '</td><td class="c">' . (int)$f['puntual'] . '</td><td class="c">' . (int)$f['retardo'] . '</td><td class="c">' . (int)$f['justif'] . '</td>'
-            . '<td class="c">' . (int)$f['falta'] . '</td><td class="c">' . (int)$f['susp'] . '</td><td class="c ' . $cls . '">' . ($f['porcentaje'] !== null ? $f['porcentaje'] . '%' : '—') . '</td></tr>';
+            . '<td class="c">' . (int)$f['falta'] . '</td><td class="c">' . (int)$f['susp'] . '</td><td class="c ' . $cls . '">' . ($f['porcentaje'] !== null ? $f['porcentaje'] . '%' : '—') . '</td>'
+            . '<td class="c">' . (int)$f['faltas_clase'] . '</td><td class="c">' . (int)$f['dias_pinta'] . '</td></tr>';
     }
-    if (!$filas) $cuerpo .= '<tr><td colspan="10" class="c">No hay alumnos en este grupo para el periodo seleccionado.</td></tr>';
-    $cuerpo .= '</tbody></table><p class="nota">Se cuentan los días hábiles (lunes a viernes, sin suspensiones de clases). Un día hábil sin registro de entrada cuenta como falta. Los alumnos se cuentan desde su fecha de inscripción al grupo. Verde: 90% o más · Amarillo: 80–89% · Rojo: menos de 80%.</p>'
+    if (!$filas) $cuerpo .= '<tr><td colspan="12" class="c">No hay alumnos en este grupo para el periodo seleccionado.</td></tr>';
+    $cuerpo .= '</tbody></table><p class="nota">Se cuentan los días hábiles (lunes a viernes, sin suspensiones de clases). Un día hábil sin registro de entrada cuenta como falta. Los alumnos se cuentan desde su fecha de inscripción al grupo. Verde: 90% o más · Amarillo: 80–89% · Rojo: menos de 80%. Faltas a clases: según el pase de lista de los docentes. Días con pinta: entró al plantel y faltó a alguna clase.</p>'
         . '<br><br><table style="width:60%;margin:0 auto"><tr><td style="border:none;border-top:1px solid #333;text-align:center;padding-top:4px">Prefectura · Firma y sello</td></tr></table>';
     pdf_descargar($nombre_archivo . '.pdf', 'Concentrado de asistencia · ' . $titulo_grupo, $etiqueta . ' · ' . $dias_texto, $cuerpo, 'landscape');
 }
@@ -277,16 +283,18 @@ if ($grupo && in_array($formato, ['pdf', 'xlsx'], true)) {
                     <div><strong><?php echo $totales['justif']; ?></strong><span>Justificadas</span></div>
                     <div><strong><?php echo $totales['falta']; ?></strong><span>Faltas</span></div>
                     <div><strong><?php echo $pct_grupo !== null ? $pct_grupo . '%' : '—'; ?></strong><span>Asistencia del grupo</span></div>
+                    <div><strong><?php echo $totales['faltas_clase']; ?></strong><span>Faltas a clases</span></div>
+                    <div><strong><?php echo $totales['dias_pinta']; ?></strong><span>Días con pinta</span></div>
                 </div>
 
                 <div class="table-responsive">
                     <table class="ca-tabla" id="tablaConcentrado">
                         <thead>
-                            <tr><th>#</th><th>Alumno</th><th>Matrícula</th><th>Días hábiles</th><th>Puntual</th><th>Retardos</th><th>Justificadas</th><th>Faltas</th><th>Suspendido</th><th>% Asistencia</th></tr>
+                            <tr><th>#</th><th>Alumno</th><th>Matrícula</th><th>Días hábiles</th><th>Puntual</th><th>Retardos</th><th>Justificadas</th><th>Faltas</th><th>Suspendido</th><th>% Asistencia</th><th title="Faltas sin justificar en el pase de lista de los docentes">Faltas a clases</th><th title="Días que entró al plantel y faltó a alguna clase">Días con pinta</th></tr>
                         </thead>
                         <tbody>
                             <?php if (!$filas): ?>
-                                <tr><td colspan="10" style="padding:24px; color:#64748b;">No hay alumnos en este grupo para el periodo seleccionado.</td></tr>
+                                <tr><td colspan="12" style="padding:24px; color:#64748b;">No hay alumnos en este grupo para el periodo seleccionado.</td></tr>
                             <?php else: foreach ($filas as $i => $f):
                                 $cls = $f['porcentaje'] === null ? '' : ($f['porcentaje'] >= 90 ? 'ok' : ($f['porcentaje'] >= 80 ? 'medio' : 'bajo')); ?>
                                 <tr>
@@ -300,12 +308,14 @@ if ($grupo && in_array($formato, ['pdf', 'xlsx'], true)) {
                                     <td><?php echo (int)$f['falta']; ?></td>
                                     <td><?php echo (int)$f['susp']; ?></td>
                                     <td><span class="ca-pct <?php echo $cls; ?>"><?php echo $f['porcentaje'] !== null ? $f['porcentaje'] . '%' : '—'; ?></span></td>
+                                    <td><?php echo (int)$f['faltas_clase']; ?></td>
+                                    <td><?php echo (int)$f['dias_pinta'] ? '<span class="ca-pct bajo">' . (int)$f['dias_pinta'] . '</span>' : '0'; ?></td>
                                 </tr>
                             <?php endforeach; endif; ?>
                         </tbody>
                     </table>
                 </div>
-                <p class="ca-nota"><i class="fas fa-circle-info"></i> Se cuentan solo días hábiles (lunes a viernes) y se excluyen las suspensiones de clases registradas. Un día hábil sin registro de entrada cuenta como falta. Los alumnos se cuentan desde su fecha de inscripción al grupo. Verde: 90% o más · Amarillo: 80–89% · Rojo: menos de 80%.</p>
+                <p class="ca-nota"><i class="fas fa-circle-info"></i> Se cuentan solo días hábiles (lunes a viernes) y se excluyen las suspensiones de clases registradas. Un día hábil sin registro de entrada cuenta como falta. Los alumnos se cuentan desde su fecha de inscripción al grupo. Verde: 90% o más · Amarillo: 80–89% · Rojo: menos de 80%. <b>Faltas a clases</b>: según el pase de lista de los docentes. <b>Días con pinta</b>: entró al plantel y faltó a alguna clase (detalle diario en Asistencia a Clases).</p>
             </section>
         <?php endif; ?>
     </main>

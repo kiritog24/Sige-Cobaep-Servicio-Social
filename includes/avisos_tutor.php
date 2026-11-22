@@ -156,6 +156,7 @@ function aviso_tutor_clases(PDO $pdo, int $id_alumno, string $fecha, ?string $en
  * @return array<int, array{faltas:int, fechas:array}>
  */
 function faltas_periodo(PDO $pdo, string $desde, string $hasta, int $id_grupo = 0, bool $contar_sin_registro = true): array {
+    require_once __DIR__ . '/asistencia.php';   // fuente_asistencias_plantel(): incluye lo archivado en cierres de ciclo
     $hasta = min($hasta, date('Y-m-d'));
     if ($desde > $hasta) return [];
     $sql = "SELECT a.id_alumno, ga.fecha_asignacion, ga.fecha_baja FROM GRUPO_ALUMNO ga INNER JOIN ALUMNOS a ON a.id_alumno = ga.id_alumno
@@ -170,7 +171,7 @@ function faltas_periodo(PDO $pdo, string $desde, string $hasta, int $id_grupo = 
 
     $ids = implode(',', array_map(fn($a) => (int)$a['id_alumno'], $alumnos));
     $st = $pdo->prepare("SELECT id_alumno, DATE(fecha_hora_escaneo) AS dia, SUBSTRING_INDEX(GROUP_CONCAT(estatus ORDER BY fecha_hora_escaneo ASC), ',', 1) AS estatus
-                         FROM ASISTENCIAS WHERE id_alumno IN ($ids) AND tipo_registro = 'Entrada' AND DATE(fecha_hora_escaneo) BETWEEN ? AND ?
+                         FROM " . fuente_asistencias_plantel($pdo) . " f WHERE id_alumno IN ($ids) AND tipo_registro = 'Entrada' AND DATE(fecha_hora_escaneo) BETWEEN ? AND ?
                          GROUP BY id_alumno, DATE(fecha_hora_escaneo)");
     $st->execute([$desde, $hasta]);
     $reg = [];
@@ -208,10 +209,11 @@ function faltas_periodo(PDO $pdo, string $desde, string $hasta, int $id_grupo = 
 function retardos_periodo(PDO $pdo, string $desde, string $hasta, int $id_grupo = 0): array {
     $hasta = min($hasta, date('Y-m-d'));
     if ($desde > $hasta) return [];
+    require_once __DIR__ . '/asistencia.php';
     $sql = "SELECT x.id_alumno, x.dia FROM (
                 SELECT asi.id_alumno, DATE(asi.fecha_hora_escaneo) AS dia,
                        SUBSTRING_INDEX(GROUP_CONCAT(asi.estatus ORDER BY asi.fecha_hora_escaneo ASC), ',', 1) AS estatus
-                FROM ASISTENCIAS asi
+                FROM " . fuente_asistencias_plantel($pdo) . " asi
                 INNER JOIN ALUMNOS a ON a.id_alumno = asi.id_alumno AND a.estatus = 'Alta'
                 INNER JOIN GRUPO_ALUMNO ga ON ga.id_alumno = a.id_alumno AND ga.fecha_baja IS NULL
                 INNER JOIN GRUPOS g ON g.id_grupo = ga.id_grupo AND g.estatus = 'Activo'
