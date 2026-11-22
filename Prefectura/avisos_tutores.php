@@ -159,7 +159,7 @@ $chips = ['enviado' => ['Enviado', 'ok'], 'pendiente' => ['Pendiente', 'pend'], 
     <link rel="stylesheet" href="../admin/style_dashboard_admin.css">
     <link rel="stylesheet" href="../admin/style_sidebar.css">
     <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css">
-    <link rel="stylesheet" href="../css/responsive.css?v=4">
+    <link rel="stylesheet" href="../css/responsive.css?v=5">
     <style>
         .at-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 18px; padding: 20px; box-shadow: 0 4px 18px rgba(15, 23, 42, .04); margin-bottom: 20px; }
         .at-card h2 { margin: 0 0 4px; font-size: 1.08rem; color: #0f172a; display: flex; gap: 10px; align-items: center; }
@@ -378,7 +378,8 @@ $chips = ['enviado' => ['Enviado', 'ok'], 'pendiente' => ['Pendiente', 'pend'], 
             if (this.value !== 'personalizado') document.getElementById('formFiltros').submit();
         });
         const todos = document.getElementById('todos');
-        if (todos) todos.addEventListener('change', () => document.querySelectorAll('.sel:not(:disabled)').forEach(c => c.checked = todos.checked));
+        // Solo los alumnos visibles (si se filtró con el buscador, los ocultos no se marcan)
+        if (todos) todos.addEventListener('change', () => document.querySelectorAll('.sel:not(:disabled)').forEach(c => { const tr = c.closest('tr'); if (!tr || tr.style.display !== 'none') c.checked = todos.checked; }));
         document.querySelectorAll('.at-motivo input').forEach(r => r.addEventListener('change', () => {
             r.closest('.at-motivo').querySelectorAll('label').forEach(l => l.classList.toggle('activo', l.querySelector('input').checked));
             if (r.name === 'motivo') document.getElementById('formFiltros').submit();
@@ -414,6 +415,6 @@ $chips = ['enviado' => ['Enviado', 'ok'], 'pendiente' => ['Pendiente', 'pend'], 
         }
     </script>
     <script src="../Prefectura/procesos/dashboard_prefecturas.js"></script>
-    <script src="../js/responsive.js?v=6"></script>
+    <script src="../js/responsive.js?v=8"></script>
 </body>
 </html>

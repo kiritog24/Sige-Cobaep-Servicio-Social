@@ -73,7 +73,7 @@ function estudiante_layout_inicio(string $titulo, string $subtitulo, string $act
         .tag.green{background:#ecfdf5;color:#047857;} .tag.amber{background:#fffbeb;color:#b45309;} .tag.red{background:#fef2f2;color:#b91c1c;} .tag.blue{background:#eff6ff;color:#1d4ed8;} .tag.gray{background:#f1f5f9;color:#475569;}
         <?php echo $css_extra; ?>
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=4">
+    <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>
     <aside class="sidebar" id="sidebar">
@@ -156,7 +156,7 @@ function estudiante_layout_fin(string $js_extra = ''): void {
         });
         <?php echo $js_extra; ?>
     </script>
-    <script src="../js/responsive.js?v=6"></script>
+    <script src="../js/responsive.js?v=8"></script>
 </body>
 </html>
     <?php

@@ -255,7 +255,7 @@ try {
         .fuerza { height: 5px; background: #e2e8f0; border-radius: 4px; margin-top: 8px; overflow: hidden; }
         .fuerza span { display: block; height: 100%; width: 0; transition: .25s; }
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=4">
+    <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 
 <body>
@@ -501,6 +501,6 @@ try {
         });
     </script>
     <script src="../js/credencial_personal.js"></script>
-    <script src="../js/responsive.js?v=6"></script>
+    <script src="../js/responsive.js?v=8"></script>
 </body>
 </html>

@@ -35,7 +35,7 @@ try {
     
     <link rel="stylesheet" href="style_dashboard_docente.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="style_horario.css?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="../css/responsive.css?v=4">
+    <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 
 <body>
@@ -192,6 +192,6 @@ try {
             }
         });
     </script>
-    <script src="../js/responsive.js?v=6"></script>
+    <script src="../js/responsive.js?v=8"></script>
 </body>
 </html>

@@ -83,7 +83,7 @@ try {
         .form-control { width: 100%; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-family: 'Inter'; font-size: 0.95rem; outline: none; }
         .btn-group { display: flex; gap: 10px; justify-content: flex-end; margin-top: 1.5rem; }
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=4">
+    <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>
     <main class="main-content" style="margin-left:0; width:100%; padding:2rem;">
@@ -208,6 +208,6 @@ try {
             document.getElementById('modalRevisar').classList.remove('active');
         }
     </script>
-    <script src="../js/responsive.js?v=6"></script>
+    <script src="../js/responsive.js?v=8"></script>
 </body>
 </html>

@@ -91,7 +91,7 @@ if (!$requiere_entrega) {
         }
         .btn-alert:hover { background: #2563eb; }
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=4">
+    <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>
     <div class="preview-banner"><i class="fas fa-eye"></i> MODO VISTA PREVIA DEL ALUMNO</div>
@@ -169,6 +169,6 @@ if (!$requiere_entrega) {
             setTimeout(() => { alerta.style.display = 'none'; }, 200);
         }
     </script>
-    <script src="../js/responsive.js?v=6"></script>
+    <script src="../js/responsive.js?v=8"></script>
 </body>
 </html>

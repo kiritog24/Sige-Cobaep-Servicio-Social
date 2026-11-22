@@ -39,7 +39,7 @@ $volver = $al['id_grupo'] ? 'ver_grupo.php?id=' . (int)$al['id_grupo'] : 'gestio
         .btn-back{display:inline-flex;align-items:center;gap:8px;color:#6d7f77;text-decoration:none;font-weight:600;font-size:.9rem;margin-bottom:10px;}
         .btn-back i{background:#f1f5f9;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;}
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=4">
+    <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -71,6 +71,6 @@ $volver = $al['id_grupo'] ? 'ver_grupo.php?id=' . (int)$al['id_grupo'] : 'gestio
             if (overlay) overlay.addEventListener('click', () => { sidebar.classList.remove('mobile-open'); overlay.classList.remove('visible'); body.classList.remove('menu-open'); });
         });
     </script>
-    <script src="../js/responsive.js?v=6"></script>
+    <script src="../js/responsive.js?v=8"></script>
 </body>
 </html>

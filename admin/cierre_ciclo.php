@@ -102,7 +102,7 @@ $tam = fn($b) => $b >= 1048576 ? round($b / 1048576, 1) . ' MB' : max(1, round($
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link href="style_dashboard_admin.css" rel="stylesheet">
     <link href="style_sidebar.css" rel="stylesheet">
-    <link rel="stylesheet" href="../css/responsive.css?v=4">
+    <link rel="stylesheet" href="../css/responsive.css?v=5">
     <style>
         body { font-family: 'Inter', sans-serif; }
         .ce-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
@@ -251,6 +251,6 @@ $tam = fn($b) => $b >= 1048576 ? round($b / 1048576, 1) . ' MB' : max(1, round($
             if (inp && btn) inp.addEventListener('input', () => { btn.disabled = inp.value.trim().toUpperCase() !== t; });
         });
     </script>
-    <script src="../js/responsive.js?v=6"></script>
+    <script src="../js/responsive.js?v=8"></script>
 </body>
 </html>

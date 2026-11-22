@@ -34,7 +34,7 @@ $plural = ['maestros' => 'Docentes', 'prefectos' => 'Prefectos', 'admin' => 'Adm
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link href="style_dashboard_admin.css" rel="stylesheet">
     <link href="style_sidebar.css" rel="stylesheet">
-    <link rel="stylesheet" href="../css/responsive.css?v=4">
+    <link rel="stylesheet" href="../css/responsive.css?v=5">
     <style>
         body { font-family: 'Inter', sans-serif; }
         .cp-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
@@ -53,7 +53,11 @@ $plural = ['maestros' => 'Docentes', 'prefectos' => 'Prefectos', 'admin' => 'Adm
         .cp-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; border-radius: 10px; border: none; background: #16a05d; color: #fff; font-weight: 700; font-family: inherit; font-size: .88rem; cursor: pointer; }
         .cp-btn.sec { background: #fff; color: #334155; border: 1px solid #cbd5e1; }
         .cp-btn:disabled { opacity: .55; cursor: wait; }
-        .cp-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+        .cp-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; max-height: min(64vh, 620px); overflow-y: auto; padding-right: 4px; overscroll-behavior: contain; align-content: start; }
+        .cp-buscar { display: flex; align-items: center; gap: 10px; padding: 0 12px; border: 1px solid #dbe4df; border-radius: 12px; margin-bottom: 12px; max-width: 420px; }
+        .cp-buscar input { flex: 1; border: none; outline: none; padding: 10px 0; font: inherit; font-size: .9rem; }
+        .cp-buscar i { color: #94a3b8; }
+        .cp-item.oculto { display: none; }
         .cp-item { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 14px; cursor: pointer; }
         .cp-item:has(input:checked) { border-color: #16a05d; background: #f0fdf4; }
         .cp-item input { width: 18px; height: 18px; accent-color: #16a05d; flex-shrink: 0; }
@@ -102,6 +106,7 @@ $plural = ['maestros' => 'Docentes', 'prefectos' => 'Prefectos', 'admin' => 'Adm
                         <button type="button" class="cp-btn" id="btnDescargar"><i class="fas fa-download"></i> Descargar PDF</button>
                     </div>
                 </div>
+                <div class="cp-buscar"><i class="fas fa-magnifying-glass"></i><input type="search" id="cpBuscar" placeholder="Buscar por nombre o usuario…" aria-label="Buscar personal"></div>
                 <div class="cp-lista">
                     <?php foreach ($personas as $p):
                         $p['tipo'] = $tipo;
@@ -125,13 +130,19 @@ $plural = ['maestros' => 'Docentes', 'prefectos' => 'Prefectos', 'admin' => 'Adm
     <script src="../js/credencial_personal.js"></script>
     <script>
         const todos = document.getElementById('todos');
-        if (todos) todos.addEventListener('change', () => document.querySelectorAll('.sel').forEach(c => c.checked = todos.checked));
+        // "Seleccionar todos" marca solo a los que se ven con la búsqueda actual
+        if (todos) todos.addEventListener('change', () => document.querySelectorAll('.cp-item:not(.oculto) .sel').forEach(c => c.checked = todos.checked));
+        const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+        document.getElementById('cpBuscar')?.addEventListener('input', e => {
+            const q = norm(e.target.value.trim());
+            document.querySelectorAll('.cp-item').forEach(it => it.classList.toggle('oculto', !!q && !norm(it.textContent).includes(q)));
+        });
         const elegidas = () => [...document.querySelectorAll('.sel:checked')].map(c => ({ clave: c.value, qr: c.dataset.qr }));
         document.getElementById('btnVer')?.addEventListener('click', e => sigeCredenciales(elegidas(), 'ver', e.currentTarget));
         document.getElementById('btnDescargar')?.addEventListener('click', e => sigeCredenciales(elegidas(), 'descargar', e.currentTarget));
         // El botón de "una sola" no debe marcar la casilla
         document.querySelectorAll('.cp-una').forEach(b => b.addEventListener('click', e => e.preventDefault()));
     </script>
-    <script src="../js/responsive.js?v=6"></script>
+    <script src="../js/responsive.js?v=8"></script>
 </body>
 </html>

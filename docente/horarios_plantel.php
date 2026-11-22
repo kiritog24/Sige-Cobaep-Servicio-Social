@@ -28,7 +28,7 @@ try {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="style_dashboard_docente.css?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="../css/responsive.css?v=4">
+    <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>
     <aside class="sidebar" id="sidebar">
@@ -75,6 +75,6 @@ try {
         <?php dh_render($datos, ['mi_maestro' => $id_docente]); ?>
     </main>
     <script src="dashboard_maestro.js"></script>
-    <script src="../js/responsive.js?v=6"></script>
+    <script src="../js/responsive.js?v=8"></script>
 </body>
 </html>

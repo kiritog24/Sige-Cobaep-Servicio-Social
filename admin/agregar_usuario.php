@@ -34,7 +34,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
     <link href="style_dashboard_admin.css?v=<?php echo time(); ?>" rel="stylesheet">
     <link href="style_sidebar.css?v=<?php echo time(); ?>" rel="stylesheet">
     <link href="style_agregar_usuario.css?v=<?php echo time(); ?>" rel="stylesheet">
-    <link rel="stylesheet" href="../css/responsive.css?v=4">
+    <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>
 
@@ -306,6 +306,6 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
             setInterval(actualizarHora, 60000);
         });
     </script>
-    <script src="../js/responsive.js?v=6"></script>
+    <script src="../js/responsive.js?v=8"></script>
 </body>
 </html>

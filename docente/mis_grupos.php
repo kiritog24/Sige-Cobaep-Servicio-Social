@@ -75,7 +75,7 @@ try {
         .btn-manage { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--green); color: white; padding: 12px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 0.95rem; transition: 0.2s ease; width: 100%;}
         .btn-manage:hover { background: var(--green-800); box-shadow: 0 4px 10px rgba(22, 160, 93, 0.3); }
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=4">
+    <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 
 <body>
@@ -184,6 +184,6 @@ try {
     </main>
 
     <script src="dashboard_maestro.js"></script>
-    <script src="../js/responsive.js?v=6"></script>
+    <script src="../js/responsive.js?v=8"></script>
 </body>
 </html>

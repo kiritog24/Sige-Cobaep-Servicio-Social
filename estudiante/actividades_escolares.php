@@ -158,7 +158,7 @@ try {
             .activities-grid { grid-template-columns: 1fr; }
         }
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=4">
+    <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>
 
@@ -378,6 +378,6 @@ try {
             }
         });
     </script>
-    <script src="../js/responsive.js?v=6"></script>
+    <script src="../js/responsive.js?v=8"></script>
 </body>
 </html>

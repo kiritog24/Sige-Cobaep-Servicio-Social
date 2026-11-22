@@ -21,7 +21,7 @@ date_default_timezone_set('America/Mexico_City');
     <link rel="stylesheet" href="../admin/style_dashboard_admin.css">
     <link rel="stylesheet" href="../admin/style_sidebar.css">
     <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css">
-    <link rel="stylesheet" href="../css/responsive.css?v=4">
+    <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>
     <?php include __DIR__ . '/includes/sidebar_prefectura.php'; ?>
@@ -43,6 +43,6 @@ date_default_timezone_set('America/Mexico_City');
     </main>
 
     <script src="../Prefectura/procesos/dashboard_prefecturas.js"></script>
-    <script src="../js/responsive.js?v=6"></script>
+    <script src="../js/responsive.js?v=8"></script>
 </body>
 </html>

@@ -210,7 +210,7 @@ $estados = [
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link href="style_dashboard_admin.css" rel="stylesheet">
     <link href="style_sidebar.css" rel="stylesheet">
-    <link rel="stylesheet" href="../css/responsive.css?v=4">
+    <link rel="stylesheet" href="../css/responsive.css?v=5">
     <style>
         body { font-family: 'Inter', sans-serif; }
         .ci-wrap { max-width: 1150px; }
@@ -354,6 +354,6 @@ $estados = [
             document.querySelectorAll('.ci-tabla tbody tr').forEach(tr => { tr.style.display = (b.dataset.f === 'todos' || tr.dataset.e === b.dataset.f) ? '' : 'none'; });
         }));
     </script>
-    <script src="../js/responsive.js?v=6"></script>
+    <script src="../js/responsive.js?v=8"></script>
 </body>
 </html>

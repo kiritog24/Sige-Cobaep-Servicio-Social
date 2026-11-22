@@ -260,7 +260,7 @@ $estados = ['nuevo' => ['Nuevo', 'fa-circle-plus'], 'existe' => ['Ya registrado'
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link href="style_dashboard_admin.css" rel="stylesheet">
     <link href="style_sidebar.css" rel="stylesheet">
-    <link rel="stylesheet" href="../css/responsive.css?v=4">
+    <link rel="stylesheet" href="../css/responsive.css?v=5">
     <style>
         body { font-family: 'Inter', sans-serif; }
         .ip-wrap { max-width: 1150px; }
@@ -403,6 +403,6 @@ $estados = ['nuevo' => ['Nuevo', 'fa-circle-plus'], 'existe' => ['Ya registrado'
             <?php endif; ?>
         </div>
     </main>
-    <script src="../js/responsive.js?v=6"></script>
+    <script src="../js/responsive.js?v=8"></script>
 </body>
 </html>

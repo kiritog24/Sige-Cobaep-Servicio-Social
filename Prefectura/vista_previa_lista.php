@@ -135,7 +135,7 @@ if (in_array($formato, ['pdf', 'xlsx'], true)) {
             .export-btn, .back-btn { width: 100%; justify-content: center; text-align: center; }
         }
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=4">
+    <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 
 <body>
@@ -229,6 +229,6 @@ if (in_array($formato, ['pdf', 'xlsx'], true)) {
     </div>
 
 
-    <script src="../js/responsive.js?v=6"></script>
+    <script src="../js/responsive.js?v=8"></script>
 </body>
 </html>

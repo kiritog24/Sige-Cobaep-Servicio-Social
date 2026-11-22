@@ -152,7 +152,7 @@ $qs_periodo = 'desde=' . urlencode($fecha_desde) . '&hasta=' . urlencode($fecha_
             body.imprimir-lista .rep-card:not(#cardLista){display:none !important;}
         }
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=4">
+    <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -323,6 +323,6 @@ $qs_periodo = 'desde=' . urlencode($fecha_desde) . '&hasta=' . urlencode($fecha_
             if (overlay) overlay.addEventListener('click', () => { sidebar.classList.remove('mobile-open'); overlay.classList.remove('visible'); body.classList.remove('menu-open'); });
         });
     </script>
-    <script src="../js/responsive.js?v=6"></script>
+    <script src="../js/responsive.js?v=8"></script>
 </body>
 </html>

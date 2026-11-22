@@ -133,7 +133,7 @@ if (!empty($clase['imagen_portada'])) {
     
     <link rel="stylesheet" href="style_dashboard_docente.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="style_detalle_regularizacion.css?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="../css/responsive.css?v=4">
+    <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 
 <body>
@@ -940,6 +940,6 @@ $render_material = function (array $act) use ($h, $id_clase) { ?>
         });
     });
     </script>
-    <script src="../js/responsive.js?v=6"></script>
+    <script src="../js/responsive.js?v=8"></script>
 </body>
 </html>

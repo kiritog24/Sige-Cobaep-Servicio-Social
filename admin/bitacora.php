@@ -77,7 +77,7 @@ $colores_accion = ['eliminacion' => 'rojo', 'fallido' => 'rojo', 'baja_grupo' =>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link href="style_dashboard_admin.css" rel="stylesheet">
     <link href="style_sidebar.css" rel="stylesheet">
-    <link rel="stylesheet" href="../css/responsive.css?v=4">
+    <link rel="stylesheet" href="../css/responsive.css?v=5">
     <style>
         body { font-family: 'Inter', sans-serif; }
         .bt-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
@@ -92,7 +92,8 @@ $colores_accion = ['eliminacion' => 'rojo', 'fallido' => 'rojo', 'baja_grupo' =>
         .bt-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 15px; border-radius: 10px; border: none; background: #16a05d; color: #fff; font-weight: 700; font-family: inherit; font-size: .86rem; cursor: pointer; text-decoration: none; white-space: nowrap; }
         .bt-btn.sec { background: #fff; color: #334155; border: 1px solid #cbd5e1; }
         .bt-resumen { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; font-size: .88rem; color: #475569; }
-        .bt-lista { list-style: none; margin: 0; padding: 0; }
+        .bt-lista { list-style: none; margin: 0; padding: 0 6px 0 0; max-height: min(70vh, 720px); overflow-y: auto; overscroll-behavior: contain; }
+        @media print { .bt-lista { max-height: none; overflow: visible; } }
         .bt-item { display: grid; grid-template-columns: 44px 1fr auto; gap: 12px; padding: 13px 4px; border-bottom: 1px solid #f1f5f9; align-items: start; }
         .bt-item:last-child { border-bottom: none; }
         .bt-ico { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: .95rem; background: #f1f5f9; color: #475569; }
@@ -203,6 +204,6 @@ $colores_accion = ['eliminacion' => 'rojo', 'fallido' => 'rojo', 'baja_grupo' =>
             <?php endif; ?>
         </section>
     </main>
-    <script src="../js/responsive.js?v=6"></script>
+    <script src="../js/responsive.js?v=8"></script>
 </body>
 </html>

@@ -313,3 +313,122 @@
     }
     contador = setInterval(revisar, 1000);
 })();
+
+/**
+ * Encabezado en teléfono: la campana y la foto de perfil quedan a la misma altura que el botón de menú (☰).
+ * Cada página arma su encabezado distinto; aquí se mide y se corrige la posición (solo en pantallas chicas).
+ */
+(function () {
+    function alinear() {
+        const der = document.querySelector('.topbar-right');
+        if (!der) return;
+        der.style.top = '';
+        der.style.marginTop = '';
+        if (window.innerWidth > 900) return;
+        const menu = [...document.querySelectorAll('#mobileMenu, .mobile-menu')].find(b => b.offsetWidth > 0 && b.offsetHeight > 0);
+        if (!menu) return;
+        const a = menu.getBoundingClientRect(), b = der.getBoundingClientRect();
+        const dif = Math.round((a.top + a.height / 2) - (b.top + b.height / 2));
+        if (Math.abs(dif) <= 2) return;
+        const pos = getComputedStyle(der).position;
+        if (pos === 'absolute' || pos === 'fixed') der.style.top = ((parseFloat(getComputedStyle(der).top) || 0) + dif) + 'px';
+        else if (dif < 0 && menu.closest('main, .main-content') === der.closest('main, .main-content')) {
+            // Está debajo del menú (en otra fila): se sube a la fila del menú
+            der.style.position = 'absolute'; der.style.right = '0';
+            const b2 = der.getBoundingClientRect();
+            der.style.top = ((parseFloat(getComputedStyle(der).top) || 0) + Math.round((a.top + a.height / 2) - (b2.top + b2.height / 2))) + 'px';
+        }
+    }
+    let t;
+    const programar = () => { clearTimeout(t); t = setTimeout(alinear, 60); };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', alinear); else alinear();
+    window.addEventListener('load', alinear);
+    window.addEventListener('resize', programar);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(alinear);
+})();
+
+/**
+ * Listas largas: toda tabla con más de 10 filas queda dentro de un contenedor con su propia barra de
+ * desplazamiento (encabezado fijo arriba) y, si su sección no tiene ya un buscador, se le agrega uno
+ * para filtrar por nombre o matrícula. Funciona también con tablas que se cargan después (AJAX).
+ * Para excluir una tabla: <table data-sin-scroll> (sin contenedor) o <table data-sin-buscador>.
+ */
+(function () {
+    const MIN_FILAS = 10;
+    const norm = s => (s || '').toString().normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    const filas = t => t.tBodies.length ? [...t.tBodies].flatMap(b => [...b.rows]) : [...t.rows].slice(1);
+
+    function contenedorDe(t) {
+        // Si la tabla ya vive en un envoltorio horizontal propio (overflow-x), se reutiliza ese mismo
+        let el = t.parentElement;
+        for (let i = 0; i < 3 && el && !el.matches('main, .main-content, body'); i++, el = el.parentElement) {
+            const cs = getComputedStyle(el);
+            if (/(auto|scroll)/.test(cs.overflowX) || /(auto|scroll)/.test(cs.overflowY)) {
+                const otros = [...el.children].filter(c => c !== t && !c.contains(t) && c.offsetHeight > 0);
+                if (!otros.length) return el;
+                break;
+            }
+        }
+        const w = document.createElement('div');
+        t.parentNode.insertBefore(w, t);
+        w.appendChild(t);
+        return w;
+    }
+
+    function tieneBuscador(t, cont) {
+        const caja = t.closest('section, .card, .panel, .table-card, .content-card, [class*="card"], .main-content > div') || cont.parentElement;
+        return !!(caja && caja.querySelector('input[type=search], input[placeholder*="uscar" i], input[id*="busc" i], input[name="q"], input[name*="busc" i]'));
+    }
+
+    function procesar(t) {
+        if (t.dataset.sigeLista || t.closest('.fm-overlay, .sd-overlay, .tbu-menu, .modal, .modal-overlay')) return;
+        const lista = filas(t);
+        if (lista.length <= MIN_FILAS) return;
+        t.dataset.sigeLista = '1';
+        let cont = null;
+        if (!t.hasAttribute('data-sin-scroll')) {
+            cont = contenedorDe(t);
+            cont.classList.add('sige-tabla-scroll');
+        }
+        if (t.hasAttribute('data-sin-buscador') || tieneBuscador(t, cont || t.parentElement)) return;
+        const barra = document.createElement('div');
+        barra.className = 'sige-buscador';
+        barra.innerHTML = '<i class="fas fa-magnifying-glass"></i><input type="search" placeholder="Buscar por nombre o matrícula…" aria-label="Buscar en la lista"><span class="sige-buscador-n"></span>';
+        (cont || t).parentNode.insertBefore(barra, cont || t);
+        const input = barra.querySelector('input'), n = barra.querySelector('.sige-buscador-n');
+        const total = () => filas(t).filter(r => !r.querySelector('td[colspan]')).length;
+        const contar = vis => { n.textContent = input.value.trim() ? vis + ' de ' + total() : total() + ' en la lista'; };
+        contar(total());
+        let sinRes = null;
+        input.addEventListener('input', () => {
+            const q = norm(input.value.trim());
+            let vis = 0;
+            filas(t).forEach(r => {
+                if (r.classList.contains('sige-sin-resultados')) return;
+                const ok = !q || norm(r.textContent).includes(q);
+                r.style.display = ok ? '' : 'none';
+                if (ok && !r.querySelector('td[colspan]')) vis++;
+            });
+            if (!sinRes) {
+                sinRes = document.createElement('tr');
+                sinRes.className = 'sige-sin-resultados';
+                sinRes.innerHTML = '<td colspan="99">No hay coincidencias con la búsqueda.</td>';
+                (t.tBodies[0] || t).appendChild(sinRes);
+            }
+            sinRes.style.display = q && !vis ? '' : 'none';
+            contar(vis);
+            if (cont) cont.scrollTop = 0;
+        });
+    }
+
+    function revisar(raiz) { (raiz || document).querySelectorAll('main table, .main-content table, .main table, .content table').forEach(procesar); }
+    function iniciar() {
+        revisar();
+        const main = document.querySelector('main, .main-content');
+        if (main && window.MutationObserver) {
+            let t;
+            new MutationObserver(() => { clearTimeout(t); t = setTimeout(revisar, 250); }).observe(main, { childList: true, subtree: true });
+        }
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
+})();

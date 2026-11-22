@@ -222,3 +222,23 @@ body.menu-open { overflow: hidden; }
 /* Mientras carga la página, el menú toma su estado (compacto/desplegado) sin animación: evita el "salto" */
 .sige-sin-animacion .sidebar, .sige-sin-animacion .sidebar *, .sige-sin-animacion .main-content,
 .sige-sin-animacion .main, .sige-sin-animacion .collapse-toggle, .sige-sin-animacion .topbar { transition: none !important; }
+
+/* ---------- Listas largas: contenedor con desplazamiento propio, encabezado fijo y buscador ---------- */
+.sige-tabla-scroll { max-height: min(68vh, 620px); overflow: auto !important; -webkit-overflow-scrolling: touch; border-radius: 12px; overscroll-behavior: contain; }
+.sige-tabla-scroll > table thead th { position: sticky; top: 0; z-index: 3; background-color: #f8fafc; box-shadow: inset 0 -1px 0 #e2e8f0; }
+.sige-buscador { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; padding: 0 12px; border: 1px solid #dbe4df; border-radius: 12px; background: #fff; max-width: 460px; }
+.sige-buscador i { color: #94a3b8; font-size: .9rem; }
+.sige-buscador input { flex: 1; min-width: 0; border: none !important; outline: none; padding: 11px 0 !important; font: inherit; font-size: .92rem; background: transparent; box-shadow: none !important; }
+.sige-buscador-n { font-size: .78rem; color: #64748b; white-space: nowrap; font-weight: 600; }
+.sige-buscador:focus-within { border-color: #16a05d; box-shadow: 0 0 0 3px rgba(22, 160, 93, .12); }
+.sige-sin-resultados td { text-align: center; padding: 22px !important; color: #94a3b8; font-style: italic; }
+@media screen and (max-width: 768px) {
+    .sige-tabla-scroll { max-height: 72vh; }
+    .sige-buscador { max-width: none; }
+    /* En teléfono las tablas se ven como tarjetas: el encabezado fijo no aplica */
+    .sige-tabla-scroll > table.tabla-tarjetas thead th { position: static; }
+}
+@media print {
+    .sige-tabla-scroll { max-height: none !important; overflow: visible !important; }
+    .sige-buscador { display: none !important; }
+}

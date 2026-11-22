@@ -60,7 +60,7 @@ $url_regreso = ($return_to === 'expediente') ? "expediente_alumnos.php?matricula
         .btn-save:hover { background: #047857; }
         .student-badge { background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 0.95rem; color: #0f172a; }
     </style>
-    <link rel="stylesheet" href="../css/responsive.css?v=4">
+    <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>
     <div class="edit-container">
@@ -104,6 +104,6 @@ $url_regreso = ($return_to === 'expediente') ? "expediente_alumnos.php?matricula
             </div>
         </form>
     </div>
-    <script src="../js/responsive.js?v=6"></script>
+    <script src="../js/responsive.js?v=8"></script>
 </body>
 </html>
