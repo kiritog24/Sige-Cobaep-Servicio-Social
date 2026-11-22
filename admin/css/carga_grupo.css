@@ -1,0 +1,31 @@
+/* Revisión de una lista antes de inscribirla en un grupo (admin/carga_grupo.php) */
+.cg-resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr)); gap: 12px; margin-bottom: 18px; }
+.cg-num { display: grid; grid-template-columns: 40px 1fr; grid-template-rows: auto auto; column-gap: 12px; align-items: center; padding: 14px 16px; border-radius: 14px; background: #fff; border: 1px solid #e2e8f0; text-decoration: none; color: #0f172a; }
+.cg-num i { grid-row: span 2; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; }
+.cg-num strong { font-size: 1.4rem; line-height: 1; }
+.cg-num span { font-size: .78rem; color: #64748b; }
+.cg-num.verde i { background: #ecfdf5; color: #059669; } .cg-num.ambar i { background: #fffbeb; color: #d97706; }
+.cg-num.rojo i { background: #fef2f2; color: #dc2626; } .cg-num.gris i { background: #f1f5f9; color: #64748b; }
+.cg-num:hover { box-shadow: 0 4px 14px rgba(15, 23, 42, .06); }
+.cg-aviso { margin-bottom: 16px; padding: 12px 16px; border-radius: 12px; background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; font-size: .88rem; }
+.cg-seccion { margin-bottom: 18px; scroll-margin-top: 16px; }
+.cg-titulo { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
+.cg-titulo h3 { margin: 0; font-size: 1rem; color: #0f172a; display: flex; gap: 8px; align-items: center; }
+.cg-titulo small { color: #64748b; font-weight: 600; }
+.cg-ic-verde { color: #059669; } .cg-ic-ambar { color: #d97706; } .cg-ic-rojo { color: #dc2626; } .cg-ic-gris { color: #64748b; }
+.cg-explica { margin: 4px 0 12px; font-size: .84rem; color: #64748b; }
+.cg-todos, .cg-mover { display: inline-flex; align-items: center; gap: 6px; font-size: .84rem; font-weight: 700; color: #b45309; cursor: pointer; }
+.cg-todos input, .cg-mover input { width: 17px; height: 17px; accent-color: #d97706; cursor: pointer; }
+.cg-grupo { display: inline-block; padding: 2px 9px; border-radius: 99px; background: #f1f5f9; color: #334155; font-size: .78rem; font-weight: 600; }
+.cg-muted { color: #94a3b8; }
+.cg-obs { font-size: .8rem; color: #b45309; }
+.cg-obs i { margin-right: 4px; }
+.cg-barra { position: sticky; bottom: 12px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; padding: 14px 18px; border-radius: 14px; background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 8px 24px rgba(15, 23, 42, .08); margin-top: 8px; }
+.cg-barra > div { display: flex; gap: 10px; flex-wrap: wrap; }
+.cg-barra button[disabled] { opacity: .5; cursor: not-allowed; }
+@media (max-width: 560px) {
+    .cg-resumen { grid-template-columns: 1fr 1fr; }
+    .cg-barra { padding: 10px 12px; gap: 8px; bottom: 8px; font-size: .85rem; }
+    .cg-barra .btn-outline { display: none; }            /* ya hay "Cancelar" arriba */
+    .cg-barra > div, .cg-barra .btn-primary { width: 100%; justify-content: center; }
+}

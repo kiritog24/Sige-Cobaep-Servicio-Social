@@ -23,7 +23,7 @@ $pagina_actual = basename($_SERVER['PHP_SELF']);
             </a>
 
             <span class="nav-heading">Académico</span>
-            <a href="gestion_grupos.php" class="nav-item <?php echo ($pagina_actual == 'gestion_grupos.php') ? 'active' : ''; ?>">
+            <a href="gestion_grupos.php" class="nav-item <?php echo in_array($pagina_actual, ['gestion_grupos.php', 'ver_grupo.php', 'carga_grupo.php', 'agregar_grupo.php', 'editar_grupo.php'], true) ? 'active' : ''; ?>">
                 <i class="fas fa-users-rectangle"></i><span>Gestión de Grupos</span>
             </a>
             <a href="gestion_horarios.php" class="nav-item <?php echo ($pagina_actual == 'gestion_horarios.php') ? 'active' : ''; ?>">

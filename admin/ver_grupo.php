@@ -28,6 +28,11 @@ try {
     $stmtAsig->execute([$id_grupo]);
     $docentes_asignados = $stmtAsig->fetchAll();
     $ids_asignados = array_map('intval', array_column($docentes_asignados, 'id_maestro'));
+    $stmtOtros = $pdo->prepare("SELECT g.id_grupo, g.semestre, g.nombre_grupo, g.turno,
+                                       (SELECT COUNT(*) FROM GRUPO_ALUMNO x WHERE x.id_grupo = g.id_grupo AND x.fecha_baja IS NULL) AS alumnos
+                                FROM GRUPOS g WHERE g.estatus = 'Activo' AND g.id_grupo <> ? ORDER BY g.semestre, g.turno, g.nombre_grupo");
+    $stmtOtros->execute([$id_grupo]);
+    $otros_grupos = $stmtOtros->fetchAll();
 } catch (PDOException $e) { die("Error de BD: " . $e->getMessage()); }
 $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombre'], ENT_QUOTES, 'UTF-8') : 'Administrador';
 ?>
@@ -114,31 +119,21 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
                 <?php endif; ?>
             </details>
         </div>
-        <?php if(isset($_GET['msg']) && $_GET['msg'] == 'excel_procesado'): ?>
+        <?php if (isset($_GET['carga'])): [$c_ins, $c_cam, $c_omi] = array_map('intval', explode('|', $_GET['carga']) + [0, 0, 0]); ?>
             <div class="alert alert-success" style="background:#ecfdf5; color:#065f46; padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid #a7f3d0;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div><i class="fas fa-check-circle"></i> Archivo procesado. Se inscribieron <strong><?php echo htmlspecialchars($_GET['cantidad']); ?></strong> alumnos.
-                        <?php if(isset($_GET['omitidos']) && $_GET['omitidos'] > 0): ?><div style="margin-top:5px; color:#b45309; font-size:0.95rem;"><i class="fas fa-exclamation-triangle"></i> Se omitieron <b><?php echo htmlspecialchars($_GET['omitidos']); ?> alumno(s)</b> porque ya se encuentran inscritos en otro grupo activo.</div><?php endif; ?>
-                    </div>
-                    <?php if(isset($_GET['omitidos']) && $_GET['omitidos'] > 0): ?><button type="button" id="btnVerOmitidos" class="btn btn-primary" style="background:#b45309; border:none; font-size:0.9rem; padding:8px 15px;"><i class="fas fa-list"></i> Ver Detalles</button><?php endif; ?>
-                </div>
+                <i class="fas fa-check-circle"></i> Lista aplicada: <strong><?php echo $c_ins; ?></strong> alumno(s) inscrito(s)<?php if ($c_cam): ?> y <strong><?php echo $c_cam; ?></strong> cambiado(s) desde otro grupo<?php endif; ?>.
+                <?php if ($c_omi): ?><div style="margin-top:5px; color:#b45309;"><i class="fas fa-exclamation-triangle"></i> <?php echo $c_omi; ?> se omitieron porque su situación cambió mientras revisabas la lista (ya estaban inscritos o los dieron de baja).</div><?php endif; ?>
             </div>
         <?php endif; ?>
-        <?php if(isset($_SESSION['detalles_omitidos'])): ?>
-        <div id="modalOmitidos" class="modal-overlay">
-            <div class="modal-content" style="max-width:600px;">
-                <div class="modal-header"><h2><i class="fas fa-exclamation-triangle" style="color:#b45309;"></i> Detalles de Omisión</h2><button class="close-modal" id="btnCerrarOmitidos">&times;</button></div>
-                <div class="modal-body" style="max-height:400px; overflow-y:auto;">
-                    <table class="data-table">
-                        <thead><tr><th>MATRÍCULA</th><th>MOTIVO</th><th>GRUPO ACTUAL</th></tr></thead>
-                        <tbody>
-                            <?php foreach($_SESSION['detalles_omitidos'] as $omitido): ?><tr><td><strong><?php echo htmlspecialchars($omitido['matricula']); ?></strong></td><td style="color:#b45309;">Inscrito en otro grupo</td><td><span class="badge status-active"><?php echo htmlspecialchars($omitido['grupo']); ?></span></td></tr><?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
+        <?php if (isset($_GET['cambio'])): [$cb_quien, $cb_grupo, $cb_id] = explode('|', $_GET['cambio']) + ['', '', 0]; ?>
+            <div class="alert alert-success" style="background:#ecfdf5; color:#065f46; padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid #a7f3d0;">
+                <i class="fas fa-right-left"></i> <strong><?php echo htmlspecialchars($cb_quien); ?></strong> ahora está en el grupo <strong><?php echo htmlspecialchars($cb_grupo); ?></strong>.
+                <a href="ver_grupo.php?id=<?php echo (int)$cb_id; ?>" style="color:#047857; font-weight:700; margin-left:6px;">Ver ese grupo <i class="fas fa-arrow-right"></i></a>
             </div>
-        </div>
-        <?php unset($_SESSION['detalles_omitidos']); endif; ?>
+        <?php endif; ?>
+        <?php if (isset($_GET['error_carga'])): ?>
+            <div class="alert" style="background:#fef2f2; color:#991b1b; padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid #fecaca;"><i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($_GET['error_carga']); ?></div>
+        <?php endif; ?>
         <div class="content-card">
             <div class="search-box"><i class="fas fa-search"></i><input type="text" id="buscadorAlumnos" placeholder="Buscar por matrícula, nombre o periodo de ingreso..."></div>
             <div class="table-responsive">
@@ -153,6 +148,8 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
                                     <div class="action-buttons">
                                         <a href="perfil_alumno.php?id=<?php echo $al['id_alumno']; ?>" class="btn-icon btn-view" title="Ver perfil" data-ficha-tipo="alumnos" data-ficha-id="<?php echo (int)$al['id_alumno']; ?>"><i class="fas fa-eye"></i></a>
                                         <a href="editar_usuario.php?id=<?php echo $al['id_alumno']; ?>&tipo=alumnos" class="btn-icon btn-edit" title="Editar"><i class="fas fa-pen"></i></a>
+                                        <button type="button" class="btn-icon btn-cambiar" title="Cambiar de grupo" style="border:none; cursor:pointer; background:#fffbeb; color:#b45309;"
+                                                data-id="<?php echo (int)$al['id_alumno']; ?>" data-nombre="<?php echo htmlspecialchars($al['nombre_completo'] . ' · ' . $al['matricula'], ENT_QUOTES); ?>"><i class="fas fa-right-left"></i></button>
                                         <a href="../procesos/baja_alumno.php?id=<?php echo $al['id_alumno']; ?>&grupo=<?php echo $id_grupo; ?>" class="btn-icon btn-delete" title="Baja" onclick="return confirm('¿Estás seguro de quitar a este alumno del grupo?');"><i class="fas fa-trash"></i></a>
                                     </div>
                                 </td>
@@ -201,14 +198,42 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
     </div>
     <div id="modalExcel" class="modal-overlay">
         <div class="modal-content" style="max-width:500px;">
-            <div class="modal-header"><h2><i class="fas fa-file-excel"></i> Inscribir por Excel/CSV</h2><button class="close-modal" id="btnCerrarModalExcel">&times;</button></div>
+            <div class="modal-header"><h2><i class="fas fa-file-excel"></i> Inscribir con una lista (Excel o CSV)</h2><button class="close-modal" id="btnCerrarModalExcel">&times;</button></div>
             <form action="procesos/inscribirAlumnos_excel.php" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="id_grupo" value="<?php echo $id_grupo; ?>">
+                <input type="hidden" name="paso" value="analizar">
                 <div class="modal-body">
-                    <p style="font-size:0.9rem; color:#6b7280; margin-bottom:15px;">Sube un archivo <b>CSV (delimitado por comas)</b> que contenga una columna con las <b>Matrículas</b> de los alumnos que deseas inscribir a este grupo (sin encabezados u otra información ajena).</p>
-                    <input type="file" name="archivo_csv" accept=".csv" required style="width:100%; padding:12px; border:2px dashed #cbd5e1; border-radius:8px; cursor:pointer;">
+                    <p style="font-size:0.9rem; color:#475569; margin:0 0 10px;">Sube la lista del grupo en <b>Excel (.xlsx)</b> o <b>CSV</b>. Puede ser la lista oficial tal cual, con títulos y encabezados: el sistema encuentra solo la columna de <b>matrículas</b> (o, si no hay, los nombres completos).</p>
+                    <ul style="font-size:0.82rem; color:#64748b; margin:0 0 14px; padding-left:18px; line-height:1.5;">
+                        <li>Antes de inscribir verás una <b>revisión</b>: quién entra, quién ya está, repetidos y no encontrados.</li>
+                        <li>Si un alumno ya está en <b>otro grupo</b>, tú decides si se cambia a este.</li>
+                        <li>Los alumnos deben estar dados de alta en el sistema.</li>
+                    </ul>
+                    <input type="file" name="archivo" accept=".xlsx,.csv" required style="width:100%; padding:12px; border:2px dashed #cbd5e1; border-radius:8px; cursor:pointer;">
                 </div>
-                <div class="modal-footer"><button type="submit" class="btn btn-primary" style="width:100%; background-color:#0d9488;"><i class="fas fa-upload"></i> Procesar Archivo</button></div>
+                <div class="modal-footer"><button type="submit" class="btn btn-primary" style="width:100%; background-color:#0d9488;"><i class="fas fa-magnifying-glass"></i> Revisar lista</button></div>
+            </form>
+        </div>
+    </div>
+    <div id="modalCambiar" class="modal-overlay">
+        <div class="modal-content" style="max-width:480px;">
+            <div class="modal-header"><h2><i class="fas fa-right-left" style="color:#b45309;"></i> Cambiar de grupo</h2><button class="close-modal" id="btnCerrarCambiar">&times;</button></div>
+            <form action="procesos/cambiar_grupo.php" method="POST">
+                <input type="hidden" name="id_alumno" id="cambiarIdAlumno">
+                <input type="hidden" name="id_grupo_origen" value="<?php echo $id_grupo; ?>">
+                <div class="modal-body">
+                    <p style="margin:0 0 4px; font-size:.85rem; color:#64748b;">Alumno</p>
+                    <p id="cambiarNombre" style="margin:0 0 14px; font-weight:700; color:#0f172a;"></p>
+                    <p style="margin:0 0 4px; font-size:.85rem; color:#64748b;">De <b><?php echo htmlspecialchars($grupo['semestre'] . '° "' . $grupo['nombre_grupo'] . '" · ' . $grupo['turno']); ?></b> a:</p>
+                    <select name="id_grupo_destino" required style="width:100%; padding:11px 12px; border:1px solid #cbd5e1; border-radius:9px; font:inherit;">
+                        <option value="">Elige el grupo nuevo…</option>
+                        <?php foreach ($otros_grupos as $og): ?>
+                            <option value="<?php echo (int)$og['id_grupo']; ?>"><?php echo htmlspecialchars($og['semestre'] . '° "' . $og['nombre_grupo'] . '" · ' . $og['turno'] . ' (' . (int)$og['alumnos'] . ' alumnos)'); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <p style="margin:12px 0 0; font-size:.8rem; color:#64748b; line-height:1.45;"><i class="fas fa-circle-info"></i> Su historial y asistencia en este grupo se conservan. Desde hoy toma el semestre, turno y materias del grupo nuevo.</p>
+                </div>
+                <div class="modal-footer"><button type="submit" class="btn btn-primary" style="width:100%; background-color:#b45309;"><i class="fas fa-right-left"></i> Cambiar de grupo</button></div>
             </form>
         </div>
     </div>
@@ -270,7 +295,15 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
             setupModal('modalInscribir', 'btnAbrirModal', 'btnCerrarModal');
             setupModal('modalExcel', 'btnAbrirModalExcel', 'btnCerrarModalExcel');
             setupModal('modalDocentes', 'btnAbrirModalDocentes', 'btnCerrarModalDocentes');
-            setupModal('modalOmitidos', 'btnVerOmitidos', 'btnCerrarOmitidos');
+            const modalCambiar = document.getElementById('modalCambiar');
+            document.querySelectorAll('.btn-cambiar').forEach(b => b.addEventListener('click', () => {
+                document.getElementById('cambiarIdAlumno').value = b.dataset.id;
+                document.getElementById('cambiarNombre').textContent = b.dataset.nombre;
+                modalCambiar.querySelector('select').value = '';
+                modalCambiar.classList.add('active');
+            }));
+            document.getElementById('btnCerrarCambiar')?.addEventListener('click', () => modalCambiar.classList.remove('active'));
+            modalCambiar?.addEventListener('click', e => { if (e.target === modalCambiar) modalCambiar.classList.remove('active'); });
 
             const buscadorModal = document.getElementById('buscadorDisponibles'), filasDisponibles = document.querySelectorAll('.fila-disponible');
             if(buscadorModal) buscadorModal.addEventListener('keyup', function() {
