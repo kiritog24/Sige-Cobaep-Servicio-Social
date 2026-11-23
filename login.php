@@ -21,7 +21,7 @@ if ($rol_esperado == 'admin') {
     <title>Iniciar Sesión · COBAEP Plantel 27</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles.css?v=2">
     <link rel="stylesheet" href="css/responsive.css?v=5">
 </head>
 <body>
@@ -151,11 +151,11 @@ if ($rol_esperado == 'admin') {
                             </div>
                         </div>
                     </div>
+                    <p class="login-legal">Al iniciar sesión aceptas los <a href="informacion/terminos.html">Términos de uso</a> y el <a href="informacion/privacidad.html">Aviso de privacidad</a>. Antes de usar el sistema, lee también <a href="informacion/uso-responsable.html">Uso responsable</a>.</p>
                 </div>
             </div>
 
             <footer class="bottom-footer">
-                <p class="login-legal" style="font-size:13px; text-align:center; color:#64748b; margin:0 0 10px; line-height:1.5;">Al iniciar sesión aceptas los <a href="informacion/terminos.html">Términos de uso</a> y el <a href="informacion/privacidad.html">Aviso de privacidad</a>. Antes de usar el sistema, lee también <a href="informacion/uso-responsable.html">Uso responsable</a>.</p>
                 <p style="font-size: 15px; text-align: center"  >&copy; <?php echo date('Y'); ?> COBAEP Plantel 27. Todos los derechos reservados.</p>
                 <div class="footer-divider-sm"></div>
                 <a href="http://www.cobaep.edu.mx/plantel-27/" target="_blank" rel="noopener noreferrer">
