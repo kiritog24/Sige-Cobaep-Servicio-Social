@@ -11,8 +11,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_alumno = isset($_POST['id_alumno']) ? (int)$_POST['id_alumno'] : 0;
     $id_clase = isset($_POST['id_clase']) ? (int)$_POST['id_clase'] : 0;
     require_once __DIR__ . '/permisos.php';
-    if (!docente_dueno_clase($pdo, $id_clase)) docente_denegar(false);
-    $acceso = isset($_POST['acceso']) ? (int)$_POST['acceso'] : 1;
+    if (!docente_dueno_clase($pdo, $id_clase)) docente_denegar(true);
+    $acceso = (int)($_POST["acceso"] ?? 1) === 1 ? 1 : 0;
 
     if ($id_alumno > 0 && $id_clase > 0) {
         try {

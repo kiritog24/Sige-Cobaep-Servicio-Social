@@ -23,10 +23,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $visible = isset($_POST['visible']) ? 1 : 0;
     $fecha_apertura = !empty($_POST['fecha_apertura']) ? $_POST['fecha_apertura'] : null;
 
-    // --- NUEVAS VARIABLES DE LÍMITES DE ARCHIVOS ---
-    $tamano = isset($_POST['tamano_maximo']) ? (int)$_POST['tamano_maximo'] : 10;
-    $archivos = isset($_POST['numero_archivos']) ? (int)$_POST['numero_archivos'] : 1;
-    $tipo = isset($_POST['tipo_archivo']) ? $_POST['tipo_archivo'] : '*';
+    // --- LÍMITES DE ARCHIVOS ---
+    $tamano = tamano_archivo_valido($_POST['tamano_maximo'] ?? 10);
+    $archivos = numero_archivos_valido($_POST['numero_archivos'] ?? 1);
+    $tipo = tipos_archivo_desde_post($_POST);
+
+    $volver_error = function (string $msg) use ($id_clase) {
+        header("Location: ../gestionar_aula.php?id_clase=" . $id_clase . "&error=" . urlencode($msg));
+        exit();
+    };
+    $ts_apertura = $fecha_apertura ? strtotime($fecha_apertura) : null;
+    $ts_limite = $fecha_limite ? strtotime($fecha_limite) : null;
+    if (($fecha_apertura && !$ts_apertura) || ($fecha_limite && !$ts_limite)) $volver_error('Revisa las fechas: alguna no es válida.');
+    if ($ts_apertura && $ts_limite && $ts_limite <= $ts_apertura) $volver_error('La fecha límite debe ser después de la fecha de apertura.');
+    $fecha_apertura = $ts_apertura ? date('Y-m-d H:i:s', $ts_apertura) : null;
+    $fecha_limite = $ts_limite ? date('Y-m-d H:i:s', $ts_limite) : null;
+    // El filtro de asistencia revisa el pase de lista del día en que la actividad se abre
+    $fecha_filtro = $solo_asistentes ? date('Y-m-d', $ts_apertura ?: time()) : null;
+    asegurar_columnas_actividades($pdo);
 
     if ($id_clase === 0 || empty($titulo)) {
         header("Location: ../gestionar_aula.php?id_clase=" . $id_clase . "&error=El título es obligatorio.");
@@ -66,44 +80,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $pdo->beginTransaction();
 
-        // 1. Guardamos la actividad (AHORA INCLUYE LOS LÍMITES DE ARCHIVO Y EL ARCHIVO DEL MAESTRO)
-        $stmt = $pdo->prepare("INSERT INTO actividades_clase (id_clase, titulo, descripcion, archivo_ruta, fecha_limite, permite_entregas, acepta_retardo, visible, fecha_apertura, tamano_maximo, numero_archivos, tipo_archivo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        
-        // Pasamos exactamente 12 parámetros al execute, en el mismo orden
-        $stmt->execute([$id_clase, $titulo, $descripcion, $ruta_bd, $fecha_limite, $permite_entregas, $acepta_retardo, $visible, $fecha_apertura, $tamano, $archivos, $tipo]);
-        
-        $id_actividad = $pdo->lastInsertId();
-
-        // 2. VISIBILIDAD INTELIGENTE
-        if ($solo_asistentes === 1) {
-            $fecha_hoy = date('Y-m-d');
-            
-            // Primero, damos permiso (visible=1) a TODOS los alumnos de la clase
-            $stmtPermisoGlobal = $pdo->prepare("
-                INSERT INTO visibilidad_actividad (id_actividad, id_alumno, visible)
-                SELECT ?, id_alumno, 1 FROM clase_regular_alumno WHERE id_clase = ?
-            ");
-            $stmtPermisoGlobal->execute([$id_actividad, $id_clase]);
-
-            // Segundo, bloqueamos (visible=0) SOLAMENTE a los que tienen 'Falta' o 'Ausente' hoy en esta clase
-            $stmtBloqueo = $pdo->prepare("
-                UPDATE visibilidad_actividad va
-                INNER JOIN asistencias_clases ac ON va.id_alumno = ac.id_alumno
-                SET va.visible = 0
-                WHERE va.id_actividad = ? 
-                  AND ac.id_clase = ? 
-                  AND ac.fecha = ? 
-                  AND (ac.estatus = 'Falta' OR ac.estatus = 'Ausente')
-            ");
-            $stmtBloqueo->execute([$id_actividad, $id_clase, $fecha_hoy]);
-        }
+        $stmt = $pdo->prepare("INSERT INTO actividades_clase (id_clase, titulo, descripcion, archivo_ruta, fecha_limite, permite_entregas, acepta_retardo, visible, fecha_apertura, tamano_maximo, numero_archivos, tipo_archivo, solo_asistentes, fecha_filtro) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$id_clase, $titulo, $descripcion, $ruta_bd, $fecha_limite, $permite_entregas, $acepta_retardo, $visible, $fecha_apertura, $tamano, $archivos, $tipo, $solo_asistentes, $fecha_filtro]);
+        // El filtro de asistencia se aplica al momento en que el alumno abre su aula (sql_actividad_visible),
+        // así cuenta aunque el pase de lista se tome después de publicar.
 
         $pdo->commit();
         header("Location: ../gestionar_aula.php?id_clase=" . $id_clase . "&exito=Actividad guardada correctamente.");
         exit();
     } catch (PDOException $e) {
-        $pdo->rollBack();
-        header("Location: ../gestionar_aula.php?id_clase=" . $id_clase . "&error=Error al publicar: " . urlencode($e->getMessage()));
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        error_log('docente_publicar_actividad: ' . $e->getMessage());
+        header("Location: ../gestionar_aula.php?id_clase=" . $id_clase . "&error=" . urlencode("No se pudo guardar la actividad."));
         exit();
     }
 }

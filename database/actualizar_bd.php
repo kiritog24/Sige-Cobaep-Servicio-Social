@@ -291,6 +291,26 @@ try {
         }
     }
 
+    // Aula virtual: calificación y revisión de entregas, filtro de asistencia y lista más larga de tipos de archivo
+    agregar_columna($pdo, 'ENTREGAS_ACTIVIDAD', 'calificacion', 'DECIMAL(4,1) NULL DEFAULT NULL');
+    agregar_columna($pdo, 'ENTREGAS_ACTIVIDAD', 'revisada', 'TINYINT(1) NOT NULL DEFAULT 0');
+    agregar_columna($pdo, 'ENTREGAS_ACTIVIDAD', 'fecha_revision', 'DATETIME NULL DEFAULT NULL');
+    agregar_columna($pdo, 'ACTIVIDADES_CLASE', 'solo_asistentes', 'TINYINT(1) NOT NULL DEFAULT 0');
+    agregar_columna($pdo, 'ACTIVIDADES_CLASE', 'fecha_filtro', 'DATE NULL DEFAULT NULL');
+    if (!tabla_existe($pdo, 'ENTREGAS_ACTIVIDAD_ARCHIVOS')) {
+        $pdo->exec(SQL_TABLA_ARCHIVOS_ENTREGA);
+        registrar("➕ Tabla ENTREGAS_ACTIVIDAD_ARCHIVOS creada (varios archivos por entrega)");
+    }
+    $tipo = $pdo->query("SHOW COLUMNS FROM `ACTIVIDADES_CLASE` LIKE 'tipo_archivo'")->fetch(PDO::FETCH_ASSOC);
+    if ($tipo && stripos($tipo['Type'], 'varchar(255)') === false) {
+        $pdo->exec("ALTER TABLE `ACTIVIDADES_CLASE` MODIFY `tipo_archivo` VARCHAR(255) DEFAULT '*'");
+        registrar("➕ ACTIVIDADES_CLASE.tipo_archivo ampliada a 255 caracteres");
+    }
+    $n = $pdo->exec("UPDATE `ENTREGAS_ACTIVIDAD` e INNER JOIN `ACTIVIDADES_CLASE` ac ON ac.id_actividad = e.id_actividad
+                     SET e.revisada = 1, e.estatus_entrega = IF(ac.fecha_limite IS NOT NULL AND e.fecha_entrega > ac.fecha_limite, 'Con Retardo', 'A Tiempo')
+                     WHERE e.estatus_entrega = 'Revisada'");
+    if ($n) registrar("➕ $n entrega(s) marcadas como revisadas con el sistema nuevo");
+
     // Instalación nueva: si no hay ningún administrador, se crea uno con contraseña provisional
     if (tabla_existe($pdo, 'ADMINISTRATIVOS') && (int)$pdo->query("SELECT COUNT(*) FROM ADMINISTRATIVOS")->fetchColumn() === 0) {
         $pass = generar_password_provisional();

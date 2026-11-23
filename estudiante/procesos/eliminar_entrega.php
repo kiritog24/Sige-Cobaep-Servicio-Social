@@ -18,21 +18,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     try {
-        // 1. Obtener la ruta del archivo para eliminarlo físicamente
-        $stmt_archivo = $pdo->prepare("SELECT archivo_ruta FROM entregas_actividad WHERE id_actividad = ? AND id_alumno = ?");
-        $stmt_archivo->execute([$id_actividad, $id_alumno]);
+        // 1. La entrega debe ser del alumno, de esa clase, sin revisar y dentro del plazo
+        asegurar_columnas_actividades($pdo);
+        $stmt_archivo = $pdo->prepare("
+            SELECT e.id_entrega, e.archivo_ruta, e.revisada, ac.fecha_limite, ac.acepta_retardo, va.fecha_limite_excepcion
+            FROM entregas_actividad e
+            INNER JOIN actividades_clase ac ON ac.id_actividad = e.id_actividad AND ac.id_clase = ?
+            LEFT JOIN visibilidad_actividad va ON va.id_actividad = e.id_actividad AND va.id_alumno = e.id_alumno
+            WHERE e.id_actividad = ? AND e.id_alumno = ?");
+        $stmt_archivo->execute([$id_clase, $id_actividad, $id_alumno]);
         $entrega = $stmt_archivo->fetch(PDO::FETCH_ASSOC);
-
-        if ($entrega && !empty($entrega['archivo_ruta'])) {
-            $ruta_fisica = '../../uploads/entregas_alumnos/' . $entrega['archivo_ruta'];
-            if (file_exists($ruta_fisica)) {
-                unlink($ruta_fisica); // Elimina el archivo del servidor
-            }
+        if (!$entrega) {
+            header("Location: ../aula_virtual.php?id=" . $id_clase . "&error=" . urlencode('No encontramos tu entrega.'));
+            exit();
+        }
+        if ((int)$entrega['revisada'] === 1) {
+            header("Location: ../aula_virtual.php?id=" . $id_clase . "&error=" . urlencode('Tu profesor ya revisó esta entrega; ya no se puede quitar.'));
+            exit();
+        }
+        $limite = $entrega['fecha_limite_excepcion'] ?: $entrega['fecha_limite'];
+        if ($limite && strtotime($limite) < time() && (int)$entrega['acepta_retardo'] !== 1) {
+            header("Location: ../aula_virtual.php?id=" . $id_clase . "&error=" . urlencode('La fecha límite ya pasó; ya no puedes quitar tu envío.'));
+            exit();
         }
 
-        // 2. Eliminar el registro de la base de datos
-        $stmt_delete = $pdo->prepare("DELETE FROM entregas_actividad WHERE id_actividad = ? AND id_alumno = ?");
-        $stmt_delete->execute([$id_actividad, $id_alumno]);
+        // 2. Quitar la entrega (sus archivos se borran en cascada en la BD) y luego los archivos del servidor
+        $rutas = rutas_archivos_entrega($pdo, [(int)$entrega['id_entrega']]);
+        $pdo->prepare("DELETE FROM entregas_actividad WHERE id_entrega = ?")->execute([(int)$entrega['id_entrega']]);
+        borrar_archivos_fisicos($rutas);
 
         header("Location: ../aula_virtual.php?id=" . $id_clase . "&exito=Envío eliminado correctamente.");
         exit();

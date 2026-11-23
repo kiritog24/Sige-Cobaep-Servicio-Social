@@ -98,3 +98,42 @@ body.sidebar-collapsed .main-content { margin-left: var(--sidebar-collapsed-widt
     .hero-materia { height: auto; padding: 1.5rem; }
     .actividad-card { flex-direction: column; }
 }
+
+/* Revisión del profesor dentro de la entrega */
+.eval-docente { background: #fff; border: 1px solid #bfdbfe; border-left: 4px solid #3b82f6; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: .85rem; color: #334155; }
+.eval-cab { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.eval-cab strong { color: #0f172a; }
+.eval-cab strong i { color: #3b82f6; }
+.eval-calif { padding: 4px 10px; border-radius: 50px; font-weight: 700; font-size: .82rem; }
+.eval-calif b { font-size: 1rem; }
+.eval-calif.ok { background: #dcfce7; color: #166534; }
+.eval-calif.baja { background: #fee2e2; color: #991b1b; }
+.eval-coment { margin: 4px 0; line-height: 1.5; overflow-wrap: anywhere; }
+.eval-coment i { color: #3b82f6; }
+.eval-docente small { color: #64748b; }
+.eval-espera { font-size: .8rem; color: #64748b; margin-bottom: 10px; }
+.eval-bloqueo { margin-top: 15px; color: #1e3a8a; background: #eff6ff; border: 1px solid #bfdbfe; padding: 10px; border-radius: 6px; font-size: .8rem; }
+
+/* Archivos de la entrega (uno o varios) */
+.fila-entrega { display: flex; flex-direction: column; gap: 10px; }
+.fila-entrega > .btn-action { align-self: flex-start; }
+.selector-archivos { width: 100%; }
+.sel-boton { display: flex; align-items: center; justify-content: center; gap: 8px; border: 2px dashed #93c5fd; background: #eff6ff; color: #1d4ed8; border-radius: 10px; padding: 14px; font-weight: 700; font-size: .9rem; cursor: pointer; text-align: center; transition: .2s; }
+.sel-boton:hover, .sel-boton:focus-within { background: #dbeafe; border-color: #3b82f6; }
+.sel-boton input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.sel-boton { position: relative; }
+.sel-lista { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.sel-lista li { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px; font-size: .82rem; min-width: 0; }
+.sel-lista li > i { color: #3b82f6; flex-shrink: 0; }
+.sel-nombre { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #0f172a; font-weight: 600; }
+.sel-lista small { color: #64748b; flex-shrink: 0; }
+.sel-lista li.con-error { border-color: #fecaca; background: #fef2f2; }
+.sel-lista li.con-error > i, .sel-lista li.con-error small { color: #b91c1c; font-weight: 700; }
+.sel-quitar { border: none; background: #f1f5f9; color: #475569; width: 26px; height: 26px; border-radius: 6px; cursor: pointer; flex-shrink: 0; }
+.sel-quitar:hover { background: #fee2e2; color: #b91c1c; }
+.sel-ayuda { font-size: .75rem; color: #64748b; margin: 6px 0 0; }
+.mis-archivos { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 10px; }
+.mis-archivos-tit { width: 100%; font-size: .78rem; font-weight: 700; color: #475569; }
+.archivo-chip { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; background: #fff; border: 1px solid #cbd5e1; color: #1d4ed8; border-radius: 8px; padding: 6px 10px; font-size: .8rem; font-weight: 600; text-decoration: none; }
+.archivo-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.archivo-chip:hover { background: #eff6ff; }

@@ -9,13 +9,16 @@ $id_actividad = (int)$_POST['id_actividad'];
 require_once __DIR__ . '/permisos.php';
 if (!docente_dueno_actividad($pdo, $id_actividad)) docente_denegar(true);
 $id_alumno = (int)$_POST['id_alumno'];
-$fecha = empty($_POST['fecha']) ? null : $_POST['fecha'];
+$fecha = trim((string)($_POST['fecha'] ?? ''));
+if ($fecha === '') $fecha = null;
+elseif (!($ts = strtotime($fecha))) { echo json_encode(['success' => false, 'message' => 'La fecha no es válida.']); exit; }
+else $fecha = date('Y-m-d H:i:s', $ts);
 
 if ($id_actividad > 0 && $id_alumno > 0) {
     try {
         $stmt = $pdo->prepare("
             INSERT INTO visibilidad_actividad (id_actividad, id_alumno, visible, fecha_limite_excepcion)
-            VALUES (?, ?, 1, ?) 
+            VALUES (?, ?, NULL, ?)   -- NULL: la visibilidad sigue la regla general (filtro de asistencia) 
             ON DUPLICATE KEY UPDATE fecha_limite_excepcion = VALUES(fecha_limite_excepcion)
         ");
         $stmt->execute([$id_actividad, $id_alumno, $fecha]);

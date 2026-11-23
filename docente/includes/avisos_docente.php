@@ -31,6 +31,7 @@ function agregar_aviso(array &$avisos, int $prioridad, string $tipo, string $ico
  * Devuelve ['avisos' => [...], 'clases_semana' => [...]] para el docente.
  */
 function docente_avisos(PDO $pdo, int $id_docente): array {
+    asegurar_columnas_actividades($pdo);
     date_default_timezone_set('America/Mexico_City');
     $ahora = time();
     $numero_dia_hoy = (int)date('N');
@@ -94,7 +95,7 @@ function docente_avisos(PDO $pdo, int $id_docente): array {
             INNER JOIN CLASES_REGULARES c ON c.id_clase = ac.id_clase AND c.id_maestro = ?
             INNER JOIN MATERIAS m ON m.id_materia = c.id_materia
             INNER JOIN GRUPOS g ON g.id_grupo = c.id_grupo
-            WHERE ea.estatus_entrega <> 'Revisada'
+            WHERE ea.revisada = 0
             GROUP BY ac.id_actividad, ac.id_clase, ac.titulo, m.nombre_materia, g.semestre, g.nombre_grupo
             ORDER BY ultima DESC LIMIT 6
         ");

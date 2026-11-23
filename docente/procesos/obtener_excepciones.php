@@ -1,4 +1,8 @@
 <?php
+/**
+ * docente/procesos/obtener_excepciones.php — Lista "Visibilidad por alumno" de una actividad (se carga por AJAX).
+ * El buscador y los switches se manejan desde gestionar_aula.php (los <script> que llegan por AJAX no se ejecutan).
+ */
 session_start();
 require_once '../../config/database.php';
 
@@ -10,86 +14,83 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'docente') {
 $id_actividad = isset($_GET['id_actividad']) ? (int)$_GET['id_actividad'] : 0;
 require_once __DIR__ . '/permisos.php';
 if (!docente_dueno_actividad($pdo, $id_actividad)) docente_denegar(true);
-$id_clase = isset($_GET['id_clase']) ? (int)$_GET['id_clase'] : 0; 
+asegurar_columnas_actividades($pdo);
 
-if ($id_actividad > 0 && $id_clase > 0) {
-    try {
-        $stmt = $pdo->prepare("
-            SELECT a.id_alumno, a.nombre, a.apellido_paterno, a.matricula, 
-                   COALESCE(va.visible, 0) as puede_ver, va.fecha_limite_excepcion
-            FROM clase_regular_alumno cra
-            INNER JOIN alumnos a ON cra.id_alumno = a.id_alumno
-            LEFT JOIN visibilidad_actividad va ON a.id_alumno = va.id_alumno AND va.id_actividad = ?
-            WHERE cra.id_clase = ?
-            ORDER BY a.apellido_paterno ASC
-        ");
-        $stmt->execute([$id_actividad, $id_clase]);
-        $alumnos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+try {
+    $act = $pdo->prepare("SELECT id_clase, solo_asistentes, fecha_filtro FROM actividades_clase WHERE id_actividad = ?");
+    $act->execute([$id_actividad]);
+    $act = $act->fetch(PDO::FETCH_ASSOC);
+    $id_clase = (int)$act['id_clase'];
+    $filtro = (int)$act['solo_asistentes'] === 1;
 
-        if (count($alumnos) === 0) {
-            echo "<div style='text-align:center; padding:15px; color:#64748b;'>No hay alumnos registrados.</div>";
-            exit;
-        }
+    $stmt = $pdo->prepare("
+        SELECT a.id_alumno, a.nombre, a.apellido_paterno, a.apellido_materno, a.matricula, a.fotografia,
+               va.visible AS decision, va.fecha_limite_excepcion,
+               EXISTS (SELECT 1 FROM asistencias_clases fx WHERE fx.id_clase = ? AND fx.id_alumno = a.id_alumno
+                       AND fx.fecha = ? AND fx.estatus = 'Falta') AS falto
+        FROM clase_regular_alumno cra
+        INNER JOIN alumnos a ON cra.id_alumno = a.id_alumno
+        LEFT JOIN visibilidad_actividad va ON a.id_alumno = va.id_alumno AND va.id_actividad = ?
+        WHERE cra.id_clase = ?
+        ORDER BY a.apellido_paterno, a.apellido_materno, a.nombre
+    ");
+    $stmt->execute([$id_clase, $act['fecha_filtro'] ?: '1000-01-01', $id_actividad, $id_clase]);
+    $alumnos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    error_log('obtener_excepciones: ' . $e->getMessage());
+    echo "<div style='text-align:center; padding:15px; color:#b91c1c;'>No se pudo cargar la lista.</div>";
+    exit;
+}
 
-        echo '
-        <div style="margin-bottom: 15px;">
-            <div style="display:flex; gap: 10px; margin-bottom: 15px;">
-                <button type="button" class="btn-outline" style="flex:1; font-size:0.75rem; color:#059669; border-color:#059669; justify-content:center;" onclick="accionMasivaExcepciones('.$id_actividad.', 1, '.$id_clase.')"><i class="fas fa-check-double"></i> Permitir a Todos</button>
-                <button type="button" class="btn-outline" style="flex:1; font-size:0.75rem; color:#dc2626; border-color:#dc2626; justify-content:center;" onclick="accionMasivaExcepciones('.$id_actividad.', 0, '.$id_clase.')"><i class="fas fa-ban"></i> Bloquear a Todos</button>
-            </div>
-            <div class="search-box" style="margin-bottom:0; background: #f8fafc;">
-                <i class="fas fa-search" style="color:#94a3b8;"></i>
-                <input type="text" id="buscadorExcepciones" placeholder="Buscar por nombre o matrícula..." style="width:100%; border:none; background:transparent; outline:none; font-family:Inter; font-size:0.9rem;">
-            </div>
-        </div>
-        <div id="listaExcScroll" class="lista-scroll" style="max-height: 380px; overflow-y:auto; padding-right:5px;">
-        ';
-
-        foreach ($alumnos as $alum) {
-            $iniciales = mb_substr($alum['nombre'], 0, 1) . mb_substr($alum['apellido_paterno'], 0, 1);
-            $checked = $alum['puede_ver'] == 1 ? 'checked' : '';
-            // Formatear fecha para el input datetime-local
-            $fecha_val = $alum['fecha_limite_excepcion'] ? date('Y-m-d\TH:i', strtotime($alum['fecha_limite_excepcion'])) : '';
-
-            echo '
-            <div class="alumno-exc-item" style="display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--line); flex-wrap:wrap; gap:10px;">
-                
-                <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:180px;">
-                    <div class="alumno-avatar" style="width:34px; height:34px; background:#e2e8f0; color:#475569; border-radius:50%; display:grid; place-items:center; font-size:0.75rem; font-weight:bold;">'.htmlspecialchars($iniciales).'</div>
-                    <div class="alumno-info" style="line-height:1.2;">
-                        <strong class="exc-nombre" style="display:block; font-size:0.85rem; color:var(--ink);">'.htmlspecialchars($alum['apellido_paterno'].' '.$alum['nombre']).'</strong>
-                        <span class="exc-mat" style="font-size:0.75rem; color:var(--muted);">Mat: '.htmlspecialchars($alum['matricula']).'</span>
-                    </div>
-                </div>
-                
-                <div style="display:flex; align-items:center; gap:15px;">
-                    <div style="display:flex; flex-direction:column; gap:4px;">
-                        <label style="font-size:0.65rem; color:var(--muted); font-weight:700;">Extensión de fecha:</label>
-                        <input type="datetime-local" class="form-control" style="padding:4px 8px; font-size:0.75rem; border-radius:6px; border:1px solid #cbd5e1; outline:none; max-width:140px;" value="'.$fecha_val.'" onchange="actualizarFechaExcepcion('.$alum['id_alumno'].', '.$id_actividad.', this.value)">
-                    </div>
-
-                    <div class="switch" title="Permitir o bloquear entregas" style="margin-top:15px;">
-                        <input type="checkbox" class="rojo exc-toggle" id="vis_alum_'.$alum['id_alumno'].'" '.$checked.' onchange="toggleVisibilidadAlumno('.$alum['id_alumno'].', '.$id_actividad.', this)">
-                        <label class="slider" for="vis_alum_'.$alum['id_alumno'].'"></label>
-                    </div>
-                </div>
-            </div>';
-        }
-        
-        echo '</div>';
-        
-        echo '
-        <script>
-            document.getElementById("buscadorExcepciones").addEventListener("input", function(e) {
-                let term = e.target.value.toLowerCase();
-                document.querySelectorAll(".alumno-exc-item").forEach(item => {
-                    let nombre = item.querySelector(".exc-nombre").textContent.toLowerCase();
-                    let matricula = item.querySelector(".exc-mat").textContent.toLowerCase();
-                    item.style.display = (nombre.includes(term) || matricula.includes(term)) ? "flex" : "none";
-                });
-            });
-        </script>
-        ';
-    } catch (Exception $e) {}
+if (!$alumnos) {
+    echo "<div style='text-align:center; padding:15px; color:#64748b;'>No hay alumnos registrados en esta materia.</div>";
+    exit;
 }
 ?>
+<div class="vis-acciones">
+    <button type="button" class="btn-outline vis-btn-si" onclick="accionMasivaExcepciones(<?php echo $id_actividad; ?>, 1, <?php echo $id_clase; ?>)"><i class="fas fa-check-double"></i> Permitir a todos</button>
+    <button type="button" class="btn-outline vis-btn-no" onclick="accionMasivaExcepciones(<?php echo $id_actividad; ?>, 0, <?php echo $id_clase; ?>)"><i class="fas fa-ban"></i> Ocultar a todos</button>
+</div>
+<?php if ($filtro): ?>
+    <p class="vis-filtro"><i class="fas fa-user-slash"></i> Esta actividad tiene filtro de asistencia: se oculta a quien tenga <b>Falta</b> en tu pase de lista del <?php echo date('d/m/Y', strtotime($act['fecha_filtro'])); ?>. Si enciendes el switch de un alumno, lo verá aunque haya faltado.</p>
+<?php endif; ?>
+<div class="search-box vis-buscador">
+    <i class="fas fa-search"></i>
+    <input type="search" id="buscadorExcepciones" placeholder="Buscar por nombre o matrícula..." autocomplete="off" onkeydown="return event.key !== 'Enter';">
+</div>
+<p class="vis-cuenta" id="excCuenta"></p>
+<div id="listaExcScroll" class="lista-scroll vis-lista">
+<?php foreach ($alumnos as $alum):
+    $nombre = trim($alum['apellido_paterno'] . ' ' . $alum['apellido_materno'] . ' ' . $alum['nombre']);
+    $oculto_filtro = $alum['decision'] === null && $filtro && (int)$alum['falto'] === 1;
+    $puede_ver = $alum['decision'] !== null ? (int)$alum['decision'] === 1 : !$oculto_filtro;
+    $fecha_val = $alum['fecha_limite_excepcion'] ? date('Y-m-d\TH:i', strtotime($alum['fecha_limite_excepcion'])) : '';
+    $buscar = mb_strtolower($alum['matricula'] . ' ' . $nombre . ' ' . $alum['nombre'] . ' ' . $alum['apellido_paterno'], 'UTF-8');
+    $id = (int)$alum['id_alumno'];
+?>
+    <div class="alumno-exc-item" data-buscar="<?php echo htmlspecialchars($buscar); ?>">
+        <div class="exc-alumno">
+            <?php echo avatar_html($alum['fotografia'] ?? null, $alum['nombre'] . ' ' . $alum['apellido_paterno'], 'alumno-avatar exc-avatar', 'overflow:hidden;'); ?>
+            <div class="alumno-info">
+                <strong class="exc-nombre"><?php echo htmlspecialchars($nombre); ?></strong>
+                <span class="exc-mat">Mat: <?php echo htmlspecialchars($alum['matricula']); ?></span>
+                <?php if ($oculto_filtro): ?><span class="exc-filtro"><i class="fas fa-user-slash"></i> Oculta por falta</span><?php endif; ?>
+            </div>
+        </div>
+        <div class="exc-controles">
+            <label class="exc-fecha">
+                <span>Fecha límite especial</span>
+                <input type="datetime-local" class="form-control" value="<?php echo $fecha_val; ?>" onchange="actualizarFechaExcepcion(<?php echo $id; ?>, <?php echo $id_actividad; ?>, this.value)">
+            </label>
+            <div class="exc-switch">
+                <span>Puede verla</span>
+                <div class="switch" title="Mostrar u ocultar la actividad a este alumno">
+                    <input type="checkbox" class="rojo exc-toggle" id="vis_alum_<?php echo $id; ?>" <?php echo $puede_ver ? 'checked' : ''; ?> onchange="toggleVisibilidadAlumno(<?php echo $id; ?>, <?php echo $id_actividad; ?>, this)">
+                    <label class="slider" for="vis_alum_<?php echo $id; ?>"></label>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php endforeach; ?>
+    <p id="excSinResultados" class="vis-vacio" style="display:none;"><i class="fas fa-search"></i> Ningún alumno coincide con la búsqueda.</p>
+</div>

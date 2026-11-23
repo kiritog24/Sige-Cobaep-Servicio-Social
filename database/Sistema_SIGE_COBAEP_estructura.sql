@@ -40,7 +40,9 @@ CREATE TABLE IF NOT EXISTS `actividades_clase` (
   `visible` tinyint(1) DEFAULT 1,
   `tamano_maximo` int(11) DEFAULT 10,
   `numero_archivos` int(11) DEFAULT 1,
-  `tipo_archivo` varchar(100) DEFAULT '*',
+  `tipo_archivo` varchar(255) DEFAULT '*',
+  `solo_asistentes` tinyint(1) NOT NULL DEFAULT 0,
+  `fecha_filtro` date DEFAULT NULL,
   PRIMARY KEY (`id_actividad`),
   KEY `fk_act_clase` (`id_clase`),
   CONSTRAINT `fk_act_clase` FOREIGN KEY (`id_clase`) REFERENCES `clases_regulares` (`id_clase`) ON DELETE CASCADE
@@ -361,11 +363,25 @@ CREATE TABLE IF NOT EXISTS `entregas_actividad` (
   `fecha_entrega` datetime NOT NULL,
   `estatus_entrega` varchar(20) NOT NULL DEFAULT 'A Tiempo',
   `retroalimentacion` text DEFAULT NULL,
+  `calificacion` decimal(4,1) DEFAULT NULL,
+  `revisada` tinyint(1) NOT NULL DEFAULT 0,
+  `fecha_revision` datetime DEFAULT NULL,
   PRIMARY KEY (`id_entrega`),
   KEY `id_actividad` (`id_actividad`),
   KEY `id_alumno` (`id_alumno`),
   CONSTRAINT `entregas_actividad_ibfk_1` FOREIGN KEY (`id_actividad`) REFERENCES `actividades_clase` (`id_actividad`) ON DELETE CASCADE,
   CONSTRAINT `entregas_actividad_ibfk_2` FOREIGN KEY (`id_alumno`) REFERENCES `alumnos` (`id_alumno`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `entregas_actividad_archivos` (
+  `id_archivo` int(11) NOT NULL AUTO_INCREMENT,
+  `id_entrega` int(11) NOT NULL,
+  `archivo_ruta` varchar(255) NOT NULL,
+  `nombre_original` varchar(255) DEFAULT NULL,
+  `tamano` int(11) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id_archivo`),
+  KEY `idx_entrega` (`id_entrega`),
+  CONSTRAINT `fk_archivo_entrega` FOREIGN KEY (`id_entrega`) REFERENCES `entregas_actividad` (`id_entrega`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;

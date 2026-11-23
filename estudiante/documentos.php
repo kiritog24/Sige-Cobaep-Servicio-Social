@@ -55,7 +55,7 @@ try {
 
     // Mis entregas
     $st = $pdo->prepare("
-        SELECT ea.archivo_ruta, ea.fecha_entrega, ea.estatus_entrega, ac.titulo, m.nombre_materia
+        SELECT ea.id_entrega, ea.archivo_ruta, ea.fecha_entrega, ea.estatus_entrega, ac.titulo, m.nombre_materia
         FROM ENTREGAS_ACTIVIDAD ea
         INNER JOIN ACTIVIDADES_CLASE ac ON ac.id_actividad = ea.id_actividad
         INNER JOIN CLASES_REGULARES c ON c.id_clase = ac.id_clase
@@ -65,6 +65,8 @@ try {
     ");
     $st->execute([$id_alumno]);
     $entregas = $st->fetchAll(PDO::FETCH_ASSOC);
+    asegurar_columnas_actividades($pdo);
+    $archivos_entregas = archivos_de_entregas($pdo, $entregas);
 } catch (PDOException $e) {
     error_log('Documentos alumno: ' . $e->getMessage());
 }
@@ -102,7 +104,7 @@ estudiante_layout_inicio('Documentos', 'Tus documentos escolares y materiales de
     <?php else: ?>
         <div class="info-wrap">
             <table class="info-table">
-                <thead><tr><th>Materia</th><th>Actividad</th><th>Archivo</th><th>Fecha</th></tr></thead>
+                <thead><tr><th>Materia</th><th>Actividad</th><th>Archivos</th><th>Fecha</th></tr></thead>
                 <tbody>
                 <?php foreach ($materiales as $m): ?>
                     <tr>
@@ -126,7 +128,7 @@ estudiante_layout_inicio('Documentos', 'Tus documentos escolares y materiales de
     <?php else: ?>
         <div class="info-wrap">
             <table class="info-table">
-                <thead><tr><th>Materia</th><th>Actividad</th><th>Estatus</th><th>Archivo</th><th>Fecha</th></tr></thead>
+                <thead><tr><th>Materia</th><th>Actividad</th><th>Estatus</th><th>Archivos</th><th>Fecha</th></tr></thead>
                 <tbody>
                 <?php foreach ($entregas as $e):
                     $archivo = basename($e['archivo_ruta']);
@@ -136,7 +138,7 @@ estudiante_layout_inicio('Documentos', 'Tus documentos escolares y materiales de
                         <td><?php echo htmlspecialchars($e['nombre_materia']); ?></td>
                         <td><?php echo htmlspecialchars($e['titulo']); ?></td>
                         <td><span class="tag <?php echo $cls; ?>"><?php echo htmlspecialchars($est); ?></span></td>
-                        <td><a class="dl" href="../uploads/entregas_alumnos/<?php echo htmlspecialchars($archivo); ?>" target="_blank"><i class="fas fa-download"></i> <?php echo htmlspecialchars(preg_replace('/^al_\d+_\d+_/', '', $archivo)); ?></a></td>
+                        <td><?php foreach (($archivos_entregas[(int)$e['id_entrega']] ?? []) as $arch): ?><a class="dl" style="display:block; margin:2px 0;" href="../uploads/entregas_alumnos/<?php echo htmlspecialchars(rawurlencode($arch['ruta'])); ?>" target="_blank" download="<?php echo htmlspecialchars($arch['nombre']); ?>"><i class="fas fa-download"></i> <?php echo htmlspecialchars($arch['nombre']); ?></a><?php endforeach; ?></td>
                         <td style="white-space:nowrap;"><?php echo date('d/m/Y H:i', strtotime($e['fecha_entrega'])); ?></td>
                     </tr>
                 <?php endforeach; ?>

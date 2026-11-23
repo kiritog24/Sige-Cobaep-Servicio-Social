@@ -33,10 +33,11 @@ $materias_inactivas = [];
 $link_actual = "";
 $total_alumnos = 0;
 $alumnos_activos_count = 0;
+asegurar_columnas_actividades($pdo);
 
 try {
     if ($vista_actual === 'materia') {
-        $stmt = $pdo->prepare("SELECT c.*, m.nombre_materia, g.nombre_grupo, g.semestre, g.id_grupo FROM clases_regulares c INNER JOIN materias m ON c.id_materia = m.id_materia LEFT JOIN grupos g ON c.id_grupo = g.id_grupo WHERE c.id_clase = ? AND c.id_maestro = ?");
+        $stmt = $pdo->prepare("SELECT c.*, m.nombre_materia, m.imagen_portada, g.nombre_grupo, g.semestre, g.id_grupo FROM clases_regulares c INNER JOIN materias m ON c.id_materia = m.id_materia LEFT JOIN grupos g ON c.id_grupo = g.id_grupo WHERE c.id_clase = ? AND c.id_maestro = ?");
         $stmt->execute([$id_clase, $id_docente]);
         $info_cabecera = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -84,7 +85,20 @@ try {
         $stmtMatInactivas->execute([$id_grupo, $id_docente]);
         $materias_inactivas = $stmtMatInactivas->fetchAll(PDO::FETCH_ASSOC);
     }
-} catch (PDOException $e) {}
+} catch (PDOException $e) { error_log('gestionar_aula: ' . $e->getMessage()); }
+
+/** Campo de tipos de archivo: resumen + botón que abre la ventana de casillas. */
+function campo_tipos_archivo(string $id, string $valor): void {
+    $v = tipos_archivo_accept($valor) ?: '*'; ?>
+    <div class="tipos-campo" id="tipos_<?php echo $id; ?>">
+        <input type="hidden" name="tipo_archivo" class="tipos-valor" value="<?php echo htmlspecialchars($v); ?>">
+        <button type="button" class="tipos-boton" onclick="abrirTiposArchivo('tipos_<?php echo $id; ?>')">
+            <i class="fas fa-paperclip"></i>
+            <span class="tipos-texto"><?php echo htmlspecialchars(tipos_archivo_texto($valor)); ?></span>
+            <span class="tipos-cambiar">Elegir <i class="fas fa-chevron-right"></i></span>
+        </button>
+    </div>
+<?php }
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -99,7 +113,7 @@ try {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="style_dashboard_docente.css?v=<?php echo time(); ?>">
 
-    <link rel="stylesheet" href="css/gestionar_aula.css?v=1">
+    <link rel="stylesheet" href="css/gestionar_aula.css?v=3">
     <link rel="stylesheet" href="../css/asistencia.css?v=2">
     <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
@@ -163,7 +177,11 @@ try {
             <?php docente_topbar($pdo); ?>
         </header>
 
-        <div class="header-aula">
+        <?php
+            $portada_cab = ($vista_actual === 'materia' && !empty($info_cabecera['imagen_portada']) && is_file(__DIR__ . '/../' . $info_cabecera['imagen_portada']))
+                ? '../' . $info_cabecera['imagen_portada'] : '';
+        ?>
+        <div class="header-aula<?php echo $portada_cab ? ' con-portada' : ''; ?>"<?php if ($portada_cab): ?> style="background-image: url('<?php echo htmlspecialchars($portada_cab, ENT_QUOTES); ?>');"<?php endif; ?>>
             <div>
                 <?php if ($vista_actual === 'grupo'): ?>
                     <h2>Grupo <?php echo htmlspecialchars($info_cabecera['semestre']) . '° "' . htmlspecialchars($info_cabecera['nombre_grupo']) . '"'; ?></h2>
@@ -361,49 +379,33 @@ try {
     <label style="color:var(--ink);"><i class="fas fa-file-upload" style="color:var(--blue);"></i> Configuración de Archivos (Para los alumnos)</label>
     
     <div style="display:flex; gap:15px; margin-top: 10px; flex-wrap: wrap;">
-        <!-- Tipo de archivo -->
+        <!-- Tipos de archivo -->
         <div style="flex: 1.5; min-width: 200px;">
-            <label style="font-size: 0.8rem; color: var(--muted); font-weight: 700; display:block; margin-bottom:5px;">Tipo Permitido:</label>
-            <select name="tipo_archivo" class="form-control" style="background: white; padding: 8px 12px; height: 42px;">
-                <option value="*">Cualquier tipo de archivo</option>
-                <optgroup label="📸 Imágenes (Abre la cámara en celular)">
-                    <option value="image/*">Solo Imágenes / Fotos</option>
-                </optgroup>
-                <optgroup label="📄 Documentos">
-                    <option value=".pdf">Solo documentos PDF</option>
-                    <option value=".pdf,.doc,.docx">Documentos (PDF, Word)</option>
-                    <option value=".xls,.xlsx">Hojas de cálculo (Excel)</option>
-                    <option value=".zip,.rar">Comprimidos (ZIP, RAR)</option>
-                </optgroup>
-            </select>
+            <label style="font-size: 0.8rem; color: var(--muted); font-weight: 700; display:block; margin-bottom:5px;">Tipos permitidos:</label>
+            <?php campo_tipos_archivo('crear', '*'); ?>
         </div>
-        
-        <!-- Tamaño máximo -->
+                <!-- Tamaño máximo -->
         <div style="flex: 1; min-width: 120px;">
-            <label style="font-size: 0.8rem; color: var(--muted); font-weight: 700; display:block; margin-bottom:5px;">Peso Máx:</label>
+            <label style="font-size: 0.8rem; color: var(--muted); font-weight: 700; display:block; margin-bottom:5px;">Peso máx. por archivo:</label>
             <select name="tamano_maximo" class="form-control" style="background: white; padding: 8px 12px; height: 42px;">
-                <option value="2">2 MB</option>
-                <option value="5">5 MB</option>
-                <option value="10" selected>10 MB</option>
-                <option value="20">20 MB</option>
-                <option value="50">50 MB</option>
+                <?php foreach (tamanos_disponibles() as $mb): ?><option value="<?php echo $mb; ?>"<?php echo $mb === 10 ? ' selected' : ''; ?>><?php echo $mb; ?> MB</option><?php endforeach; ?>
             </select>
         </div>
 
         <!-- Cantidad de archivos -->
         <div style="flex: 1; min-width: 120px;">
-            <label style="font-size: 0.8rem; color: var(--muted); font-weight: 700; display:block; margin-bottom:5px;">Cant. Archivos:</label>
-            <input type="number" name="numero_archivos" class="form-control" value="1" min="1" max="10" style="background: white; padding: 8px 12px; height: 42px;">
+            <label style="font-size: 0.8rem; color: var(--muted); font-weight: 700; display:block; margin-bottom:5px;">Archivos por alumno:</label>
+            <input type="number" name="numero_archivos" class="form-control" value="1" min="1" max="<?php echo numero_archivos_valido(99); ?>" style="background: white; padding: 8px 12px; height: 42px;">
         </div>
     </div>
-        <p style="margin: 5px 0 0 0; font-size: 0.75rem; color: var(--muted);"><i class="fas fa-info-circle"></i> Ayuda a evitar que el servidor se sature con archivos muy pesados.</p>
+        <p style="margin: 5px 0 0 0; font-size: 0.75rem; color: var(--muted);"><i class="fas fa-info-circle"></i> Cada alumno podrá subir hasta esa cantidad de archivos en su entrega (por ejemplo, varias fotos de su cuaderno). El servidor acepta máximo <?php echo limites_servidor()['total_mb']; ?> MB por envío entre todos los archivos.</p>
     </div>
 
     <!-- ... (Sigue lo que ya tenías de Programación y Privacidad) ... -->
                                 <div class="form-group" style="margin-bottom: 15px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
                                     <label style="color:var(--ink);"><i class="fas fa-clock" style="color:var(--orange);"></i> Programación (Automatización)</label>
                                     <div style="margin-top: 5px;">
-                                        <label style="font-size: 0.8rem; font-weight: 600; color: var(--muted); display:block; margin-bottom: 5px;">Fecha de Apertura (El sistema la mostrará sola en esta fecha):</label>
+                                        <label style="font-size: 0.8rem; font-weight: 600; color: var(--muted); display:block; margin-bottom: 5px;">Fecha de apertura: los alumnos la verán a partir de esta fecha y hora (déjala vacía para que se vea de inmediato).</label>
                                         <input type="datetime-local" name="fecha_apertura" class="form-control" style="max-width: 250px; background: white;">
                                     </div>
                                 </div>
@@ -412,11 +414,11 @@ try {
                                     <div class="check-options" style="flex-direction: column; gap: 10px; margin-top: 5px;">
                                         <label class="check-item" style="width: 100%;">
                                             <input type="checkbox" name="visible" value="1" checked> 
-                                            <b>Publicar en el muro </b> (Desmárcalo para guardar como borrador)
+                                            <span><b>Publicar para los alumnos</b> (desmárcalo para guardarla como borrador oculto)</span>
                                         </label>
                                         <label class="check-item" style="width: 100%;">
                                             <input type="checkbox" name="solo_asistentes" value="1"> 
-                                            <b>Filtro de Asistencia:</b> Ocultar a los alumnos que faltaron hoy.
+                                            <span><b>Filtro de asistencia:</b> ocultar a quien tenga <b>Falta</b> en tu pase de lista del día en que se abre la actividad (hoy, o la fecha de apertura si la programas). Cuenta aunque pases lista después de publicar.</span>
                                         </label>
                                     </div>
                                 </div>
@@ -448,7 +450,7 @@ try {
                                                         <span class="badge-oculta" style="color:#ef4444; font-size:0.75rem; margin-left:5px;"><i class="fas fa-eye-slash"></i> Oculta</span>
                                                     <?php endif; ?>
                                                 </h4>
-                                                <p><i class="far fa-calendar-alt"></i> Publicado: <?php echo date('d/m/Y', strtotime($act['fecha_publicacion'])); ?></p>
+                                                <p><i class="far fa-calendar-alt"></i> Creada: <?php echo date('d/m/Y', strtotime($act['fecha_publicacion'])); ?></p>
                                             </div>
                                         </div>
                                         <div class="act-badges">
@@ -456,7 +458,17 @@ try {
                                                 <span class="badge badge-orange"><i class="far fa-clock"></i> Límite: <?php echo date('d/m/Y H:i', strtotime($act['fecha_limite'])); ?></span>
                                             <?php endif; ?>
                                             <?php if(isset($act['permite_entregas']) && $act['permite_entregas'] == 1): ?>
-                                                <span class="badge badge-green"><i class="fas fa-upload"></i> Requiere Entrega</span>
+                                                <span class="badge badge-green"><i class="fas fa-upload"></i> Requiere entrega</span>
+                                                <?php $n_arch = numero_archivos_valido($act['numero_archivos'] ?? 1); ?>
+                                                <span class="badge badge-gris"><i class="fas fa-paperclip"></i> <?php echo $n_arch > 1 ? "Hasta $n_arch archivos" : '1 archivo'; ?> · <?php echo htmlspecialchars(tipos_archivo_texto($act['tipo_archivo'] ?? '*')); ?> · <?php echo tamano_archivo_valido($act['tamano_maximo'] ?? 10); ?> MB c/u</span>
+                                            <?php endif; ?>
+                                            <?php if (!empty($act['fecha_apertura']) && strtotime($act['fecha_apertura']) > time()): ?>
+                                                <span class="badge badge-azul" title="Los alumnos aún no la ven"><i class="fas fa-calendar-plus"></i> Programada: se abre el <?php echo date('d/m/Y H:i', strtotime($act['fecha_apertura'])); ?></span>
+                                            <?php elseif (!empty($act['fecha_apertura'])): ?>
+                                                <span class="badge badge-gris"><i class="fas fa-calendar-check"></i> Abierta desde <?php echo date('d/m/Y H:i', strtotime($act['fecha_apertura'])); ?></span>
+                                            <?php endif; ?>
+                                            <?php if ((int)($act['solo_asistentes'] ?? 0) === 1): ?>
+                                                <span class="badge badge-rojo" title="Se oculta a quien tenga Falta en el pase de lista de ese día"><i class="fas fa-user-slash"></i> Filtro de asistencia (<?php echo date('d/m/Y', strtotime($act['fecha_filtro'] ?: $act['fecha_publicacion'])); ?>)</span>
                                             <?php endif; ?>
                                         </div>
                                         
@@ -478,7 +490,15 @@ try {
                                               <i class="fas fa-users-cog"></i> Permisos
                                              </button>
                                               <!-- ... (El resto de tus botones siguen igual) ... -->
-                                            <button type="button" class="btn-outline" onclick="abrirModalEditar(<?php echo $act['id_actividad']; ?>, '<?php echo htmlspecialchars(addslashes($act['titulo'])); ?>', '<?php echo htmlspecialchars(addslashes($act['descripcion'])); ?>', '<?php echo $act['fecha_limite']; ?>', <?php echo $act['permite_entregas'] ?? 0; ?>, <?php echo $act['acepta_retardo'] ?? 0; ?>, '<?php echo $act['fecha_apertura']; ?>', <?php echo $act['tamano_maximo'] ?? 10; ?>, <?php echo $act['numero_archivos'] ?? 1; ?>, '<?php echo $act['tipo_archivo'] ?? '*'; ?>')">
+                                            <?php $datos_edit = [
+                                                'id' => (int)$act['id_actividad'], 'titulo' => $act['titulo'], 'descripcion' => (string)$act['descripcion'],
+                                                'limite' => (string)$act['fecha_limite'], 'apertura' => (string)$act['fecha_apertura'],
+                                                'permite' => (int)$act['permite_entregas'], 'retardo' => (int)$act['acepta_retardo'],
+                                                'tamano' => tamano_archivo_valido($act['tamano_maximo'] ?? 10), 'num' => numero_archivos_valido($act['numero_archivos'] ?? 1),
+                                                'tipo' => tipos_archivo_accept($act['tipo_archivo'] ?? '*') ?: '*', 'tipo_texto' => tipos_archivo_texto($act['tipo_archivo'] ?? '*'),
+                                                'filtro' => (int)($act['solo_asistentes'] ?? 0),
+                                            ]; ?>
+                                            <button type="button" class="btn-outline" data-act="<?php echo htmlspecialchars(json_encode($datos_edit, JSON_UNESCAPED_UNICODE), ENT_QUOTES); ?>" onclick="abrirModalEditar(this)">
                                                   <i class="fas fa-edit"></i> Editar
                                               </button>
                                               <a href="ver_entregas.php?id_actividad=<?php echo $act['id_actividad']; ?>&id_clase=<?php echo $id_clase; ?>" class="btn-outline" style="color:var(--blue); border-color:var(--blue); text-decoration:none;">
@@ -615,7 +635,7 @@ try {
 
                     <div class="card">
                         <div class="card-title" style="justify-content:space-between;">
-                            <div><i class="fas fa-users"></i> Alumnos (<?php echo $total_alumnos; ?>)</div>
+                            <div><i class="fas fa-users"></i> Alumnos (<span id="cuentaAcceso"><?php echo $alumnos_activos_count; ?></span>/<?php echo $total_alumnos; ?> con acceso)</div>
                             <div style="display:flex; align-items:center; gap:8px;">
                                 <span style="font-size:0.75rem; color:var(--muted);">Acceso Gral.</span>
                                 <div class="switch" title="Dar/Quitar acceso a todos">
@@ -627,14 +647,14 @@ try {
 
                         <div class="search-box">
                             <i class="fas fa-search"></i>
-                            <input type="text" id="buscadorAlumnos" placeholder="Buscar alumno...">
+                            <input type="search" id="buscadorAlumnos" placeholder="Buscar por nombre o matrícula..." autocomplete="off">
                         </div>
                         <div class="lista-scroll" style="max-height: 480px;">
                             <?php foreach($lista_alumnos as $alum): 
                                 $ini_alum = mb_substr($alum['nombre'], 0, 1) . mb_substr($alum['apellido_paterno'], 0, 1);
                                 $tiene_acceso = isset($alum['acceso']) ? $alum['acceso'] : 1;
                             ?>
-                                <div class="alumno-item">
+                                <div class="alumno-item" data-buscar="<?php echo htmlspecialchars(mb_strtolower($alum['matricula'] . ' ' . $alum['nombre'] . ' ' . $alum['apellido_paterno'] . ' ' . $alum['apellido_materno'] . ' ' . $alum['apellido_paterno'] . ' ' . $alum['nombre'], 'UTF-8')); ?>" data-nombre="<?php echo htmlspecialchars($alum['nombre'] . ' ' . $alum['apellido_paterno']); ?>">
                                     <div style="display:flex; align-items:center; gap:12px;">
                                         <?php echo avatar_html($alum['fotografia'] ?? null, $alum['nombre'] . ' ' . $alum['apellido_paterno'], 'alumno-avatar', 'overflow:hidden;'); ?>
                                         <div class="alumno-info">
@@ -826,35 +846,23 @@ try {
             <!-- NUEVO EN EDITAR: Límites de Archivos -->
 <div style="display:flex; gap:15px; margin-bottom: 1.5rem; flex-wrap: wrap;">
     <div class="form-group" style="margin: 0; flex: 1.5; min-width: 200px;">
-        <label>Tipo Permitido</label>
-        <select name="tipo_archivo" id="edit_tipo_archivo" class="form-control">
-            <option value="*">Cualquier tipo de archivo</option>
-            <optgroup label="📸 Imágenes">
-                <option value="image/*">Solo Imágenes / Fotos</option>
-            </optgroup>
-            <optgroup label="📄 Documentos">
-                <option value=".pdf">Solo documentos PDF</option>
-                <option value=".pdf,.doc,.docx">Documentos (PDF, Word)</option>
-                <option value=".xls,.xlsx">Hojas de cálculo (Excel)</option>
-                <option value=".zip,.rar">Comprimidos (ZIP, RAR)</option>
-            </optgroup>
-        </select>
+        <label>Tipos permitidos</label>
+        <?php campo_tipos_archivo('editar', '*'); ?>
     </div>
     <div class="form-group" style="margin: 0; flex: 1; min-width: 100px;">
-        <label>Peso Máx.</label>
+        <label>Peso máx. por archivo</label>
         <select name="tamano_maximo" id="edit_tamano_maximo" class="form-control">
-            <option value="2">2 MB</option>
-            <option value="5">5 MB</option>
-            <option value="10">10 MB</option>
-            <option value="20">20 MB</option>
-            <option value="50">50 MB</option>
+            <?php foreach (tamanos_disponibles() as $mb): ?><option value="<?php echo $mb; ?>"><?php echo $mb; ?> MB</option><?php endforeach; ?>
         </select>
     </div>
     <div class="form-group" style="margin: 0; flex: 1; min-width: 100px;">
-        <label>Máx. Archivos</label>
-        <input type="number" name="numero_archivos" id="edit_numero_archivos" class="form-control" min="1" max="10">
+        <label>Archivos por alumno</label>
+        <input type="number" name="numero_archivos" id="edit_numero_archivos" class="form-control" min="1" max="<?php echo numero_archivos_valido(99); ?>">
     </div>
 </div>
+            <div class="form-group check-options" style="margin-bottom: 1.5rem; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <label class="check-item" style="width:100%;"><input type="checkbox" name="solo_asistentes" id="edit_solo_asistentes" value="1"> <span><b>Filtro de asistencia:</b> ocultar a quien tenga <b>Falta</b> en el pase de lista del día en que se abre la actividad.</span></label>
+            </div>
 
             <div class="btn-group">
                 <button type="button" class="btn-cancel" onclick="cerrarModal('modalEditar')">Cancelar</button>
@@ -866,17 +874,17 @@ try {
 
 <!-- Modal Excepciones de Visibilidad -->
 <div class="modal-overlay" id="modalAlumnosActividad">
-    <div class="modal-content" style="max-width: 450px;">
+    <div class="modal-content modal-visibilidad">
         <div class="modal-header">
-            <h3><i class="fas fa-users-cog" style="color:var(--blue);"></i> Visibilidad por Alumno</h3>
-            <button class="btn-close" onclick="cerrarModal('modalAlumnosActividad')"><i class="fas fa-times"></i></button>
+            <h3><i class="fas fa-users-cog" style="color:var(--blue);"></i> Visibilidad por alumno</h3>
+            <button type="button" class="btn-close" onclick="cerrarModal('modalAlumnosActividad')"><i class="fas fa-times"></i></button>
         </div>
-        <p style="font-size:0.85rem; color:var(--muted); margin-bottom:15px;">Bloquea o permite ver esta actividad a alumnos en específico (ej. si pidieron permiso o faltaron).</p>
-        <div id="contenedorListaVisibilidad" class="lista-scroll" style="max-height: 300px; border: 1px solid var(--line); border-radius: 8px; padding: 10px;">
+        <p class="vis-ayuda">Con el switch decides quién ve esta actividad (encendido = la ve y puede entregar). Con la fecha le das a un alumno más tiempo que al resto.</p>
+        <div id="contenedorListaVisibilidad">
             <div style="text-align:center; padding:20px; color:#94a3b8;"><i class="fas fa-spinner fa-spin"></i> Cargando alumnos...</div>
         </div>
         <div class="btn-group">
-            <button type="button" class="btn-cancel" onclick="cerrarModal('modalAlumnosActividad')" style="width:100%;">Cerrar Ventana</button>
+            <button type="button" class="btn-cancel" onclick="cerrarModal('modalAlumnosActividad')" style="width:100%;">Cerrar ventana</button>
         </div>
     </div>
 </div>
@@ -954,6 +962,32 @@ try {
         </div>
     </div>
 </div>
+<!-- Ventana: tipos de archivo que acepta la actividad -->
+<div class="modal-overlay modal-encima" id="modalTiposArchivo">
+    <div class="modal-content modal-tipos">
+        <div class="modal-header">
+            <h3><i class="fas fa-paperclip" style="color:var(--blue);"></i> Tipos de archivo permitidos</h3>
+            <button type="button" class="btn-close" onclick="cancelarTiposArchivo()"><i class="fas fa-times"></i></button>
+        </div>
+        <p class="vis-ayuda">Marca los tipos de archivo que tus alumnos podrán subir en esta actividad. El sistema rechaza cualquier otro.</p>
+        <label class="tipo-todos"><input type="checkbox" id="tipoCualquiera"> <span><b>Cualquier tipo de archivo</b> (todos los de la lista)</span></label>
+        <div class="tipos-grid">
+            <?php foreach (TIPOS_ARCHIVO as $grupo => $exts): $gid = 'g' . substr(md5($grupo), 0, 6); ?>
+                <fieldset class="tipo-grupo">
+                    <legend><label><input type="checkbox" class="tipo-grupo-check" data-grupo="<?php echo $gid; ?>"> <i class="fas <?php echo GRUPO_ICONO_ARCHIVO[$grupo] ?? 'fa-file'; ?>"></i> <?php echo htmlspecialchars($grupo); ?></label></legend>
+                    <?php foreach ($exts as $ext => $nombre): ?>
+                        <label class="tipo-ext"><input type="checkbox" class="tipo-check" value=".<?php echo $ext; ?>" data-grupo="<?php echo $gid; ?>" data-nombre="<?php echo htmlspecialchars($nombre); ?>" data-grupo-nombre="<?php echo htmlspecialchars($grupo); ?>"> <?php echo htmlspecialchars($nombre); ?></label>
+                    <?php endforeach; ?>
+                </fieldset>
+            <?php endforeach; ?>
+        </div>
+        <p class="tipos-cuenta" id="tiposCuenta"></p>
+        <div class="btn-group">
+            <button type="button" class="btn-cancel" onclick="cancelarTiposArchivo()">Cancelar</button>
+            <button type="button" class="btn-primary" style="margin:0; width:auto;" onclick="confirmarTiposArchivo()"><i class="fas fa-check"></i> Confirmar selección</button>
+        </div>
+    </div>
+</div>
 </div>
 
     </main>
@@ -1025,22 +1059,83 @@ try {
     // =======================================================
     function abrirModalEliminar(id, idc) { document.getElementById('del_id_actividad').value = id; document.getElementById('del_id_clase').value = idc; document.getElementById('modalEliminar').classList.add('active'); }
     function abrirModalHorario() { document.getElementById('modalAgregarHorario').classList.add('active'); }
-    function abrirModalEditar(id, t, d, f_limite, p, acepta_ret, f_apertura, tamano, num_arch, tipo) { 
-        document.getElementById('edit_id_actividad').value = id; 
-        document.getElementById('edit_titulo').value = t; 
-        document.getElementById('edit_descripcion').value = d; 
-        document.getElementById('edit_fecha_limite').value = f_limite ? f_limite.replace(' ', 'T') : ''; 
-        document.getElementById('edit_fecha_apertura').value = f_apertura ? f_apertura.replace(' ', 'T') : ''; 
-        document.getElementById('edit_permite_entregas').checked = (p == 1); 
-        document.getElementById('edit_acepta_retardo').checked = (acepta_ret == 1); 
-        
-        // Poner los nuevos valores
-        document.getElementById('edit_tamano_maximo').value = tamano || 10;
-        document.getElementById('edit_numero_archivos').value = num_arch || 1;
-        document.getElementById('edit_tipo_archivo').value = tipo || '*';
-
-        document.getElementById('modalEditar').classList.add('active'); 
+    function abrirModalEditar(btn) {
+        const a = JSON.parse(btn.dataset.act);
+        document.getElementById('edit_id_actividad').value = a.id;
+        document.getElementById('edit_titulo').value = a.titulo;
+        document.getElementById('edit_descripcion').value = a.descripcion;
+        document.getElementById('edit_fecha_limite').value = a.limite ? a.limite.replace(' ', 'T').slice(0, 16) : '';
+        document.getElementById('edit_fecha_apertura').value = a.apertura ? a.apertura.replace(' ', 'T').slice(0, 16) : '';
+        document.getElementById('edit_permite_entregas').checked = a.permite == 1;
+        document.getElementById('edit_acepta_retardo').checked = a.retardo == 1;
+        document.getElementById('edit_solo_asistentes').checked = a.filtro == 1;
+        document.getElementById('edit_tamano_maximo').value = a.tamano || 10;
+        document.getElementById('edit_numero_archivos').value = a.num || 1;
+        const campo = document.getElementById('tipos_editar');
+        campo.querySelector('.tipos-valor').value = a.tipo || '*';
+        campo.querySelector('.tipos-texto').textContent = a.tipo_texto || 'Cualquier tipo de archivo';
+        document.getElementById('modalEditar').classList.add('active');
     }
+
+    // La fecha límite no puede quedar antes de la apertura (crear y editar)
+    document.querySelectorAll('form[action$="docente_publicar_actividad.php"], form[action$="docente_editar_actividad.php"]').forEach(f => {
+        f.addEventListener('submit', e => {
+            const ap = f.querySelector('[name="fecha_apertura"]').value, li = f.querySelector('[name="fecha_limite"]').value;
+            if (ap && li && li <= ap) { e.preventDefault(); alert('La fecha límite debe ser después de la fecha de apertura.'); }
+        });
+    });
+
+    const confirmar = (msg, o) => window.sigeConfirm ? window.sigeConfirm(msg, o) : Promise.resolve(confirm(msg));
+
+    // =======================================================
+    // TIPOS DE ARCHIVO (ventana con casillas)
+    // =======================================================
+    let campoTipos = null;
+    const tiposChecks = () => [...document.querySelectorAll('#modalTiposArchivo .tipo-check')];
+    function refrescarTipos() {
+        const checks = tiposChecks();
+        document.querySelectorAll('#modalTiposArchivo .tipo-grupo-check').forEach(g => {
+            const del = checks.filter(c => c.dataset.grupo === g.dataset.grupo), n = del.filter(c => c.checked).length;
+            g.checked = n === del.length; g.indeterminate = n > 0 && n < del.length;
+        });
+        const n = checks.filter(c => c.checked).length;
+        const todos = document.getElementById('tipoCualquiera');
+        todos.checked = n === checks.length; todos.indeterminate = n > 0 && n < checks.length;
+        document.getElementById('tiposCuenta').textContent = n === checks.length ? 'Se aceptará cualquier tipo de archivo de la lista.' : (n ? n + ' tipo(s) seleccionado(s).' : 'No has marcado ningún tipo.');
+    }
+    function textoTipos(sel) {
+        const checks = tiposChecks();
+        if (!sel.length || sel.length === checks.length) return 'Cualquier tipo de archivo';
+        const partes = [], grupos = {};
+        checks.forEach(c => { (grupos[c.dataset.grupoNombre] = grupos[c.dataset.grupoNombre] || []).push(c); });
+        Object.entries(grupos).forEach(([g, cs]) => {
+            const marc = cs.filter(c => sel.includes(c.value));
+            if (marc.length && marc.length === cs.length && cs.length > 1) partes.push(g + ' (todos)');
+            else marc.forEach(c => partes.push(c.dataset.nombre));
+        });
+        return partes.join(', ');
+    }
+    function abrirTiposArchivo(idCampo) {
+        campoTipos = document.getElementById(idCampo);
+        const v = campoTipos.querySelector('.tipos-valor').value;
+        const sel = v === '*' ? null : v.split(',');
+        tiposChecks().forEach(c => { c.checked = sel === null || sel.includes(c.value); });
+        refrescarTipos();
+        document.getElementById('modalTiposArchivo').classList.add('active');
+    }
+    function cancelarTiposArchivo() { document.getElementById('modalTiposArchivo').classList.remove('active'); campoTipos = null; }
+    function confirmarTiposArchivo() {
+        const checks = tiposChecks(), sel = checks.filter(c => c.checked).map(c => c.value);
+        if (!sel.length) { alert('Marca al menos un tipo de archivo, o "Cualquier tipo de archivo".'); return; }
+        campoTipos.querySelector('.tipos-valor').value = sel.length === checks.length ? '*' : sel.join(',');
+        campoTipos.querySelector('.tipos-texto').textContent = textoTipos(sel);
+        cancelarTiposArchivo();
+    }
+    document.getElementById('modalTiposArchivo')?.addEventListener('change', e => {
+        if (e.target.id === 'tipoCualquiera') tiposChecks().forEach(c => c.checked = e.target.checked);
+        else if (e.target.classList.contains('tipo-grupo-check')) tiposChecks().filter(c => c.dataset.grupo === e.target.dataset.grupo).forEach(c => c.checked = e.target.checked);
+        refrescarTipos();
+    });
 
     // CIERRE SEGURO DE MODALES Y CÁMARA
     function cerrarModal(id) { 
@@ -1050,25 +1145,59 @@ try {
         }
     }
 
-    document.getElementById('buscadorAlumnos')?.addEventListener('input', function(e) {
-        let term = e.target.value.toLowerCase();
+    // Buscador de la lista de alumnos (nombre en cualquier orden o matrícula)
+    const normalizar = t => String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+    function coincide(texto, term) { const t = normalizar(texto); return normalizar(term).split(' ').every(p => t.includes(p)); }
+    document.getElementById('buscadorAlumnos')?.addEventListener('input', function () {
         document.querySelectorAll('.alumno-item').forEach(item => {
-            item.style.display = item.querySelector('.alumno-info').textContent.toLowerCase().includes(term) ? 'flex' : 'none';
+            item.style.display = coincide(item.dataset.buscar || item.textContent, this.value) ? 'flex' : 'none';
         });
     });
 
-    function toggleAcceso(id_a, id_c, check) {
-        fetch('procesos/docente_toggle_acceso.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `id_alumno=${id_a}&id_clase=${id_c}&acceso=${check.checked?1:0}` })
-        .then(r => r.json()).then(d => { if(!d.success) check.checked = !check.checked; }).catch(() => check.checked = !check.checked);
-    }
-    
-    function toggleAllAccesos(id_c, check) {
-        fetch('procesos/docente_toggle_acceso_general.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `id_clase=${id_c}&acceso=${check.checked?1:0}` })
-        .then(r => r.json()).then(d => { if(d.success) document.querySelectorAll('.alum-toggle').forEach(t => t.checked = check.checked); else check.checked = !check.checked; }).catch(() => check.checked = !check.checked);
+    function actualizarCuentaAcceso() {
+        const t = [...document.querySelectorAll('.alum-toggle')], n = t.filter(x => x.checked).length;
+        const c = document.getElementById('cuentaAcceso'); if (c) c.textContent = n;
+        const all = document.getElementById('toggleAll'); if (all) all.checked = t.length > 0 && n === t.length;
     }
 
-    function toggleVisibilidadActividad(id_actividad, checkbox) {
+    async function toggleAcceso(id_a, id_c, check) {
+        const activar = check.checked, nombre = check.closest('.alumno-item')?.dataset.nombre || 'este alumno';
+        check.checked = !activar;   // no cambia hasta que se confirme
+        const ok = await confirmar(activar
+            ? `¿Dar acceso a ${nombre}? Podrá entrar al aula, ver las actividades y entregar.`
+            : `¿Quitar el acceso a ${nombre}? Ya no podrá entrar al aula ni entregar actividades. Sus entregas anteriores se conservan.`,
+            { titulo: activar ? 'Dar acceso' : 'Quitar acceso', aceptar: activar ? 'Sí, dar acceso' : 'Sí, quitar acceso', peligro: !activar });
+        if (!ok) return;
+        check.checked = activar;
+        fetch('procesos/docente_toggle_acceso.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `id_alumno=${id_a}&id_clase=${id_c}&acceso=${activar ? 1 : 0}` })
+        .then(r => r.json()).then(d => { if (!d.success) { check.checked = !activar; alert(d.message || 'No se pudo guardar el cambio.'); } actualizarCuentaAcceso(); })
+        .catch(() => { check.checked = !activar; alert('Error de conexión. No se guardó el cambio.'); actualizarCuentaAcceso(); });
+    }
+
+    async function toggleAllAccesos(id_c, check) {
+        const activar = check.checked, total = document.querySelectorAll('.alum-toggle').length;
+        check.checked = !activar;
+        const ok = await confirmar(activar
+            ? `¿Dar acceso a los ${total} alumnos de esta materia?`
+            : `¿Quitar el acceso a los ${total} alumnos de esta materia? Nadie podrá entrar al aula ni entregar hasta que lo vuelvas a activar.`,
+            { titulo: activar ? 'Dar acceso a todos' : 'Quitar acceso a todos', aceptar: activar ? 'Sí, a todos' : 'Sí, quitar a todos', peligro: !activar });
+        if (!ok) return;
+        check.checked = activar;
+        fetch('procesos/docente_toggle_acceso_general.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `id_clase=${id_c}&acceso=${activar ? 1 : 0}` })
+        .then(r => r.json()).then(d => {
+            if (d.success) document.querySelectorAll('.alum-toggle').forEach(t => t.checked = activar);
+            else { check.checked = !activar; alert(d.message || 'No se pudo guardar el cambio.'); }
+            actualizarCuentaAcceso();
+        }).catch(() => { check.checked = !activar; alert('Error de conexión. No se guardó el cambio.'); });
+    }
+
+    async function toggleVisibilidadActividad(id_actividad, checkbox) {
         let estado = checkbox.checked ? 1 : 0;
+        checkbox.checked = !estado;
+        const ok = await confirmar(estado ? '¿Mostrar esta actividad a los alumnos?' : '¿Ocultar esta actividad a todos los alumnos? Dejarán de verla y no podrán entregar hasta que la vuelvas a mostrar.',
+            { titulo: estado ? 'Mostrar actividad' : 'Ocultar actividad', aceptar: estado ? 'Sí, mostrar' : 'Sí, ocultar', peligro: !estado });
+        if (!ok) return;
+        checkbox.checked = !!estado;
         fetch('procesos/docente_toggle_actividad.php', {
             method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: `id_actividad=${id_actividad}&visible=${estado}`
@@ -1095,10 +1224,28 @@ try {
         document.getElementById('modalAlumnosActividad').classList.add('active');
         const contenedor = document.getElementById('contenedorListaVisibilidad');
         contenedor.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;"><i class="fas fa-spinner fa-spin"></i> Cargando alumnos...</div>';
-        let id_clase = document.querySelector('input[name="id_clase"]').value;
-        fetch(`procesos/obtener_excepciones.php?id_actividad=${id_actividad}&id_clase=${id_clase}`)
-        .then(response => response.text()).then(html => { contenedor.innerHTML = html; })
-        .catch(error => { contenedor.innerHTML = '<div style="color:red; text-align:center; padding:20px;">Error de conexión.</div>'; });
+        fetch(`procesos/obtener_excepciones.php?id_actividad=${id_actividad}&id_clase=<?php echo (int)$id_clase; ?>`)
+        .then(r => r.text()).then(html => { contenedor.innerHTML = html; contarVisibles(); })
+        .catch(() => { contenedor.innerHTML = '<div style="color:red; text-align:center; padding:20px;">Error de conexión.</div>'; });
+    }
+
+    // El buscador llega por AJAX: se escucha desde el contenedor (los <script> del HTML cargado no se ejecutan)
+    document.getElementById('contenedorListaVisibilidad')?.addEventListener('input', e => {
+        if (e.target.id !== 'buscadorExcepciones') return;
+        let visibles = 0;
+        document.querySelectorAll('#contenedorListaVisibilidad .alumno-exc-item').forEach(item => {
+            const si = coincide(item.dataset.buscar || item.textContent, e.target.value);
+            item.style.display = si ? '' : 'none';
+            if (si) visibles++;
+        });
+        const vacio = document.getElementById('excSinResultados');
+        if (vacio) vacio.style.display = visibles ? 'none' : 'block';
+    });
+
+    function contarVisibles() {
+        const t = [...document.querySelectorAll('#contenedorListaVisibilidad .exc-toggle')];
+        const c = document.getElementById('excCuenta');
+        if (c) c.textContent = `${t.filter(x => x.checked).length} de ${t.length} alumnos pueden ver esta actividad`;
     }
 
     function toggleVisibilidadAlumno(id_alumno, id_actividad, checkbox) {
@@ -1106,25 +1253,32 @@ try {
         fetch('procesos/docente_toggle_excepcion.php', {
             method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: `id_actividad=${id_actividad}&id_alumno=${id_alumno}&visible=${estado}`
-        }).then(r => r.json()).then(data => { if(!data.success) { alert("Error al guardar permiso."); checkbox.checked = !checkbox.checked; } })
-        .catch(() => checkbox.checked = !checkbox.checked);
+        }).then(r => r.json()).then(data => {
+            if (!data.success) { alert("Error al guardar permiso."); checkbox.checked = !checkbox.checked; }
+            else checkbox.closest('.alumno-exc-item')?.querySelector('.exc-filtro')?.remove();
+            contarVisibles();
+        }).catch(() => { checkbox.checked = !checkbox.checked; contarVisibles(); });
     }
 
     function actualizarFechaExcepcion(id_alumno, id_actividad, fecha) {
         fetch('procesos/docente_fecha_excepcion.php', {
             method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: `id_actividad=${id_actividad}&id_alumno=${id_alumno}&fecha=${encodeURIComponent(fecha)}`
-        }).then(r => r.json()).then(data => { if(!data.success) alert("Error al guardar la fecha límite especial."); });
+        }).then(r => r.json()).then(data => { if(!data.success) alert(data.message || "Error al guardar la fecha límite especial."); });
     }
 
     async function accionMasivaExcepciones(id_actividad, estado, id_clase) {
-        const mensajeConf = estado === 1 ? '¿Permitir entregas a TODOS los alumnos?' : '¿Bloquear entregas a TODOS los alumnos?';
-        if (!(window.sigeConfirm ? await window.sigeConfirm(mensajeConf) : confirm(mensajeConf))) return;
-        document.querySelectorAll('.exc-toggle').forEach(chk => chk.checked = (estado === 1));
+        const mensajeConf = estado === 1 ? '¿Permitir que TODOS los alumnos vean y entreguen esta actividad?' : '¿Ocultar esta actividad a TODOS los alumnos de la lista?';
+        if (!(await confirmar(mensajeConf, { titulo: 'Cambiar a todos', aceptar: 'Sí, a todos', peligro: estado !== 1 }))) return;
         fetch('procesos/docente_toggle_excepcion_masiva.php', {
             method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: `id_actividad=${id_actividad}&visible=${estado}&id_clase=${id_clase}`
-        }).then(r => r.json()).then(data => { if(!data.success) alert("Hubo un error procesando a todo el grupo."); });
+        }).then(r => r.json()).then(data => {
+            if (!data.success) { alert("Hubo un error procesando a todo el grupo."); return; }
+            document.querySelectorAll('#contenedorListaVisibilidad .exc-toggle').forEach(chk => chk.checked = (estado === 1));
+            document.querySelectorAll('#contenedorListaVisibilidad .exc-filtro').forEach(x => x.remove());
+            contarVisibles();
+        });
     }
 
     // =======================================================

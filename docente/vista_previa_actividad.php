@@ -71,9 +71,9 @@ if (!$requiere_entrega) {
             <div style="font-weight: 800; font-size: 0.95rem; margin-bottom: 10px;"><i class="fas fa-align-left"></i> Instrucciones del Docente:</div>
             <div class="instrucciones"><?php echo nl2br(htmlspecialchars($actividad['descripcion'])); ?></div>
             
-            <?php if (isset($actividad['archivo_adjunto']) && !empty($actividad['archivo_adjunto'])): ?>
+            <?php if (!empty($actividad['archivo_ruta'])): ?>
                 <div style="margin-bottom: 20px;">
-                    <a href="../<?php echo htmlspecialchars($actividad['archivo_adjunto']); ?>" target="_blank" style="display: inline-flex; align-items: center; gap: 10px; background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
+                    <a href="../uploads/materiales_clase/<?php echo htmlspecialchars(rawurlencode(basename($actividad['archivo_ruta']))); ?>" target="_blank" style="display: inline-flex; align-items: center; gap: 10px; background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
                         <i class="fas fa-file-download"></i> Material Adjunto
                     </a>
                 </div>
@@ -89,10 +89,10 @@ if (!$requiere_entrega) {
                 <?php endif; ?>
                 <i class="fas fa-cloud-upload-alt" style="font-size: 2.5rem; color: <?php echo $bloqueado ? '#cbd5e1' : 'var(--primary)'; ?>; margin-bottom: 10px;"></i>
                 <p style="margin: 0 0 5px 0; font-size: 0.8rem; font-weight: 700; color: var(--primary);">
-                  Límites: Hasta <?php echo $actividad['numero_archivos'] ?? 1; ?> archivo(s) de <?php echo $actividad['tamano_maximo'] ?? 10; ?>MB máx.
+                  <?php $n_arch = numero_archivos_valido($actividad['numero_archivos'] ?? 1); echo $n_arch > 1 ? "Hasta $n_arch archivos" : '1 archivo'; ?> · <?php echo htmlspecialchars(tipos_archivo_texto($actividad['tipo_archivo'] ?? '*')); ?> · máx. <?php echo tamano_archivo_valido($actividad['tamano_maximo'] ?? 10); ?> MB c/u
                   </p>
-                 <input type="file" 
-                 accept="<?php echo htmlspecialchars($actividad['tipo_archivo'] ?? '*'); ?>" 
+                 <input type="file" <?php echo numero_archivos_valido($actividad['numero_archivos'] ?? 1) > 1 ? 'multiple' : ''; ?>
+                 accept="<?php echo htmlspecialchars(tipos_archivo_accept($actividad['tipo_archivo'] ?? '*')); ?>" 
                    disabled title="Bloqueado en Vista Previa" 
                        style="display: block; margin: 0 auto 15px auto; border: 1px solid #cbd5e1; padding: 8px; border-radius: 8px; background: white; cursor: not-allowed; opacity: 0.8; font-size: 0.85rem;"> 
                 <!-- BOTÓN ACTUALIZADO PARA LLAMAR AL NUEVO MODAL EN LUGAR DE alert() -->

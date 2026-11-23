@@ -55,32 +55,47 @@ try {
         exit();
     }
 
-    // 3. Obtener Actividades y Permisos Individuales
+    // 3. Actividades que este alumno puede ver: publicadas, ya abiertas (fecha de apertura cumplida),
+    //    y sin bloqueo individual ni del filtro de asistencia
+    asegurar_columnas_actividades($pdo);
     $stmt_act = $pdo->prepare("
-        SELECT ac.*, 
-               COALESCE(va.visible, 1) as permiso_individual, 
-               va.fecha_limite_excepcion
+        SELECT ac.*, va.fecha_limite_excepcion
         FROM actividades_clase ac
         LEFT JOIN visibilidad_actividad va ON ac.id_actividad = va.id_actividad AND va.id_alumno = ?
-        WHERE ac.id_clase = ? AND ac.visible = 1 AND (ac.fecha_apertura IS NULL OR ac.fecha_apertura <= NOW())
-        ORDER BY ac.fecha_publicacion DESC
+        WHERE ac.id_clase = ? AND ac.visible = 1 AND (ac.fecha_apertura IS NULL OR ac.fecha_apertura <= ?)
+          AND " . sql_actividad_visible((int)$id_alumno) . "
+        ORDER BY COALESCE(ac.fecha_apertura, ac.fecha_publicacion) DESC
     ");
-    $stmt_act->execute([$id_alumno, $id_clase]);
-    
-    $actividades = [];
-    while ($row = $stmt_act->fetch(PDO::FETCH_ASSOC)) {
-        if ($row['permiso_individual'] == 1) {
-            $actividades[] = $row;
-        }
-    }
+    $stmt_act->execute([$id_alumno, $id_clase, date('Y-m-d H:i:s')]);
+    $actividades = $stmt_act->fetchAll(PDO::FETCH_ASSOC);
 
-    // 4. Obtener Entregas
-    $stmt_entregas = $pdo->prepare("SELECT id_actividad, fecha_entrega, estatus_entrega, archivo_ruta, retroalimentacion FROM entregas_actividad WHERE id_alumno = ?");
+    // 4. Obtener Entregas (con la calificación y los comentarios del docente)
+    $stmt_entregas = $pdo->prepare("SELECT id_entrega, id_actividad, fecha_entrega, estatus_entrega, archivo_ruta, retroalimentacion, calificacion, revisada, fecha_revision FROM entregas_actividad WHERE id_alumno = ?");
     $stmt_entregas->execute([$id_alumno]);
+    $filas_entregas = $stmt_entregas->fetchAll(PDO::FETCH_ASSOC);
+    $archivos_entregas = archivos_de_entregas($pdo, $filas_entregas);   // una entrega puede tener varios archivos
     $mis_entregas = [];
-    while($row = $stmt_entregas->fetch(PDO::FETCH_ASSOC)) {
+    foreach ($filas_entregas as $row) {
+        $row['archivos'] = $archivos_entregas[(int)$row['id_entrega']] ?? [];
         $mis_entregas[$row['id_actividad']] = $row;
     }
+
+    /** Selector de archivos de una entrega: uno o varios, con las reglas de la actividad. */
+    function campo_archivos_entrega(array $act): void {
+        $n = numero_archivos_valido($act['numero_archivos'] ?? 1);
+        $mb = tamano_archivo_valido($act['tamano_maximo'] ?? 10);
+        $acc = tipos_archivo_accept($act['tipo_archivo'] ?? '*');
+        $lim = limites_servidor(); ?>
+        <div class="selector-archivos" data-max-n="<?php echo $n; ?>" data-max-mb="<?php echo $mb; ?>" data-total-mb="<?php echo $lim['total_mb']; ?>">
+            <label class="sel-boton">
+                <i class="fas fa-cloud-arrow-up"></i>
+                <span><?php echo $n > 1 ? "Elegir archivos (hasta $n)" : 'Elegir archivo'; ?></span>
+                <input type="file" name="archivo_tarea[]"<?php echo $n > 1 ? ' multiple' : ''; ?><?php if ($acc): ?> accept="<?php echo htmlspecialchars($acc); ?>"<?php endif; ?>>
+            </label>
+            <ul class="sel-lista"></ul>
+            <p class="sel-ayuda"><?php echo $n > 1 ? "Puedes subir hasta <b>$n archivos</b>" : 'Sube <b>1 archivo</b>'; ?> de máximo <b><?php echo $mb; ?> MB</b> cada uno<?php echo $n > 1 ? " (puedes elegirlos en varias veces)" : ''; ?>. Tipos: <?php echo htmlspecialchars(tipos_archivo_texto($act['tipo_archivo'] ?? '*')); ?>.</p>
+        </div>
+    <?php }
 
 } catch (PDOException $e) {
     header("Location: actividades_escolares.php?error=Error BD: " . urlencode($e->getMessage()));
@@ -120,7 +135,7 @@ $fecha_actual = new DateTime();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="style_dashboard_estud.css?v=<?php echo time(); ?>">
 
-    <link rel="stylesheet" href="css/aula_virtual.css?v=1">
+    <link rel="stylesheet" href="css/aula_virtual.css?v=3">
     <link rel="stylesheet" href="../css/responsive.css?v=5">
 </head>
 <body>
@@ -263,7 +278,11 @@ $fecha_actual = new DateTime();
                                     <p class="act-desc"><?php echo nl2br(htmlspecialchars($act['descripcion'])); ?></p>
                                     
                                     <div class="act-meta">
-                                        <span class="meta-tag"><i class="far fa-clock"></i> Publicado: <?php echo date('d M', strtotime($act['fecha_publicacion'])); ?></span>
+                                        <span class="meta-tag"><i class="far fa-clock"></i> Publicado: <?php echo date('d/m/Y', strtotime($act['fecha_apertura'] ?: $act['fecha_publicacion'])); ?></span>
+                                        <?php if ($es_tarea): ?>
+                                            <?php $n_arch = numero_archivos_valido($act['numero_archivos'] ?? 1); ?>
+                                            <span class="meta-tag"><i class="fas fa-paperclip"></i> <?php echo $n_arch > 1 ? "Hasta $n_arch archivos" : '1 archivo'; ?> · <?php echo htmlspecialchars(tipos_archivo_texto($act['tipo_archivo'] ?? '*')); ?> · máx. <?php echo tamano_archivo_valido($act['tamano_maximo'] ?? 10); ?> MB c/u</span>
+                                        <?php endif; ?>
                                         <?php if($tiene_limite): ?>
                                             <?php if(!empty($act['fecha_limite_excepcion'])): ?>
                                                  <span class="meta-tag tag-green"><i class="fas fa-calendar-check"></i> Extensión: <?php echo date('d M Y, h:i a', strtotime($fecha_a_usar)); ?></span>
@@ -298,26 +317,45 @@ $fecha_actual = new DateTime();
                                                         <span class="status-entregado status-verde" style="margin:0;"><i class="fas fa-check-double"></i> Entregada a Tiempo</span>
                                                     <?php endif; ?>
                                                     
-                                                    <?php if(!empty($info_entrega['archivo_ruta'])): 
-                                                        $archivo_entregado = basename($info_entrega['archivo_ruta']);
-                                                        $nombre_entrega_limpio = preg_replace('/^al_\d+_\d+_/', '', $archivo_entregado);
-                                                    ?>
-                                                        <a href="../uploads/entregas_alumnos/<?php echo htmlspecialchars($archivo_entregado); ?>" download="<?php echo htmlspecialchars($nombre_entrega_limpio); ?>" target="_blank" class="btn-action btn-outline" style="background: white;">
-                                                            <i class="fas fa-file-download"></i> Mi archivo: <?php echo htmlspecialchars($nombre_entrega_limpio); ?>
-                                                        </a>
-                                                    <?php endif; ?>
                                                 </div>
-
-                                                <?php if(!empty($info_entrega['retroalimentacion'])): ?>
-                                                    <div style="background: white; border-left: 4px solid #3b82f6; padding: 12px; border-radius: 6px; font-size: 0.85rem; color: #334155; box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin-bottom: 10px;">
-                                                        <strong style="display:block; margin-bottom: 4px; color: #0f172a;">
-                                                            <i class="fas fa-comment-dots" style="color: #3b82f6;"></i> Comentario del Profesor:
-                                                        </strong>
-                                                        <?php echo nl2br(htmlspecialchars($info_entrega['retroalimentacion'])); ?>
+                                                <?php if (!empty($info_entrega['archivos'])): ?>
+                                                    <div class="mis-archivos">
+                                                        <span class="mis-archivos-tit"><i class="fas fa-paperclip"></i> <?php echo count($info_entrega['archivos']) === 1 ? 'Mi archivo' : 'Mis archivos (' . count($info_entrega['archivos']) . ')'; ?></span>
+                                                        <?php foreach ($info_entrega['archivos'] as $arch): ?>
+                                                            <a href="../uploads/entregas_alumnos/<?php echo htmlspecialchars(rawurlencode($arch['ruta'])); ?>" download="<?php echo htmlspecialchars($arch['nombre']); ?>" target="_blank" class="archivo-chip">
+                                                                <i class="fas fa-file-arrow-down"></i> <span><?php echo htmlspecialchars($arch['nombre']); ?></span>
+                                                            </a>
+                                                        <?php endforeach; ?>
                                                     </div>
                                                 <?php endif; ?>
+                                                <div>
+                                                </div>
 
-                                                <?php if (!$vencida || $acepta_retardo): ?>
+                                                <?php $revisada_ent = (int)($info_entrega['revisada'] ?? 0) === 1; ?>
+                                                <?php if ($revisada_ent || $info_entrega['calificacion'] !== null || !empty($info_entrega['retroalimentacion'])): ?>
+                                                    <div class="eval-docente">
+                                                        <div class="eval-cab">
+                                                            <strong><i class="fas fa-clipboard-check"></i> Revisión del profesor</strong>
+                                                            <?php if ($info_entrega['calificacion'] !== null): ?>
+                                                                <span class="eval-calif <?php echo (float)$info_entrega['calificacion'] >= 6 ? 'ok' : 'baja'; ?>">Calificación: <b><?php echo calificacion_texto($info_entrega['calificacion']); ?></b> / 10</span>
+                                                            <?php elseif ($revisada_ent): ?>
+                                                                <span class="eval-calif ok">Revisada</span>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                        <?php if (!empty($info_entrega['retroalimentacion'])): ?>
+                                                            <p class="eval-coment"><i class="fas fa-comment-dots"></i> <?php echo nl2br(htmlspecialchars($info_entrega['retroalimentacion'])); ?></p>
+                                                        <?php endif; ?>
+                                                        <?php if (!empty($info_entrega['fecha_revision'])): ?>
+                                                            <small>Revisada el <?php echo date('d/m/Y, H:i', strtotime($info_entrega['fecha_revision'])); ?></small>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <div class="eval-espera"><i class="fas fa-hourglass-half"></i> Tu profesor aún no revisa esta entrega.</div>
+                                                <?php endif; ?>
+
+                                                <?php if ($revisada_ent): ?>
+                                                     <div class="eval-bloqueo"><i class="fas fa-lock"></i> Tu profesor ya revisó esta entrega, por eso ya no puedes cambiarla ni quitarla. Si necesitas corregir algo, habla con tu docente.</div>
+                                                <?php elseif (!$vencida || $acepta_retardo): ?>
                                                     <div id="acciones-entrega-<?php echo $act['id_actividad']; ?>" style="margin-top: 15px; border-top: 1px dashed #cbd5e1; padding-top: 15px; display: flex; gap: 10px;">
                                                         <button type="button" class="btn-action btn-outline" onclick="document.getElementById('form-editar-<?php echo $act['id_actividad']; ?>').style.display = 'block'; document.getElementById('acciones-entrega-<?php echo $act['id_actividad']; ?>').style.display = 'none';">
                                                             <i class="fas fa-edit"></i> Editar envío
@@ -333,8 +371,8 @@ $fecha_actual = new DateTime();
                                                     </div>
 
                                                     <div id="form-editar-<?php echo $act['id_actividad']; ?>" style="display: none; margin-top: 10px; background: white; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1;">
-                                                        <p style="font-size: 0.85rem; color: #64748b; margin: 0 0 10px 0;"><i class="fas fa-info-circle"></i> Sube un nuevo archivo. El envío anterior será reemplazado.</p>
-                                                        <form action="procesos/editar_entrega.php" method="POST" enctype="multipart/form-data">
+                                                        <p style="font-size: 0.85rem; color: #64748b; margin: 0 0 10px 0;"><i class="fas fa-info-circle"></i> Sube de nuevo tu entrega. Los archivos que elijas reemplazan a <b>todos</b> los que enviaste antes.</p>
+                                                        <form action="procesos/editar_entrega.php?id_clase=<?php echo (int)$id_clase; ?>" method="POST" enctype="multipart/form-data">
                                                             <input type="hidden" name="id_actividad" value="<?php echo $act['id_actividad']; ?>">
                                                             <input type="hidden" name="id_clase" value="<?php echo $id_clase; ?>">
                                                             
@@ -342,8 +380,8 @@ $fecha_actual = new DateTime();
                                                                 <div style="color: #dc2626; font-size: 0.8rem; font-weight: 700; margin-bottom: 10px;"><i class="fas fa-info-circle"></i> Nota: Esta tarea está vencida. La nueva edición se registrará como "Entrega con retardo".</div>
                                                             <?php endif; ?>
                                                             
-                                                            <div style="display:flex; gap:10px; align-items: center; flex-wrap:wrap;">
-                                                                <input type="file" name="archivo_tarea" required style="border: 1px solid #cbd5e1; padding: 6px; border-radius: 6px; background: white; font-size: 0.85rem; flex: 1; min-width: 200px;">
+                                                            <div class="fila-entrega">
+                                                                <?php campo_archivos_entrega($act); ?>
                                                                 <button type="submit" class="btn-action btn-primary" style="padding: 8px 16px;">Guardar cambios</button>
                                                                 <button type="button" class="btn-action btn-outline" onclick="document.getElementById('form-editar-<?php echo $act['id_actividad']; ?>').style.display = 'none'; document.getElementById('acciones-entrega-<?php echo $act['id_actividad']; ?>').style.display = 'flex';">Cancelar</button>
                                                             </div>
@@ -361,7 +399,7 @@ $fecha_actual = new DateTime();
                                                         <i class="fas fa-lock"></i> La fecha límite ha pasado y esta tarea no acepta entregas con retardo.
                                                     </div>
                                                 <?php else: ?>
-                                                    <form action="procesos/subir_tarea_clase.php" method="POST" enctype="multipart/form-data">
+                                                    <form action="procesos/subir_tarea_clase.php?id_clase=<?php echo (int)$id_clase; ?>" method="POST" enctype="multipart/form-data">
                                                         <input type="hidden" name="id_actividad" value="<?php echo $act['id_actividad']; ?>">
                                                         <input type="hidden" name="id_clase" value="<?php echo $id_clase; ?>">
                                                         
@@ -369,8 +407,8 @@ $fecha_actual = new DateTime();
                                                             <div style="color: #dc2626; font-size: 0.8rem; font-weight: 700; margin-bottom: 10px;"><i class="fas fa-info-circle"></i> Nota: Esta tarea está vencida. Se registrará como "Entrega con retardo".</div>
                                                         <?php endif; ?>
 
-                                                        <div style="display:flex; gap:10px; align-items: center; flex-wrap:wrap;">
-                                                            <input type="file" name="archivo_tarea" required style="border: 1px solid #cbd5e1; padding: 6px; border-radius: 6px; background: white; font-size: 0.85rem; flex: 1; min-width: 200px;">
+                                                        <div class="fila-entrega">
+                                                            <?php campo_archivos_entrega($act); ?>
                                                             <button type="submit" class="btn-action btn-primary" style="padding: 8px 16px;">Confirmar Envío</button>
                                                         </div>
                                                     </form>
@@ -487,6 +525,71 @@ $fecha_actual = new DateTime();
             }
             actualizarHora(); setInterval(actualizarHora, 60000);
         });
+    </script>
+    <script>
+        // Selector de archivos: acumula, muestra la lista y revisa cantidad, tipo y peso antes de enviar
+        (function () {
+            const puedeAcumular = (() => { try { return !!new DataTransfer(); } catch (e) { return false; } })();
+            const mbTxt = b => b < 1048576 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
+            document.querySelectorAll('.selector-archivos').forEach(box => {
+                const input = box.querySelector('input[type="file"]');
+                const lista = box.querySelector('.sel-lista');
+                const maxN = +box.dataset.maxN, maxMb = +box.dataset.maxMb, totalMb = +box.dataset.totalMb;
+                const acc = (input.getAttribute('accept') || '').split(',').filter(Boolean);
+                let elegidos = [];
+                const problema = f => {
+                    const ext = '.' + (f.name.split('.').pop() || '').toLowerCase();
+                    if (acc.length && !acc.includes(ext)) return 'Tipo no permitido (' + ext + ')';
+                    if (f.size > maxMb * 1048576) return 'Pesa más de ' + maxMb + ' MB';
+                    return '';
+                };
+                const pintar = () => {
+                    lista.innerHTML = '';
+                    elegidos.forEach((f, i) => {
+                        const li = document.createElement('li');
+                        const err = problema(f);
+                        if (err) li.className = 'con-error';
+                        li.innerHTML = '<i class="fas ' + (err ? 'fa-circle-exclamation' : 'fa-file') + '"></i><span class="sel-nombre"></span><small></small>';
+                        li.querySelector('.sel-nombre').textContent = f.name;
+                        li.querySelector('small').textContent = err || mbTxt(f.size);
+                        if (puedeAcumular) {
+                            const x = document.createElement('button');
+                            x.type = 'button'; x.className = 'sel-quitar'; x.title = 'Quitar'; x.innerHTML = '<i class="fas fa-xmark"></i>';
+                            x.onclick = () => { elegidos.splice(i, 1); sincronizar(); };
+                            li.appendChild(x);
+                        }
+                        lista.appendChild(li);
+                    });
+                    box.querySelector('.sel-boton span').textContent = elegidos.length
+                        ? (maxN > 1 ? 'Agregar más (' + elegidos.length + ' de ' + maxN + ')' : 'Cambiar archivo')
+                        : (maxN > 1 ? 'Elegir archivos (hasta ' + maxN + ')' : 'Elegir archivo');
+                };
+                const sincronizar = () => {
+                    if (puedeAcumular) { const dt = new DataTransfer(); elegidos.forEach(f => dt.items.add(f)); input.files = dt.files; }
+                    pintar();
+                };
+                input.addEventListener('change', () => {
+                    const nuevos = [...input.files];
+                    if (puedeAcumular && maxN > 1) {
+                        nuevos.forEach(f => { if (!elegidos.some(e => e.name === f.name && e.size === f.size)) elegidos.push(f); });
+                        if (elegidos.length > maxN) { alert('Esta actividad acepta máximo ' + maxN + ' archivos. Se quedaron los primeros ' + maxN + '.'); elegidos = elegidos.slice(0, maxN); }
+                    } else {
+                        elegidos = nuevos;
+                    }
+                    sincronizar();
+                });
+                box.closest('form').addEventListener('submit', e => {
+                    let msg = '';
+                    if (!elegidos.length) msg = 'Elige al menos un archivo.';
+                    else if (elegidos.length > maxN) msg = 'Esta actividad acepta máximo ' + maxN + ' archivos.';
+                    else if (elegidos.some(problema)) msg = 'Hay archivos marcados en rojo que no se pueden enviar. Quítalos o cámbialos.';
+                    else if (elegidos.reduce((t, f) => t + f.size, 0) > totalMb * 1048576) msg = 'Entre todos tus archivos pesan más de ' + totalMb + ' MB, lo máximo que acepta el servidor en un envío.';
+                    if (msg) { e.preventDefault(); alert(msg); return; }
+                    const btn = box.closest('form').querySelector('button[type="submit"]');
+                    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...'; }
+                });
+            });
+        })();
     </script>
     <script src="../js/responsive.js?v=10"></script>
 </body>

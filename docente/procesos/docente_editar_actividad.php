@@ -22,10 +22,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $permite_entregas = isset($_POST['permite_entregas']) ? 1 : 0;
     $acepta_retardo = isset($_POST['acepta_retardo']) ? 1 : 0;
 
-    // --- NUEVAS VARIABLES DE LÍMITES DE ARCHIVOS ---
-    $tamano = isset($_POST['tamano_maximo']) ? (int)$_POST['tamano_maximo'] : 10;
-    $archivos = isset($_POST['numero_archivos']) ? (int)$_POST['numero_archivos'] : 1;
-    $tipo = isset($_POST['tipo_archivo']) ? $_POST['tipo_archivo'] : '*';
+    $tamano = tamano_archivo_valido($_POST['tamano_maximo'] ?? 10);
+    $archivos = numero_archivos_valido($_POST['numero_archivos'] ?? 1);
+    $tipo = tipos_archivo_desde_post($_POST);
+    $solo_asistentes = isset($_POST['solo_asistentes']) ? 1 : 0;
+
+    $volver_error = function (string $msg) use ($id_clase) {
+        header("Location: ../gestionar_aula.php?id_clase=$id_clase&error=" . urlencode($msg));
+        exit();
+    };
+    if ($titulo === '') $volver_error('El título es obligatorio.');
+    $ts_apertura = $fecha_apertura ? strtotime($fecha_apertura) : null;
+    $ts_limite = $fecha_limite ? strtotime($fecha_limite) : null;
+    if (($fecha_apertura && !$ts_apertura) || ($fecha_limite && !$ts_limite)) $volver_error('Revisa las fechas: alguna no es válida.');
+    if ($ts_apertura && $ts_limite && $ts_limite <= $ts_apertura) $volver_error('La fecha límite debe ser después de la fecha de apertura.');
+    $fecha_apertura = $ts_apertura ? date('Y-m-d H:i:s', $ts_apertura) : null;
+    $fecha_limite = $ts_limite ? date('Y-m-d H:i:s', $ts_limite) : null;
+
+    asegurar_columnas_actividades($pdo);
+    // Fecha del pase de lista que revisa el filtro: si ya estaba activo se conserva, salvo que cambie la apertura
+    $previa = $pdo->prepare("SELECT solo_asistentes, fecha_filtro, fecha_apertura, archivo_ruta FROM actividades_clase WHERE id_actividad = ?");
+    $previa->execute([$id_actividad]);
+    $previa = $previa->fetch(PDO::FETCH_ASSOC) ?: [];
+    if (!$solo_asistentes) $fecha_filtro = null;
+    elseif (!empty($previa['solo_asistentes']) && !empty($previa['fecha_filtro']) && ($previa['fecha_apertura'] ?? null) == $fecha_apertura) $fecha_filtro = $previa['fecha_filtro'];
+    else $fecha_filtro = date('Y-m-d', $ts_apertura ?: time());
 
     $ruta_bd = null;
 
@@ -33,9 +54,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Validación y subida de archivo (Se queda igual)
         if (isset($_FILES['archivo']) && $_FILES['archivo']['error'] === UPLOAD_ERR_OK) {
             $archivo_prof = $_FILES['archivo'];
+            if ($archivo_prof['size'] > 10485760) $volver_error('El archivo adjunto pesa más de 10 MB.');
             
             // Ruta centralizada para materiales de clase
-            $carpeta_destino = '../../uploads/materiales/';
+            $carpeta_destino = '../../uploads/materiales_clase/';   // la misma carpeta que usa el alumno para descargar
             if (!is_dir($carpeta_destino)) {
                 mkdir($carpeta_destino, 0777, true);
             }
@@ -58,21 +80,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Construir la consulta UPDATE (Ahora con tamano_maximo, numero_archivos, tipo_archivo)
-        if ($ruta_bd) {
-            // Ejemplo si subió archivo nuevo
-            $stmt = $pdo->prepare("UPDATE actividades_clase SET titulo = ?, descripcion = ?, fecha_limite = ?, fecha_apertura = ?, permite_entregas = ?, acepta_retardo = ?, archivo_ruta = ?, tamano_maximo = ?, numero_archivos = ?, tipo_archivo = ? WHERE id_actividad = ? AND id_clase = ?");
-            $stmt->execute([$titulo, $descripcion, $fecha_limite, $fecha_apertura, $permite_entregas, $acepta_retardo, $ruta_bd, $tamano, $archivos, $tipo, $id_actividad, $id_clase]);
-        } else {
-            // Ejemplo si no subió archivo nuevo
-            $stmt = $pdo->prepare("UPDATE actividades_clase SET titulo = ?, descripcion = ?, fecha_limite = ?, fecha_apertura = ?, permite_entregas = ?, acepta_retardo = ?, tamano_maximo = ?, numero_archivos = ?, tipo_archivo = ? WHERE id_actividad = ? AND id_clase = ?");
-            $stmt->execute([$titulo, $descripcion, $fecha_limite, $fecha_apertura, $permite_entregas, $acepta_retardo, $tamano, $archivos, $tipo, $id_actividad, $id_clase]);
+        $campos = "titulo = ?, descripcion = ?, fecha_limite = ?, fecha_apertura = ?, permite_entregas = ?, acepta_retardo = ?, tamano_maximo = ?, numero_archivos = ?, tipo_archivo = ?, solo_asistentes = ?, fecha_filtro = ?";
+        $valores = [$titulo, $descripcion, $fecha_limite, $fecha_apertura, $permite_entregas, $acepta_retardo, $tamano, $archivos, $tipo, $solo_asistentes, $fecha_filtro];
+        if ($ruta_bd) { $campos .= ", archivo_ruta = ?"; $valores[] = $ruta_bd; }
+        $valores[] = $id_actividad; $valores[] = $id_clase;
+        $pdo->prepare("UPDATE actividades_clase SET $campos WHERE id_actividad = ? AND id_clase = ?")->execute($valores);
+        // El material anterior se borra del servidor al reemplazarlo
+        if ($ruta_bd && !empty($previa['archivo_ruta'])) {
+            foreach (['materiales_clase', 'materiales'] as $dir) {
+                $viejo = __DIR__ . '/../../uploads/' . $dir . '/' . basename($previa['archivo_ruta']);
+                if (is_file($viejo)) @unlink($viejo);
+            }
         }
-        
+
         header("Location: ../gestionar_aula.php?id_clase=$id_clase&exito=" . urlencode("Actividad actualizada correctamente."));
         exit();
     } catch (PDOException $e) {
-        header("Location: ../gestionar_aula.php?id_clase=$id_clase&error=" . urlencode("Error al actualizar la actividad: " . $e->getMessage()));
+        error_log('docente_editar_actividad: ' . $e->getMessage());
+        header("Location: ../gestionar_aula.php?id_clase=$id_clase&error=" . urlencode("No se pudo actualizar la actividad."));
         exit();
     }
 }

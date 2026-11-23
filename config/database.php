@@ -4,6 +4,7 @@ date_default_timezone_set('America/Mexico_City');
 require_once __DIR__ . '/../includes/seguridad.php';
 require_once __DIR__ . '/../includes/fotos.php';
 require_once __DIR__ . '/../includes/bitacora.php';
+require_once __DIR__ . '/../includes/actividades.php';
 // config/database.php
 
 $host     = '127.0.0.1';

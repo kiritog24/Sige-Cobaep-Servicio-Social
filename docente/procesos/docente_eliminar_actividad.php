@@ -24,15 +24,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $actividad = $stmt_check->fetch(PDO::FETCH_ASSOC);
 
         if ($actividad) {
+            // Archivos en el servidor: el material del docente y lo que entregaron los alumnos
+            $borrar = [];
             if (!empty($actividad['archivo_ruta'])) {
-                $ruta_archivo = '../../../' . $actividad['archivo_ruta'];
-                if (file_exists($ruta_archivo) && is_file($ruta_archivo)) {
-                    unlink($ruta_archivo);
-                }
+                foreach (['materiales_clase', 'materiales'] as $dir) $borrar[] = __DIR__ . '/../../uploads/' . $dir . '/' . basename($actividad['archivo_ruta']);
             }
+            asegurar_columnas_actividades($pdo);
+            $st = $pdo->prepare("SELECT id_entrega FROM entregas_actividad WHERE id_actividad = ?");
+            $st->execute([$id_actividad]);
+            $borrar = array_merge($borrar, rutas_archivos_entrega($pdo, $st->fetchAll(PDO::FETCH_COLUMN)));
 
+            $pdo->prepare("DELETE FROM visibilidad_actividad WHERE id_actividad = ?")->execute([$id_actividad]);
             $stmt_delete = $pdo->prepare("DELETE FROM actividades_clase WHERE id_actividad = ?");
-            $stmt_delete->execute([$id_actividad]);
+            $stmt_delete->execute([$id_actividad]);   // las entregas se borran en cascada
+            foreach ($borrar as $f) if (is_file($f)) @unlink($f);
 
             header("Location: ../gestionar_aula.php?id_clase=" . $id_clase . "&exito=Actividad eliminada.");
             exit();
