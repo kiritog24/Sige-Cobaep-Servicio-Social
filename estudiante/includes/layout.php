@@ -43,6 +43,7 @@ function estudiante_layout_inicio(string $titulo, string $subtitulo, string $act
             ['avisos.php', 'far fa-bell', 'Avisos'],
             ['documentos.php', 'far fa-file-alt', 'Documentos'],
             ['reglamentos.php', 'far fa-clipboard', 'Reglamentos'],
+            ['../informacion.html', 'fas fa-circle-info', 'Privacidad y reglas'],
         ],
     ];
     ?>

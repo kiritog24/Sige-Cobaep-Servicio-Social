@@ -6,84 +6,69 @@
     <link rel="icon" type="image/png" sizes="192x192" href="img/icono-192.png">
     <link rel="apple-touch-icon" href="img/icono-180.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Información legal · SIGE COBAEP Plantel 27</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root{--verde:#063f2b;--verde2:#16a05d;--tinta:#10231a;--gris:#5b6b64;--borde:#e3ebe7;}
-        *{box-sizing:border-box;}
-        body{margin:0;font-family:Inter,system-ui,sans-serif;background:#f5f8f6;color:var(--tinta);line-height:1.65;}
-        header{background:var(--verde);color:#fff;padding:22px 16px;}
-        header .wrap{display:flex;align-items:center;gap:14px;}
-        header img{height:44px;}
-        header a{color:#cfe9db;text-decoration:none;font-weight:600;margin-left:auto;white-space:nowrap;}
-        .wrap{max-width:860px;margin:0 auto;}
-        nav.indice{display:flex;flex-wrap:wrap;gap:8px;margin:24px 0 8px;}
-        nav.indice a{background:#fff;border:1px solid var(--borde);border-radius:999px;padding:6px 14px;color:var(--verde);text-decoration:none;font-size:.88rem;font-weight:600;}
-        main{padding:0 16px 40px;}
-        section{background:#fff;border:1px solid var(--borde);border-radius:16px;padding:24px;margin-top:20px;scroll-margin-top:16px;}
-        h1{font-size:1.25rem;margin:0;}
-        h2{font-size:1.1rem;margin:0 0 10px;display:flex;align-items:center;gap:10px;}
-        h2 i{color:var(--verde2);}
-        p,li{color:var(--gris);font-size:.95rem;}
-        footer{text-align:center;color:var(--gris);font-size:.85rem;padding:20px 16px 30px;}
-    </style>
-    <link rel="stylesheet" href="css/responsive.css?v=3">
+    <meta name="theme-color" content="#063f2b">
+    <title>Información · SIGE COBAEP Plantel 27</title>
+    <script>
+        // Enlaces anteriores (informacion.html#privacidad, etc.) llevan a la página nueva de cada apartado
+        (function () {
+            function ir() {
+                var destino = { '#privacidad': 'privacidad', '#terminos': 'terminos', '#accesibilidad': 'accesibilidad', '#uso-responsable': 'uso-responsable' }[location.hash];
+                if (destino) location.replace('informacion/' + destino + '.html');
+            }
+            ir();
+            window.addEventListener('hashchange', ir);
+        })();
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="css/informacion.css?v=2">
 </head>
 <body>
-    <header>
+    <header class="info-top">
         <div class="wrap">
             <img src="img/logo-blanco.png" alt="COBAEP Plantel 27">
-            <h1>Información de la plataforma SIGE</h1>
-            <a href="index.html"><i class="fas fa-arrow-left"></i> Volver</a>
+            <h1>Información de la plataforma <small>SIGE · COBAEP Plantel 27</small></h1>
+            <a class="volver" href="index.html"><i class="fas fa-arrow-left"></i> Inicio</a>
         </div>
     </header>
+
     <main class="wrap">
-        <nav class="indice">
-            <a href="#privacidad">Aviso de privacidad</a>
-            <a href="#terminos">Términos de uso</a>
-            <a href="#accesibilidad">Accesibilidad</a>
-            <a href="#uso-responsable">Uso responsable</a>
-        </nav>
+        <div class="info-intro">
+            <h2><i class="fas fa-circle-info"></i> Antes de usar SIGE, lee esto</h2>
+            <p>Aquí están las reglas y los avisos de la plataforma, cada uno en su propia página. Están escritos para alumnos, familias y personal. Léelos con calma: explican qué datos tuyos se guardan, qué está permitido y qué consecuencias tiene usar mal el sistema.</p>
+        </div>
 
-        <section id="privacidad">
-            <h2><i class="fas fa-user-shield"></i> Aviso de privacidad</h2>
-            <p>El Colegio de Bachilleres del Estado de Puebla, Plantel 27, utiliza el Sistema Integral de Gestión Educativa (SIGE) para administrar la información escolar de su comunidad.</p>
-            <ul>
-                <li><strong>Datos que se registran:</strong> nombre, matrícula, grupo, turno, datos de contacto, datos del tutor, asistencia, actividades entregadas y reportes de conducta.</li>
-                <li><strong>Para qué se usan:</strong> control de asistencia, seguimiento académico y disciplinario, comunicación con alumnos y tutores, y trámites escolares.</li>
-                <li><strong>Quién tiene acceso:</strong> solo el personal autorizado del plantel (administración, docentes y prefectura), según su función.</li>
-                <li><strong>Tus derechos:</strong> puedes solicitar en Control Escolar la consulta, corrección o actualización de tus datos personales.</li>
-            </ul>
-        </section>
+        <div class="tarjetas">
+            <a class="tarjeta" href="informacion/privacidad.html">
+                <i class="fas fa-user-shield"></i>
+                <strong>Aviso de privacidad</strong>
+                <span>Qué datos tuyos se guardan, para qué se usan, quién los puede ver y cómo pedir que corrijan algo.</span>
+                <em>Leer apartado →</em>
+            </a>
+            <a class="tarjeta" href="informacion/terminos.html">
+                <i class="fas fa-file-contract"></i>
+                <strong>Términos de uso</strong>
+                <span>Las reglas para tener una cuenta: tu contraseña, lo que sí y lo que no se puede hacer, y los archivos que subes.</span>
+                <em>Leer apartado →</em>
+            </a>
+            <a class="tarjeta" href="informacion/uso-responsable.html">
+                <i class="fas fa-scale-balanced"></i>
+                <strong>Uso responsable</strong>
+                <span>Qué pasa, caso por caso, si alteras información, prestas tu cuenta o haces mal uso del sistema.</span>
+                <em>Leer apartado →</em>
+            </a>
+            <a class="tarjeta" href="informacion/accesibilidad.html">
+                <i class="fas fa-universal-access"></i>
+                <strong>Accesibilidad</strong>
+                <span>Cómo usar el sistema en tu celular o computadora, agrandar la letra y pedir apoyo si algo se te complica.</span>
+                <em>Leer apartado →</em>
+            </a>
+        </div>
 
-        <section id="terminos">
-            <h2><i class="fas fa-file-contract"></i> Términos de uso</h2>
-            <ul>
-                <li>El acceso es personal. Tu número de control y contraseña no deben compartirse.</li>
-                <li>La plataforma es de uso exclusivamente académico e institucional.</li>
-                <li>Los archivos que subas deben ser de tu autoría o contar con permiso para compartirlos.</li>
-                <li>El plantel puede suspender el acceso a quien haga mal uso del sistema, conforme al reglamento escolar.</li>
-            </ul>
-        </section>
-
-        <section id="accesibilidad">
-            <h2><i class="fas fa-universal-access"></i> Accesibilidad</h2>
-            <p>SIGE está diseñado para funcionar en computadoras, tabletas y teléfonos celulares, con textos legibles, buen contraste y navegación con teclado.</p>
-            <p>Si encuentras alguna barrera para usar la plataforma, repórtala a <a href="mailto:contacto@cobaep27.edu.mx?subject=Accesibilidad%20SIGE">contacto@cobaep27.edu.mx</a> para atenderla.</p>
-        </section>
-
-        <section id="uso-responsable">
-            <h2><i class="fas fa-handshake"></i> Uso responsable</h2>
-            <ul>
-                <li>Cierra tu sesión al terminar, sobre todo en equipos compartidos.</li>
-                <li>Mantén actualizados tus datos de contacto desde tu perfil.</li>
-                <li>Respeta a tus compañeros y docentes en los comentarios y entregas.</li>
-                <li>Si olvidas tu contraseña, acude a Control Escolar para restablecerla.</li>
-            </ul>
-        </section>
+        <div class="aviso ambar" style="margin-top:18px;">
+            <p><i class="fas fa-circle-exclamation"></i> Todo lo que haces en SIGE queda registrado con tu usuario, la fecha, la hora y el equipo que usaste. Si tienes dudas sobre algo de estas páginas, pregunta en Control Escolar o escribe a <a href="mailto:contacto@cobaep27.edu.mx?subject=Dudas%20SIGE">contacto@cobaep27.edu.mx</a>.</p>
+        </div>
     </main>
-    <footer>&copy; 2026 COBAEP Plantel 27 · Zaragoza, Puebla</footer>
-    <script src="js/responsive.js?v=3"></script>
+    <footer><p>&copy; 2026 COBAEP Plantel 27 · Zaragoza, Puebla</p></footer>
 </body>
 </html>

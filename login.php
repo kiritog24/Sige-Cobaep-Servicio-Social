@@ -155,6 +155,7 @@ if ($rol_esperado == 'admin') {
             </div>
 
             <footer class="bottom-footer">
+                <p class="login-legal" style="font-size:13px; text-align:center; color:#64748b; margin:0 0 10px; line-height:1.5;">Al iniciar sesión aceptas los <a href="informacion/terminos.html">Términos de uso</a> y el <a href="informacion/privacidad.html">Aviso de privacidad</a>. Antes de usar el sistema, lee también <a href="informacion/uso-responsable.html">Uso responsable</a>.</p>
                 <p style="font-size: 15px; text-align: center"  >&copy; <?php echo date('Y'); ?> COBAEP Plantel 27. Todos los derechos reservados.</p>
                 <div class="footer-divider-sm"></div>
                 <a href="http://www.cobaep.edu.mx/plantel-27/" target="_blank" rel="noopener noreferrer">
