@@ -596,6 +596,6 @@ $fecha_actual = new DateTime();
             });
         })();
     </script>
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/responsive.js?v=11"></script>
 </body>
 </html>

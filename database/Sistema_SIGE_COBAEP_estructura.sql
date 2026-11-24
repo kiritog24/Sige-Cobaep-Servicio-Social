@@ -402,6 +402,23 @@ CREATE TABLE IF NOT EXISTS `avisos_guardados` (
   UNIQUE KEY `uq_alumno_clave` (`id_alumno`,`clave`),
   KEY `idx_alumno_oculto` (`id_alumno`,`oculto`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `reportes_sugeridos` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id_alumno` int(11) NOT NULL,
+  `tipo` enum('retardo','falta') NOT NULL,
+  `mes` char(7) NOT NULL,
+  `bloque` smallint(6) NOT NULL,
+  `accion` enum('reporte','descartado') NOT NULL,
+  `id_reporte` int(11) DEFAULT NULL,
+  `fechas` varchar(255) DEFAULT NULL,
+  `motivo` varchar(255) DEFAULT NULL,
+  `id_prefecto` int(11) DEFAULT NULL,
+  `fecha` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_bloque` (`id_alumno`,`tipo`,`mes`,`bloque`),
+  KEY `idx_mes` (`mes`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;

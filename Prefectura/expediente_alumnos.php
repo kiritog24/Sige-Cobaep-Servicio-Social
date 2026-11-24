@@ -62,7 +62,7 @@ if (!empty($matricula_buscada)) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="../admin/style_dashboard_admin.css">
     <link rel="stylesheet" href="../admin/style_sidebar.css">
-    <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css">
+    <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css?v=3">
     <link rel="stylesheet" href="../Prefectura/style_creacion_reportes.css">
     <link rel="stylesheet" href="css/expediente_alumnos.css?v=1">
     <link rel="stylesheet" href="../css/responsive.css?v=6">
@@ -350,6 +350,6 @@ if (!empty($matricula_buscada)) {
             document.getElementById('modalEliminarReporte').style.display = 'none';
         }
     </script>
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/responsive.js?v=11"></script>
 </body>
 </html>

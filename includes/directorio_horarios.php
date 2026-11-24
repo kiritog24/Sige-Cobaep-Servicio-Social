@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/calendario.php';
 /**
  * includes/directorio_horarios.php
  * "Horarios del Plantel": directorio compartido por los 4 perfiles para consultar
@@ -103,7 +104,7 @@ function dh_render(array $datos, array $ctx = []): void {
     $mi_grupo = (int)($ctx['mi_grupo'] ?? 0);
     $mi_maestro = (int)($ctx['mi_maestro'] ?? 0);
     ?>
-<link rel="stylesheet" href="../css/directorio_horarios.css?v=1">
+<link rel="stylesheet" href="../css/directorio_horarios.css?v=3">
 
 <div class="dh" id="dh">
     <div class="dh-resumen">
@@ -185,15 +186,17 @@ function dh_render(array $datos, array $ctx = []): void {
             <?php else: ?>
                 <div class="dh-turnos">
                     <?php foreach ($turnos as $t): ?>
+                        <?php $tr = tramos_entrada_turno($t); ?>
                         <div class="dh-turno">
-                            <h4><i class="far fa-sun"></i> Turno <?php echo $h($t['turno']); ?></h4>
+                            <h4><i class="far fa-sun"></i> Turno <?php echo $h($t['turno']); ?> <small class="dh-tol"><?php echo $tr['tolerancia_min']; ?> min de tolerancia</small></h4>
                             <div class="dh-fila"><span>Hora de entrada</span><strong><?php echo date('h:i a', strtotime($t['hora_entrada'])); ?></strong></div>
-                            <div class="dh-fila"><span>Tolerancia hasta</span><strong><?php echo date('h:i a', strtotime($t['fin_tolerancia'])); ?></strong></div>
-                            <div class="dh-fila"><span>Después cuenta como falta</span><strong><?php echo date('h:i a', strtotime($t['hora_corte'])); ?></strong></div>
+                            <div class="dh-tramo t-puntual"><span><i class="fas fa-circle-check"></i> Puntual</span><strong><?php echo $tr['puntual']; ?></strong></div>
+                            <div class="dh-tramo t-retardo"><span><i class="fas fa-clock"></i> Retardo</span><strong><?php echo $tr['retardo']; ?></strong></div>
+                            <div class="dh-tramo t-falta"><span><i class="fas fa-circle-xmark"></i> Falta</span><strong>desde <?php echo $tr['falta']; ?></strong></div>
                         </div>
                     <?php endforeach; ?>
                 </div>
-                <p class="dh-nota"><i class="fas fa-circle-info"></i> Al escanear tu credencial en la entrada: antes de la tolerancia es <b>Puntual</b>, después es <b>Retardo</b> y pasada la hora de corte se registra <b>Falta</b>.</p>
+                <p class="dh-nota"><i class="fas fa-circle-info"></i> Al escanear la credencial en la entrada: dentro de la tolerancia es <b>Puntual</b>; después de la tolerancia es <b>Retardo</b>, y pasada la hora de corte se registra <b>Falta</b>.</p>
             <?php endif; ?>
         </div>
     </div>

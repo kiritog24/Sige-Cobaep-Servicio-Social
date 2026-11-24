@@ -121,6 +121,38 @@ function aviso_tutor_conducta(PDO $pdo, int $id_reporte): string {
     }
 }
 
+/** Aviso de que se anularon reportes de conducta porque Prefectura justificó el retardo o la falta. */
+function aviso_tutor_reporte_anulado(PDO $pdo, int $id_alumno, string $tipo, string $fecha, array $reportes, int $puntos): string {
+    try {
+        if (!$reportes) return 'sin_cambios';
+        $al = aviso_datos_alumno($pdo, $id_alumno);
+        if (!$al) return 'error';
+        $lista = implode("\n", array_map(fn($r) => date('d/m/Y', strtotime($r['fecha_hora'])) . ' · Art. ' . $r['numero_reglamento'] . ': ' . $r['descripcion_falta'], $reportes));
+        $puntos_actuales = (int)$pdo->query("SELECT puntos_conducta FROM ALUMNOS WHERE id_alumno = " . (int)$id_alumno)->fetchColumn();
+        $filas = [
+            ['Alumno(a)', $al['alumno']],
+            ['Matrícula', $al['matricula']],
+            ['Grupo', $al['grupo']],
+            [($tipo === 'retardo' ? 'Retardo' : 'Falta') . ' justificado(a)', date('d/m/Y', strtotime($fecha))],
+            [count($reportes) === 1 ? 'Reporte anulado' : 'Reportes anulados', $lista],
+            ['Puntos devueltos', $puntos . ' (ahora tiene ' . $puntos_actuales . ' de 100)'],
+        ];
+        $html = aviso_html('Estimado(a) ' . ($al['nombre_tutor'] ?: 'padre, madre o tutor') . ':',
+            'Le informamos que Prefectura justificó ' . ($tipo === 'retardo' ? 'el retardo' : 'la falta') . ' de su hijo(a). Por eso se anuló el reporte de conducta que se le había levantado y se le regresaron sus puntos:',
+            $filas, 'Ya no es necesario atender ese reporte. Si tiene dudas, puede acudir a Prefectura del plantel.');
+        $ref = 'anulado-' . implode('-', array_map(fn($r) => (int)$r['id_reporte'], $reportes));
+        $estatus = aviso_registrar($pdo, $id_alumno, 'conducta', mb_substr($ref, 0, 60), 'Reporte anulado · ' . $al['alumno'], $html, $al['correo_tutor'] ?: null);
+        if (in_array($estatus, ['enviado', 'pendiente', 'sin_correo', 'fallido'], true)) {
+            $txt = ['enviado' => 'Se envió', 'pendiente' => 'Quedó pendiente', 'sin_correo' => 'No se pudo enviar (sin correo del tutor)', 'fallido' => 'Falló el envío de'][$estatus];
+            bitacora($pdo, 'avisos', 'conducta', "$txt el aviso de reporte anulado al tutor de " . $al['matricula'] . ' · ' . $al['alumno'], 'alumno', $id_alumno);
+        }
+        return $estatus;
+    } catch (Throwable $e) {
+        error_log('aviso_tutor_reporte_anulado: ' . $e->getMessage());
+        return 'error';
+    }
+}
+
 /** Aviso de faltas acumuladas en un periodo. */
 function aviso_tutor_faltas(PDO $pdo, int $id_alumno, string $desde, string $hasta, int $faltas, array $fechas): string {
     $al = aviso_datos_alumno($pdo, $id_alumno);

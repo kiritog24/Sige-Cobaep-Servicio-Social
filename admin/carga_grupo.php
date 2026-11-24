@@ -149,7 +149,7 @@ $nom = fn($a) => trim($a['apellido_paterno'] . ' ' . $a['apellido_materno'] . ' 
             </div>
         </form>
     </main>
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/responsive.js?v=11"></script>
     <script>
         (function () {
             const chks = [...document.querySelectorAll('.chk-mover')], todos = document.getElementById('moverTodos'), n = document.getElementById('cgMover');

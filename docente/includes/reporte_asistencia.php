@@ -30,24 +30,35 @@ function reporte_asistencia_periodo(array $get): array {
 
 /** Filas del reporte: un renglón por alumno con presentes, retardos, faltas, justificadas y %. */
 function reporte_asistencia_filas(PDO $pdo, int $id_clase, array $periodo): array {
+    // El mismo periodo, aplicado a la fecha del registro de Prefectura
+    $where_pref = str_replace('ac.fecha', 'DATE(x.fecha_hora_escaneo)', $periodo['where']);
     $st = $pdo->prepare("
         SELECT a.id_alumno, a.matricula, a.nombre, a.apellido_paterno, a.apellido_materno,
                SUM(ac.estatus IN ('Presente', 'Asistencia')) AS presentes,
                SUM(ac.estatus = 'Retardo') AS retardos,
                SUM(ac.estatus IN ('Falta', 'Ausente')) AS faltas,
-               SUM(ac.estatus = 'Justificada') AS justificadas
+               SUM(ac.estatus = 'Justificada') AS justificadas,
+               (SELECT COUNT(*) FROM asistencias x
+                 WHERE x.id_alumno = a.id_alumno AND x.tipo_registro = 'Entrada'
+                   AND x.estatus = 'Falta Justificada' {$where_pref}
+                   -- solo días en que esta clase tiene horario (si la clase aún no tiene horario, cuenta cualquier día)
+                   AND (NOT EXISTS (SELECT 1 FROM horarios_clases hz WHERE hz.id_clase = cra.id_clase)
+                        OR EXISTS (SELECT 1 FROM horarios_clases hz WHERE hz.id_clase = cra.id_clase AND hz.dia_semana = WEEKDAY(x.fecha_hora_escaneo) + 1))
+                   AND NOT EXISTS (SELECT 1 FROM asistencias_clases y WHERE y.id_alumno = x.id_alumno AND y.id_clase = cra.id_clase
+                                   AND y.fecha = DATE(x.fecha_hora_escaneo) AND y.estatus = 'Justificada')) AS just_prefectura
         FROM clase_regular_alumno cra
         INNER JOIN alumnos a ON cra.id_alumno = a.id_alumno
         LEFT JOIN asistencias_clases ac ON ac.id_alumno = a.id_alumno AND ac.id_clase = cra.id_clase {$periodo['where']}
         WHERE cra.id_clase = ?
         GROUP BY a.id_alumno
         ORDER BY a.apellido_paterno, a.apellido_materno, a.nombre");
-    $st->execute(array_merge($periodo['params'], [$id_clase]));
+    $st->execute(array_merge($periodo['params'], $periodo['params'], [$id_clase]));
     $filas = [];
     foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $r) {
         $p = (int)$r['presentes']; $re = (int)$r['retardos']; $f = (int)$r['faltas']; $j = (int)$r['justificadas'];
         $total = $p + $re + $f + $j;
         $r['presentes'] = $p; $r['retardos'] = $re; $r['faltas'] = $f; $r['justificadas'] = $j;
+        $r['just_prefectura'] = (int)$r['just_prefectura'];   // faltas de todo el día que Prefectura justificó (días de esta clase sin pase de lista)
         $r['total'] = $total;
         $r['pct'] = $total ? (int)round(($p + $re + $j) * 100 / $total) : null;
         $r['nombre_completo'] = trim($r['apellido_paterno'] . ' ' . $r['apellido_materno'] . ' ' . $r['nombre']);
@@ -82,7 +93,8 @@ function reporte_asistencia_tbody(array $filas, string $texto_periodo): string {
             . '<td data-label="Asistencias" class="num"><span class="cifra c-p">' . $f['presentes'] . '</span></td>'
             . '<td data-label="Retardos" class="num"><span class="cifra c-r">' . $f['retardos'] . '</span></td>'
             . '<td data-label="Faltas" class="num"><span class="cifra c-f">' . $f['faltas'] . '</span></td>'
-            . '<td data-label="Justificadas" class="num"><span class="cifra c-j">' . $f['justificadas'] . '</span></td>'
+            . '<td data-label="Justificadas" class="num"><span class="cifra c-j"' . ($f['just_prefectura'] ? ' title="Incluye ' . $f['just_prefectura'] . ' falta(s) de todo el día justificada(s) por Prefectura en días de esta clase sin pase de lista"' : '') . '>'
+                . ($f['justificadas'] + $f['just_prefectura']) . '</span>' . ($f['just_prefectura'] ? '<small class="just-pref">' . $f['just_prefectura'] . ' de Prefectura</small>' : '') . '</td>'
             . '<td data-label="Asistencia" class="num"><span class="pct ' . $cls . '">' . ($f['pct'] === null ? '—' : $f['pct'] . '%') . '</span></td>'
             . '</tr>';
     }

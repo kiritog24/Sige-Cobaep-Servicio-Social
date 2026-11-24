@@ -120,6 +120,7 @@ const LOGIN_MAX_INTENTOS = 5;      // intentos fallidos permitidos por cuenta…
 // comparten la misma IP, así que unos cuantos errores de otros no deben bloquear a nadie.
 const LOGIN_MAX_INTENTOS_IP = 40;
 const LOGIN_VENTANA_MIN  = 15;     // …dentro de esta ventana (minutos)
+const LOGIN_BLOQUEO_SEG  = 60;     // espera tras 5 intentos fallidos (con temporizador en la pantalla de inicio)
 
 function login_tabla(PDO $pdo): void {
     static $lista = false;
@@ -136,23 +137,31 @@ function login_tabla(PDO $pdo): void {
 }
 
 /** Minutos que faltan para poder intentar de nuevo (0 = permitido). */
+/**
+ * Segundos que faltan para poder intentar de nuevo (0 = permitido).
+ * Cada 5 intentos fallidos de la misma cuenta (dentro de LOGIN_VENTANA_MIN minutos) se bloquea
+ * LOGIN_BLOQUEO_SEG segundos; al terminar la espera vuelve a tener 5 intentos.
+ */
 function login_bloqueado(PDO $pdo, string $usuario): int {
     try {
         login_tabla($pdo);
-        // El tiempo restante lo calcula MySQL para no depender de la zona horaria de PHP
-        $st = $pdo->prepare("SELECT COUNT(*), TIMESTAMPDIFF(SECOND, NOW(), MIN(fecha) + INTERVAL " . LOGIN_VENTANA_MIN . " MINUTE)
+        // Los segundos los calcula MySQL para no depender de la zona horaria de PHP
+        $st = $pdo->prepare("SELECT COUNT(*), TIMESTAMPDIFF(SECOND, MAX(fecha), NOW())
                              FROM INTENTOS_LOGIN
                              WHERE usuario = ? AND fecha >= NOW() - INTERVAL " . LOGIN_VENTANA_MIN . " MINUTE");
         $st->execute([mb_strtolower($usuario)]);
-        [$n, $segundos] = $st->fetch(PDO::FETCH_NUM);
-        if ((int)$n >= LOGIN_MAX_INTENTOS) return max(1, (int)ceil(((int)$segundos) / 60));
+        [$n, $desde_ultimo] = $st->fetch(PDO::FETCH_NUM);
+        $n = (int)$n;
+        if ($n > 0 && $n % LOGIN_MAX_INTENTOS === 0 && (int)$desde_ultimo < LOGIN_BLOQUEO_SEG) {
+            return max(1, LOGIN_BLOQUEO_SEG - (int)$desde_ultimo);
+        }
 
         // Muchos intentos fallidos desde la misma IP contra distintas cuentas (posible ataque)
-        $st = $pdo->prepare("SELECT COUNT(*), TIMESTAMPDIFF(SECOND, NOW(), MIN(fecha) + INTERVAL " . LOGIN_VENTANA_MIN . " MINUTE)
+        $st = $pdo->prepare("SELECT COUNT(*), TIMESTAMPDIFF(SECOND, MAX(fecha), NOW())
                              FROM INTENTOS_LOGIN WHERE ip = ? AND fecha >= NOW() - INTERVAL " . LOGIN_VENTANA_MIN . " MINUTE");
         $st->execute([ip_cliente()]);
-        [$n, $segundos] = $st->fetch(PDO::FETCH_NUM);
-        if ((int)$n >= LOGIN_MAX_INTENTOS_IP) return max(1, (int)ceil(((int)$segundos) / 60));
+        [$n, $desde_ultimo] = $st->fetch(PDO::FETCH_NUM);
+        if ((int)$n >= LOGIN_MAX_INTENTOS_IP && (int)$desde_ultimo < LOGIN_BLOQUEO_SEG) return max(1, LOGIN_BLOQUEO_SEG - (int)$desde_ultimo);
         return 0;
     } catch (PDOException $e) { error_log('login_bloqueado: ' . $e->getMessage()); return 0; }
 }
@@ -242,7 +251,7 @@ function exigir_cambio_password(PDO $pdo): void {
 }
 
 /* ---------- Cierre de sesión por inactividad (todos los roles) ---------- */
-const SESION_INACTIVIDAD_MIN = 30;   // minutos sin usar el sistema antes de cerrar la sesión
+const SESION_INACTIVIDAD_MIN = 15;   // minutos sin usar el sistema antes de cerrar la sesión (aviso 2 minutos antes)
 
 /** Rol de sesión → valor de ?rol= en login.php */
 function sesion_rol_login(string $rol): string {

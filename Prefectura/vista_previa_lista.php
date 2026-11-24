@@ -181,6 +181,6 @@ $qs_l = http_build_query(['fecha_lista' => $fecha_lista, 'id_grupo' => $id_grupo
             </table>
         </div>
     </main>
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/responsive.js?v=11"></script>
 </body>
 </html>

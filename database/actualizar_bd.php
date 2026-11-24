@@ -321,6 +321,20 @@ try {
         registrar("➕ Tabla AVISOS_GUARDADOS creada (avisos guardados del alumno)");
     }
 
+    // Tolerancia de entrada: 10 minutos en ambos turnos (solo si sigue la de 5 minutos que traía el sistema)
+    if (tabla_existe($pdo, 'HORARIOS_TURNO')) {
+        $n = $pdo->exec("UPDATE HORARIOS_TURNO SET fin_tolerancia = ADDTIME(hora_entrada, '00:10:59')
+                         WHERE (turno = 'Matutino' AND fin_tolerancia = '07:04:59') OR (turno = 'Intermedio' AND fin_tolerancia = '10:54:59')");
+        if ($n) registrar("➕ Tolerancia de entrada ajustada a 10 minutos en $n turno(s)");
+    }
+
+    // Reportes de conducta sugeridos por acumulación (3 retardos / 3 faltas): decisiones de Prefectura
+    if (!tabla_existe($pdo, 'REPORTES_SUGERIDOS')) {
+        require_once __DIR__ . '/../includes/reportes_sugeridos.php';
+        sugeridos_tabla($pdo);
+        registrar("➕ Tabla REPORTES_SUGERIDOS creada (reportes sugeridos por acumulación)");
+    }
+
     // Instalación nueva: si no hay ningún administrador, se crea uno con contraseña provisional
     if (tabla_existe($pdo, 'ADMINISTRATIVOS') && (int)$pdo->query("SELECT COUNT(*) FROM ADMINISTRATIVOS")->fetchColumn() === 0) {
         $pass = generar_password_provisional();

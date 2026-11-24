@@ -45,7 +45,7 @@ $tipo = $_GET['tipo_filtro'] ?? 'semestre';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="style_dashboard_docente.css">
     <link rel="stylesheet" href="css/ver_entregas.css?v=4">
-    <link rel="stylesheet" href="css/lista_alumnos.css?v=2">
+    <link rel="stylesheet" href="css/lista_alumnos.css?v=3">
     <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 <body class="pagina-entregas">
@@ -105,7 +105,7 @@ $tipo = $_GET['tipo_filtro'] ?? 'semestre';
             <span><i class="fas fa-circle c-p"></i> Asistencias</span>
             <span><i class="fas fa-circle c-r"></i> Retardos</span>
             <span><i class="fas fa-circle c-f"></i> Faltas</span>
-            <span><i class="fas fa-circle c-j"></i> Justificadas (con justificante de Prefectura)</span>
+            <span><i class="fas fa-circle c-j"></i> Faltas justificadas (marcadas J o justificadas por Prefectura)</span>
             <span><b>%</b> = asistencias + retardos + justificadas entre los pases de lista</span>
         </p>
 
@@ -117,7 +117,7 @@ $tipo = $_GET['tipo_filtro'] ?? 'semestre';
                     <th class="num">Asist.</th>
                     <th class="num">Retardos</th>
                     <th class="num">Faltas</th>
-                    <th class="num" title="Faltas con justificante de Prefectura">Just.</th>
+                    <th class="num" title="Faltas a esta clase justificadas: las que marcaste J y las faltas de todo el día que justificó Prefectura">Just.</th>
                     <th class="num" title="Asistencia (presente + retardo + justificada)">%</th>
                 </tr>
             </thead>
@@ -158,6 +158,6 @@ $tipo = $_GET['tipo_filtro'] ?? 'semestre';
                 .catch(() => { tbody.innerHTML = '<tr><td colspan="6" class="vacio" data-label="">No se pudieron cargar los datos. Intenta de nuevo.</td></tr>'; });
         }
     </script>
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/responsive.js?v=11"></script>
 </body>
 </html>

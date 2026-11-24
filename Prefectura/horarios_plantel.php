@@ -31,7 +31,7 @@ try {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="../admin/style_dashboard_admin.css">
     <link rel="stylesheet" href="../admin/style_sidebar.css">
-    <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css">
+    <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css?v=3">
     <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 <body>
@@ -49,6 +49,6 @@ try {
         <?php dh_render($datos); ?>
     </main>
     <script src="../js/dashboard_prefectura.js"></script>
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/responsive.js?v=11"></script>
 </body>
 </html>

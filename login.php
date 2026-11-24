@@ -30,7 +30,7 @@ if ($rol_esperado == 'admin') {
     <?php if (isset($_GET['bloqueado'])): ?>
         <div class="toast-notification" id="errorToast">
             <i class="fas fa-lock" style="font-size: 1.2rem;"></i>
-            <span>Demasiados intentos fallidos. Por seguridad espera <?php echo max(1, (int)$_GET['bloqueado']); ?> minuto(s) e intenta de nuevo.</span>
+            <span>Demasiados intentos fallidos. Por seguridad espera <b id="bloqueoSeg" data-seg="<?php echo max(1, min(60, (int)$_GET['bloqueado'])); ?>"><?php echo max(1, min(60, (int)$_GET['bloqueado'])); ?> s</b> e intenta de nuevo.</span>
         </div>
     <?php elseif (isset($_GET['vencida'])): ?>
         <div class="toast-notification" id="errorToast">
@@ -164,7 +164,32 @@ if ($rol_esperado == 'admin') {
             </footer>
         </section>
     </main>
-    <script src="js/app.js"></script>
-    <script src="js/responsive.js?v=10"></script>
+    <script src="js/app.js?v=2"></script>
+    <script>
+        // Temporizador del bloqueo por intentos fallidos: el botón se activa al terminar la espera
+        (function () {
+            const el = document.getElementById('bloqueoSeg');
+            if (!el) return;
+            let s = parseInt(el.dataset.seg, 10) || 60;
+            const toast = document.getElementById('errorToast');
+            const btn = document.querySelector('.btn-submit');
+            const txt = btn ? btn.innerHTML : '';
+            if (toast) { toast.classList.add('toast-fijo'); }
+            const pintar = () => {
+                el.textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+                if (btn) { btn.disabled = s > 0; btn.innerHTML = s > 0 ? '<i class="fas fa-lock"></i> Espera ' + el.textContent : txt; }
+            };
+            pintar();
+            const t = setInterval(() => {
+                s--;
+                pintar();
+                if (s <= 0) {
+                    clearInterval(t);
+                    if (toast) { toast.querySelector('span').textContent = 'Ya puedes intentar de nuevo.'; toast.style.background = '#16a05d'; setTimeout(() => toast.classList.add('hide-toast'), 3000); }
+                }
+            }, 1000);
+        })();
+    </script>
+    <script src="js/responsive.js?v=11"></script>
 </body>
 </html>

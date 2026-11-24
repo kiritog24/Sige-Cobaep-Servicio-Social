@@ -39,7 +39,7 @@ INSERT IGNORE INTO `TIPOS_FALTA` (`id_tipo_falta`, `numero_reglamento`, `descrip
 INSERT IGNORE INTO `TIPOS_FALTA` (`id_tipo_falta`, `numero_reglamento`, `descripcion_falta`, `tipo_sancion`, `puntos_descuento`, `detalle_sancion`, `requiere_citacion_tutor`, `puede_ser_definitiva`) VALUES (25,25,'Reincidencia en faltas previamente sancionadas dentro del mismo ciclo escolar','Citacion',10,'Se descuentan 10 puntos adicionales y se cita al tutor; acumulación puede derivar en baja.',1,1);
 INSERT IGNORE INTO `SANCIONES_ACUMULATIVAS` (`id_sancion_acum`, `umbral_puntos_menos`, `accion`, `descripcion`) VALUES (1,25,'Carta compromiso','Al acumular 25 o más puntos descontados el alumno firma una carta compromiso ante la dirección y su tutor, donde se compromete a mejorar su conducta. La carta queda en el expediente del alumno.');
 INSERT IGNORE INTO `SANCIONES_ACUMULATIVAS` (`id_sancion_acum`, `umbral_puntos_menos`, `accion`, `descripcion`) VALUES (2,40,'Carta condicionamiento','Al acumular 40 o más puntos descontados (puntos restantes ≤ 60) el alumno firma una carta de condicionamiento. Cualquier falta posterior puede resultar en baja definitiva. Requiere firma de tutor y dirección.');
-INSERT IGNORE INTO `HORARIOS_TURNO` (`turno`, `hora_entrada`, `fin_tolerancia`, `hora_corte`) VALUES ('Matutino','07:00:00','07:04:59','07:35:00');
-INSERT IGNORE INTO `HORARIOS_TURNO` (`turno`, `hora_entrada`, `fin_tolerancia`, `hora_corte`) VALUES ('Intermedio','10:50:00','10:54:59','11:25:00');
+INSERT IGNORE INTO `HORARIOS_TURNO` (`turno`, `hora_entrada`, `fin_tolerancia`, `hora_corte`) VALUES ('Matutino','07:00:00','07:10:59','07:35:00');
+INSERT IGNORE INTO `HORARIOS_TURNO` (`turno`, `hora_entrada`, `fin_tolerancia`, `hora_corte`) VALUES ('Intermedio','10:50:00','11:00:59','11:25:00');
 
 SET FOREIGN_KEY_CHECKS = 1;

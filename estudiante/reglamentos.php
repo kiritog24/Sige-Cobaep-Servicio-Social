@@ -46,14 +46,16 @@ estudiante_layout_inicio('Reglamento escolar', 'Normas de conducta, sanciones y 
 <?php if (!empty($turnos)): ?>
 <div class="info-card">
     <h2><i class="far fa-clock"></i> Horarios de entrada</h2>
-    <p class="desc">Después de la tolerancia se registra retardo; después de la hora de corte se registra falta.</p>
+    <p class="desc">Al escanear tu credencial: dentro de la tolerancia es puntual, después es retardo y pasada la hora de corte se registra falta.</p>
     <div class="turnos">
         <?php foreach ($turnos as $t): ?>
             <div class="turno">
                 <strong>Turno <?php echo htmlspecialchars($t['turno']); ?></strong>
                 <p><i class="fas fa-door-open" style="width:18px;color:#059669;"></i> Entrada: <?php echo date('h:i a', strtotime($t['hora_entrada'])); ?></p>
-                <p><i class="fas fa-hourglass-half" style="width:18px;color:#d97706;"></i> Tolerancia hasta: <?php echo date('h:i a', strtotime($t['fin_tolerancia'])); ?></p>
-                <p><i class="fas fa-ban" style="width:18px;color:#dc2626;"></i> Hora de corte: <?php echo date('h:i a', strtotime($t['hora_corte'])); ?></p>
+                <?php require_once __DIR__ . '/../includes/calendario.php'; $tr = tramos_entrada_turno($t); ?>
+                <p><i class="fas fa-circle-check" style="width:18px;color:#059669;"></i> Puntual: <?php echo $tr['puntual']; ?> (<?php echo $tr['tolerancia_min']; ?> min de tolerancia)</p>
+                <p><i class="fas fa-clock" style="width:18px;color:#d97706;"></i> Retardo: <?php echo $tr['retardo']; ?></p>
+                <p><i class="fas fa-ban" style="width:18px;color:#dc2626;"></i> Falta: desde <?php echo $tr['falta']; ?></p>
             </div>
         <?php endforeach; ?>
     </div>

@@ -2,6 +2,12 @@
 /** Barra lateral de Prefectura, igual en todas sus páginas y organizada por secciones. */
 $pp = basename($_SERVER['PHP_SELF']);
 $act = fn(array $paginas) => in_array($pp, $paginas, true) ? ' active' : '';
+// Reportes sugeridos pendientes del mes (se calcula cada 5 minutos como máximo)
+$n_sugeridos = 0;
+if (isset($pdo)) {
+    require_once __DIR__ . '/../../includes/reportes_sugeridos.php';
+    $n_sugeridos = reportes_sugeridos_pendientes($pdo);
+}
 ?>
     <aside class="sidebar" id="sidebar">
         <button id="collapseToggle" class="collapse-toggle" aria-label="Colapsar menú"><i class="fas fa-chevron-left"></i></button>
@@ -24,6 +30,7 @@ $act = fn(array $paginas) => in_array($pp, $paginas, true) ? ' active' : '';
 
                 <span class="nav-heading">Conducta</span>
                 <a href="creacion_reportes.php" class="nav-item<?php echo $act(['creacion_reportes.php', 'editar_reporte.php']); ?>"><i class="fa-solid fa-file-lines"></i><span>Reportes de Conducta</span></a>
+                <a href="reportes_sugeridos.php" class="nav-item<?php echo $act(['reportes_sugeridos.php']); ?>"><i class="fas fa-list-check"></i><span>Reportes sugeridos</span><?php if ($n_sugeridos): ?><b class="nav-badge" title="<?php echo $n_sugeridos; ?> por atender"><?php echo $n_sugeridos > 99 ? '99+' : $n_sugeridos; ?></b><?php endif; ?></a>
                 <a href="expediente_alumnos.php" class="nav-item<?php echo $act(['expediente_alumnos.php', 'perfil_alumno.php']); ?>"><i class="fas fa-folder-open"></i><span>Expediente de Alumnos</span></a>
                 <a href="avisos_tutores.php" class="nav-item<?php echo $act(['avisos_tutores.php']); ?>"><i class="fas fa-paper-plane"></i><span>Avisos a tutores</span></a>
 

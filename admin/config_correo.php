@@ -232,6 +232,6 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
             document.getElementById('avanzado').classList.toggle('visible', this.value === 'otro');
         });
     </script>
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/responsive.js?v=11"></script>
 </body>
 </html>

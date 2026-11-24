@@ -136,6 +136,6 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
         sem.addEventListener('change', updatePreview);
         trn.addEventListener('change', updatePreview);
     </script>
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/responsive.js?v=11"></script>
 </body>
 </html>

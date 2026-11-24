@@ -64,3 +64,19 @@ function vigencia_credencial_alumno(?string $fecha = null): string {
 function nombre_completo_alumno(array $a): string {
     return trim(preg_replace('/\s+/', ' ', ($a['nombre'] ?? '') . ' ' . ($a['apellido_paterno'] ?? '') . ' ' . ($a['apellido_materno'] ?? '')));
 }
+
+
+/**
+ * Tramos de la entrada al plantel de un turno (HORARIOS_TURNO), para mostrarlos igual en todo el sistema:
+ * puntual de la hora de entrada al fin de la tolerancia, retardo hasta la hora de corte y después falta.
+ */
+function tramos_entrada_turno(array $t): array {
+    $ent = strtotime($t['hora_entrada']); $tol = strtotime($t['fin_tolerancia']); $corte = strtotime($t['hora_corte']);
+    $hm = fn($ts) => date('h:i a', $ts);
+    return [
+        'tolerancia_min' => (int)round((strtotime(date('H:i', $tol)) - strtotime(date('H:i', $ent))) / 60),
+        'puntual' => $hm($ent) . ' a ' . $hm($tol),
+        'retardo' => $hm($tol + 1) . ' a ' . $hm($corte),
+        'falta'   => $hm(strtotime(date('H:i', $corte)) + 60),
+    ];
+}

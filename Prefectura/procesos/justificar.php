@@ -5,7 +5,8 @@
  *  - Con id_asistencia: justifica ese registro (Falta → Falta Justificada, Retardo → Retardo Justificado).
  *  - Con id_alumno + fecha: el alumno no tiene registro ese día (no vino); se crea su "Falta Justificada".
  *
- * En ambos casos, las faltas que los docentes le pusieron en sus clases ese día quedan como "Justificada".
+ * En ambos casos, las faltas que los docentes le pusieron en sus clases ese día quedan como "Justificada",
+ * y el reporte de conducta por ese retardo o esa falta (levantado ese mismo día) se quita y se regresan sus puntos.
  */
 session_start();
 require_once '../../config/database.php';
@@ -66,9 +67,18 @@ try {
     }
 
     $clases = $nuevo === 'Falta Justificada' ? justificar_clases_del_dia($pdo, $id_alumno, $fecha) : 0;
+    // El reporte de conducta por ese retardo o esa falta (mismo día) se quita y se regresan sus puntos
+    $tipo_just = $nuevo === 'Falta Justificada' ? 'falta' : 'retardo';
+    // reportes_enviados = 1: la ventana mostró la lista y Prefectura eligió cuáles quitar (puede ser ninguno)
+    $ids_rep = !empty($_POST['reportes_enviados']) ? array_map('intval', (array)($_POST['reportes'] ?? [])) : null;
+    $quitados = quitar_reportes_justificados($pdo, $id_alumno, $fecha, $tipo_just, $ids_rep);
+    if ($quitados['reportes']) {
+        require_once __DIR__ . '/../../includes/avisos_tutor.php';
+        aviso_tutor_reporte_anulado($pdo, $id_alumno, $tipo_just, $fecha, $quitados['detalle'], $quitados['puntos']);
+    }
     bitacora($pdo, 'asistencia', 'justificacion', "Justificó ($nuevo) el " . date('d/m/Y', strtotime($fecha)) . ' a ' . bitacora_quien($pdo, 'alumnos', $id_alumno)
         . ': ' . mb_substr($motivo_final, 0, 150) . ($clases ? " · $clases falta(s) a clases justificadas" : ''), 'alumno', $id_alumno);
-    $ir('msg=exito_justificante&clases=' . $clases . '&resaltar=' . $id_asistencia);
+    $ir('msg=exito_justificante&clases=' . $clases . '&reportes=' . $quitados['reportes'] . '&puntos=' . $quitados['puntos'] . '&resaltar=' . $id_asistencia);
 } catch (PDOException $e) {
     error_log('Error al justificar asistencia: ' . $e->getMessage());
     $ir('error=error_bd');

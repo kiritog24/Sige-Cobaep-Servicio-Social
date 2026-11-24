@@ -164,6 +164,6 @@ $colores_accion = ['eliminacion' => 'rojo', 'fallido' => 'rojo', 'baja_grupo' =>
             <?php endif; ?>
         </section>
     </main>
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/responsive.js?v=11"></script>
 </body>
 </html>

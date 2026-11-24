@@ -80,7 +80,7 @@ $nombre_usuario = isset($_SESSION['nombre'])
     
     <link rel="stylesheet" href="../admin/style_dashboard_admin.css">
     <link rel="stylesheet" href="../admin/style_sidebar.css">
-    <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css?v=2">
+    <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css?v=3">
 
     <link rel="stylesheet" href="css/dashboard_prefectura.css?v=3">
     <link rel="stylesheet" href="../css/responsive.css?v=6">
@@ -104,6 +104,10 @@ $nombre_usuario = isset($_SESSION['nombre'])
 
             <?php topbar_usuario($pdo); ?>
         </header>
+
+        <?php if (!empty($n_sugeridos)): ?>
+            <div class="aviso-sugeridos"><i class="fas fa-list-check"></i> Hay <b><?php echo $n_sugeridos; ?></b> reporte(s) sugerido(s) por atender: alumnos con <?php echo SUGERIDOS_RETARDOS; ?> retardos o <?php echo SUGERIDOS_FALTAS; ?> faltas sin justificar este mes. <a href="reportes_sugeridos.php">Revisar</a></div>
+        <?php endif; ?>
 
         <section class="stats-grid" aria-label="Resumen">
             <article class="stat-card teachers">
@@ -363,6 +367,6 @@ $nombre_usuario = isset($_SESSION['nombre'])
 
     <script src="../js/dashboard_prefectura.js"></script>
 
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/responsive.js?v=11"></script>
 </body>
 </html>

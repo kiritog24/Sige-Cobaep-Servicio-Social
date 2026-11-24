@@ -310,6 +310,6 @@ $estados = [
             document.querySelectorAll('.ci-tabla tbody tr').forEach(tr => { tr.style.display = (b.dataset.f === 'todos' || tr.dataset.e === b.dataset.f) ? '' : 'none'; });
         }));
     </script>
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/responsive.js?v=11"></script>
 </body>
 </html>

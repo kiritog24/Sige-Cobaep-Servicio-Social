@@ -992,6 +992,6 @@ $render_material = function (array $act) use ($h, $id_clase) { ?>
         libre.addEventListener('click', () => { radioLibre.checked = true; });
     });
     </script>
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/responsive.js?v=11"></script>
 </body>
 </html>

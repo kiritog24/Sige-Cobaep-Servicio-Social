@@ -111,6 +111,6 @@ $plural = ['maestros' => 'Docentes', 'prefectos' => 'Prefectos', 'admin' => 'Adm
         // El botón de "una sola" no debe marcar la casilla
         document.querySelectorAll('.cp-una').forEach(b => b.addEventListener('click', e => e.preventDefault()));
     </script>
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/responsive.js?v=11"></script>
 </body>
 </html>

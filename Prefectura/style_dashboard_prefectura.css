@@ -276,3 +276,9 @@ td { color: var(--ink); }
 .status-badge-table { white-space: nowrap; line-height: 1.2; text-align: center; vertical-align: middle; }
 .status-retardo-just { background-color: #ccfbf1; color: #0f766e; }
 .table-responsive td:first-child strong { white-space: nowrap; }
+
+/* Contador en el menú (reportes sugeridos por atender) */
+.nav-item .nav-badge { margin-left: auto; background: #dc2626; color: #fff; font-size: .68rem; font-weight: 800; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 50px; display: inline-grid; place-items: center; }
+body.sidebar-collapsed .nav-item .nav-badge { position: absolute; top: 4px; right: 6px; min-width: 16px; height: 16px; font-size: .6rem; padding: 0 4px; }
+.aviso-sugeridos { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; border-radius: 14px; padding: 12px 16px; margin-bottom: 1rem; font-weight: 600; font-size: .9rem; }
+.aviso-sugeridos a { margin-left: auto; background: #c2410c; color: #fff; text-decoration: none; padding: 8px 14px; border-radius: 10px; font-weight: 700; font-size: .82rem; }

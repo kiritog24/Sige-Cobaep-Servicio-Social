@@ -164,6 +164,6 @@ try {
     </main>
 
     <script src="../js/dashboard_docente.js"></script>
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/responsive.js?v=11"></script>
 </body>
 </html>

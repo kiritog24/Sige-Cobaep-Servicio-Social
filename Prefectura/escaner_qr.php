@@ -128,6 +128,6 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'prefectos') {
 
         html5QrcodeScanner.render(onScanSuccess);
     </script>
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/responsive.js?v=11"></script>
 </body>
 </html>

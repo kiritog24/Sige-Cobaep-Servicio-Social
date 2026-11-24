@@ -326,3 +326,58 @@ function faltas_clases_periodo(PDO $pdo, array $ids, string $desde, string $hast
     foreach ($st->fetchAll(PDO::FETCH_KEY_PAIR) as $id => $n) $res[(int)$id]['dias_pinta'] = (int)$n;
     return $res;
 }
+
+
+/** Días hacia atrás y hacia adelante en que se buscan reportes relacionados con un retardo o una falta. */
+const REPORTES_JUSTIFICABLES_DIAS = 7;
+
+/**
+ * Reportes de conducta que pueden quitarse al justificar: Art. 1 (llegar tarde) para un retardo o
+ * Art. 11 (faltar a clases) para una falta, del mismo alumno, levantados ese día o en los días cercanos.
+ * @param string $tipo 'retardo' | 'falta'
+ */
+function reportes_justificables(PDO $pdo, int $id_alumno, string $fecha, string $tipo): array {
+    if (!fecha_valida($fecha)) return [];
+    $art = $tipo === 'retardo' ? 1 : 11;
+    $st = $pdo->prepare("SELECT r.id_reporte, r.fecha_hora, r.puntos_descontados, tf.numero_reglamento, tf.descripcion_falta,
+                                DATE(r.fecha_hora) = ? AS mismo_dia
+                         FROM REPORTES r INNER JOIN TIPOS_FALTA tf ON tf.id_tipo_falta = r.id_tipo_falta
+                         WHERE r.id_alumno = ? AND tf.numero_reglamento = ?
+                           AND DATE(r.fecha_hora) BETWEEN ? - INTERVAL " . REPORTES_JUSTIFICABLES_DIAS . " DAY AND ? + INTERVAL " . REPORTES_JUSTIFICABLES_DIAS . " DAY
+                         ORDER BY ABS(DATEDIFF(r.fecha_hora, ?)), r.fecha_hora");
+    $st->execute([$fecha, $id_alumno, $art, $fecha, $fecha, $fecha]);
+    return $st->fetchAll(PDO::FETCH_ASSOC);
+}
+
+/**
+ * Cuando Prefectura justifica un retardo o una falta, se quitan los reportes de conducta por ese motivo
+ * y se regresan sus puntos. $ids = los reportes que Prefectura marcó en la ventana; si es null
+ * (sin elegir), se quita solo el del mismo día.
+ * @return array{reportes:int, puntos:int, detalle:array}
+ */
+function quitar_reportes_justificados(PDO $pdo, int $id_alumno, string $fecha, string $tipo, ?array $ids = null): array {
+    $res = ['reportes' => 0, 'puntos' => 0, 'detalle' => []];
+    $posibles = reportes_justificables($pdo, $id_alumno, $fecha, $tipo);   // solo se puede quitar lo que corresponde
+    $elegidos = $ids === null
+        ? array_filter($posibles, fn($r) => (int)$r['mismo_dia'] === 1)
+        : array_filter($posibles, fn($r) => in_array((int)$r['id_reporte'], array_map('intval', $ids), true));
+    if (!$elegidos) return $res;
+
+    $del = $pdo->prepare("DELETE FROM REPORTES WHERE id_reporte = ? AND id_alumno = ?");
+    foreach ($elegidos as $r) {
+        $del->execute([(int)$r['id_reporte'], $id_alumno]);
+        if (!$del->rowCount()) continue;
+        $res['reportes']++;
+        $res['puntos'] += (int)$r['puntos_descontados'];
+        $res['detalle'][] = $r;
+        if (function_exists('bitacora')) {
+            bitacora($pdo, 'conducta', 'eliminacion', 'Se quitó el reporte de conducta #' . (int)$r['id_reporte'] . ' (Art. ' . (int)$r['numero_reglamento'] . ', del '
+                . date('d/m/Y', strtotime($r['fecha_hora'])) . ') de ' . bitacora_quien($pdo, 'alumnos', $id_alumno) . ' porque Prefectura justificó su ' . $tipo
+                . ' del ' . date('d/m/Y', strtotime($fecha)) . ' (se devolvieron ' . (int)$r['puntos_descontados'] . ' puntos)', 'reporte', (int)$r['id_reporte']);
+        }
+    }
+    if ($res['puntos'] > 0) {
+        $pdo->prepare("UPDATE ALUMNOS SET puntos_conducta = LEAST(100, puntos_conducta + ?) WHERE id_alumno = ?")->execute([$res['puntos'], $id_alumno]);
+    }
+    return $res;
+}

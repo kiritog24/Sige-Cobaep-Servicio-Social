@@ -103,7 +103,7 @@ if (fecha_valida($filtro_fecha) && $filtro_fecha <= date('Y-m-d')) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="../admin/style_dashboard_admin.css">
     <link rel="stylesheet" href="../admin/style_sidebar.css">
-    <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css?v=2">
+    <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css?v=3">
     <link rel="stylesheet" href="../Prefectura/style_historial_asistencias.css?v=3">
     <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
@@ -113,7 +113,9 @@ if (fecha_valida($filtro_fecha) && $filtro_fecha <= date('Y-m-d')) {
     $mostrar_modal = '';
     if (isset($_GET['msg']) && $_GET['msg'] === 'exito_justificante') {
         $n_cl = (int)($_GET['clases'] ?? 0);
+        $n_rep = (int)($_GET['reportes'] ?? 0); $n_pts = (int)($_GET['puntos'] ?? 0);
         $txt_ok = 'El justificante se guardó con su motivo y ya aparece resaltado en la tabla.' . ($n_cl ? " También se justificaron $n_cl falta(s) que tenía en sus clases ese día." : '')
+            . ($n_rep ? " Se quitó $n_rep reporte(s) de conducta relacionado(s), se le regresaron $n_pts punto(s) y se avisó a su tutor." : '')
             . ' Lo verán el alumno (en sus avisos y en Mis asistencias), sus docentes (en el pase de lista y en sus avisos) y Control Escolar (en reportes y en su ficha).';
         $mostrar_modal = "document.getElementById('modalExito').style.display = 'flex';
                           if(document.getElementById('exitoText')) document.getElementById('exitoText').innerText = " . json_encode($txt_ok, JSON_UNESCAPED_UNICODE) . ";";
@@ -133,7 +135,7 @@ if (fecha_valida($filtro_fecha) && $filtro_fecha <= date('Y-m-d')) {
                     $mostrar_modal
                     const r = document.querySelector('.fila-resaltada');
                     if (r) setTimeout(() => r.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300);
-                    const u = new URL(location.href); ['msg', 'clases', 'resaltar', 'error'].forEach(k => u.searchParams.delete(k));
+                    const u = new URL(location.href); ['msg', 'clases', 'resaltar', 'error', 'reportes', 'puntos'].forEach(k => u.searchParams.delete(k));
                     window.history.replaceState({}, document.title, u.pathname + u.search);
                 });
               </script>";
@@ -407,6 +409,13 @@ if (fecha_valida($filtro_fecha) && $filtro_fecha <= date('Y-m-d')) {
                     <textarea name="detalles" class="form-control" rows="2" style="width: 100%; padding: 0.85rem; border: 1px solid var(--line); border-radius: var(--radius-sm); font-family: 'Inter', sans-serif;" placeholder="Ej. Entregó receta médica sellada..."></textarea>
                 </div>
                 
+                <div id="reportesJustificar" class="rep-just" hidden>
+                    <input type="hidden" name="reportes_enviados" id="reportesEnviados" value="">
+                    <p class="rep-just-tit"><i class="fas fa-file-shield"></i> Reportes de conducta relacionados</p>
+                    <p class="rep-just-ayuda" id="reportesAyuda"></p>
+                    <div id="reportesLista"></div>
+                </div>
+
                 <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 1rem;">
                     <button type="button" class="btn btn-cancel" onclick="document.getElementById('modalJustificar').style.display='none'" style="padding: 0.75rem 1.5rem; border: 1px solid var(--line); border-radius: var(--radius-sm); cursor: pointer; background: #f1f5f9;">Cancelar</button>
                     <button type="submit" class="btn btn-primary" style="padding: 0.75rem 1.5rem; background: var(--green); color: white; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: bold;">Guardar Justificante</button>
@@ -466,8 +475,8 @@ if (fecha_valida($filtro_fecha) && $filtro_fecha <= date('Y-m-d')) {
         })();
     </script>
     <script src="../js/dashboard_prefectura.js"></script>
-    <script src="../js/modal_justificacion.js"></script>
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/modal_justificacion.js?v=2"></script>
+    <script src="../js/responsive.js?v=11"></script>
 </body>
 </html>
 

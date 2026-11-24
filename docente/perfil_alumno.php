@@ -111,6 +111,6 @@ if (!preg_match('#^https?://' . preg_quote($_SERVER['HTTP_HOST'] ?? 'localhost',
         </section>
     </main>
     <script src="../js/dashboard_docente.js"></script>
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/responsive.js?v=11"></script>
 </body>
 </html>

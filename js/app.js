@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 2. Lógica para ocultar el mensaje de error automáticamente (Toast)
     const toast = document.getElementById("errorToast");
-    if (toast) {
+    if (toast && !toast.classList.contains("toast-fijo")) {   // el del bloqueo se queda con su temporizador
         // Desaparece después de 4.5 segundos
         setTimeout(() => {
             toast.classList.add("hide-toast");

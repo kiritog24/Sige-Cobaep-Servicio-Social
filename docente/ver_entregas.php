@@ -256,6 +256,6 @@ $portada = (!empty($actividad['imagen_portada']) && is_file(__DIR__ . '/../' . $
         document.getElementById('modalRevisar').addEventListener('click', e => { if (e.target.id === 'modalRevisar') cerrarModal(); });
         document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModal(); });
     </script>
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/responsive.js?v=11"></script>
 </body>
 </html>

@@ -359,6 +359,6 @@ $estados = ['nuevo' => ['Nuevo', 'fa-circle-plus'], 'existe' => ['Ya registrado'
             <?php endif; ?>
         </div>
     </main>
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/responsive.js?v=11"></script>
 </body>
 </html>

@@ -147,7 +147,7 @@ function estudiante_layout_fin(string $js_extra = ''): void {
         });
         <?php echo $js_extra; ?>
     </script>
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/responsive.js?v=11"></script>
 </body>
 </html>
     <?php

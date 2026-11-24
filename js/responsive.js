@@ -228,7 +228,7 @@
     const m = document.cookie.match(/(?:^|;\s*)sige_inactividad=(\d+)/);
     if (!m) return;
     if (/\/(login\.php|index\.html|error\.php)?$/.test(location.pathname) && !document.getElementById('sidebar')) return;
-    const LIMITE = parseInt(m[1], 10) * 60000, AVISO = 60000, PING_CADA = 4 * 60000;
+    const LIMITE = parseInt(m[1], 10) * 60000, AVISO = 2 * 60000, PING_CADA = 4 * 60000;   // aviso 2 minutos antes de cerrar
     const src = (document.currentScript && document.currentScript.src) || '';
     const base = src.replace(/js\/responsive\.js.*$/, '');
     const CLAVE = 'sige_ultima_actividad';
@@ -271,8 +271,8 @@
         aviso.className = 'ina-ov';
         aviso.setAttribute('role', 'alertdialog');
         aviso.setAttribute('aria-modal', 'true');
-        aviso.innerHTML = '<div class="ina-box"><div class="ina-reloj"><span id="inaSeg">60</span></div>'
-            + '<h3>¿Sigues ahí?</h3><p>Por seguridad, tu sesión se cerrará en <b id="inaTexto">60 segundos</b> por inactividad.</p>'
+        aviso.innerHTML = '<div class="ina-box"><div class="ina-reloj"><span id="inaSeg">2:00</span></div>'
+            + '<h3>¿Sigues ahí?</h3><p>Por seguridad, tu sesión se cerrará en <b id="inaTexto">2 minutos</b> por inactividad.</p>'
             + '<div class="ina-acc"><button type="button" class="ina-salir" id="inaSalir">Cerrar sesión</button>'
             + '<button type="button" class="ina-seguir" id="inaSeguir">Seguir conectado</button></div></div>';
         document.body.appendChild(aviso);
@@ -282,8 +282,8 @@
     function mostrarAviso(restante) {
         if (!aviso) crearAviso();
         const s = Math.max(0, Math.ceil(restante / 1000));
-        aviso.querySelector('#inaSeg').textContent = s;
-        aviso.querySelector('#inaTexto').textContent = s + (s === 1 ? ' segundo' : ' segundos');
+        aviso.querySelector('#inaSeg').textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+        aviso.querySelector('#inaTexto').textContent = s > 60 ? Math.floor(s / 60) + ' min ' + (s % 60) + ' s' : s + (s === 1 ? ' segundo' : ' segundos');
         aviso.querySelector('.ina-reloj').style.setProperty('--p', Math.round(restante / AVISO * 100) + '%');
         if (!aviso.classList.contains('abierto')) { aviso.classList.add('abierto'); aviso.querySelector('#inaSeguir').focus(); }
     }

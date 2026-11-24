@@ -324,6 +324,6 @@ $nombre_admin = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombre'
             if (selTurno) selTurno.addEventListener('change', actualizarTarjetaViva);
         });
     </script>
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/responsive.js?v=11"></script>
 </body>
 </html>

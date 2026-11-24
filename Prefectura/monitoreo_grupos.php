@@ -54,7 +54,7 @@ $sin_clases_hoy = dia_sin_clases($pdo, date('Y-m-d'));
     
     <link rel="stylesheet" href="../admin/style_dashboard_admin.css">
     <link rel="stylesheet" href="../admin/style_sidebar.css">
-    <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css">
+    <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css?v=3">
 
     <link rel="stylesheet" href="css/monitoreo_grupos.css?v=1">
     <link rel="stylesheet" href="../css/responsive.css?v=6">
@@ -178,6 +178,6 @@ $sin_clases_hoy = dia_sin_clases($pdo, date('Y-m-d'));
             document.getElementById('modalFechaLista').style.display = 'flex';
         }
     </script>
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/responsive.js?v=11"></script>
 </body>
 </html>

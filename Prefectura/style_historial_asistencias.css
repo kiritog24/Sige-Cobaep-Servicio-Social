@@ -74,3 +74,13 @@ html {
 @keyframes resaltar-fila { 0%, 60% { background: #fef9c3; } 100% { background: transparent; } }
 .fila-resaltada td { animation: resaltar-fila 4s ease-out; }
 .fila-resaltada td:first-child { box-shadow: inset 4px 0 0 #16a05d; }
+
+/* Ventana de justificar: reportes de conducta que se quitan */
+.rep-just { margin: 0 0 1.2rem; padding: 12px; border: 1px solid #fde68a; background: #fffbeb; border-radius: 12px; }
+.rep-just-tit { margin: 0 0 4px; font-size: .82rem; font-weight: 800; color: #92400e; }
+.rep-just-ayuda { margin: 0 0 8px; font-size: .76rem; color: #78350f; line-height: 1.4; }
+.rep-just-item { display: flex; gap: 8px; align-items: flex-start; padding: 8px; border-radius: 8px; background: #fff; border: 1px solid #fde68a; margin-top: 6px; font-size: .8rem; color: #334155; cursor: pointer; }
+.rep-just-item input { margin-top: 2px; width: 16px; height: 16px; accent-color: #16a05d; flex-shrink: 0; }
+.rep-just-item b { color: #0f172a; }
+.rep-just-item .rj-pts { margin-left: auto; white-space: nowrap; font-weight: 700; color: #b91c1c; }
+.rep-just-item .rj-dia { display: inline-block; font-size: .68rem; font-weight: 800; color: #166534; background: #dcfce7; border-radius: 6px; padding: 1px 6px; margin-left: 4px; }

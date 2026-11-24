@@ -263,6 +263,6 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
             if (alertas.length > 0) setTimeout(() => alertas.forEach(alerta => { alerta.style.transition = 'opacity 0.5s ease, transform 0.5s ease'; alerta.style.opacity = '0'; alerta.style.transform = 'translateY(-10px)'; setTimeout(() => alerta.style.display = 'none', 500); }), 5000);
         });
     </script>
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/responsive.js?v=11"></script>
 </body>
 </html>

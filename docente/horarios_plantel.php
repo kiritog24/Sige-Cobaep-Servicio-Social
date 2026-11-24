@@ -78,6 +78,6 @@ try {
         <?php dh_render($datos, ['mi_maestro' => $id_docente]); ?>
     </main>
     <script src="../js/dashboard_docente.js"></script>
-    <script src="../js/responsive.js?v=10"></script>
+    <script src="../js/responsive.js?v=11"></script>
 </body>
 </html>
