@@ -1,30 +1,60 @@
-/* Estilos de Prefectura/vista_previa_lista.php (antes estaban dentro del PHP) */
-/* Diseño institucional, sobrio y responsivo */
+/* Estilos de Prefectura/vista_previa_lista.php — mismo diseño que los reportes del docente */
 * { box-sizing: border-box; }
-body { font-family: Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; color: #333; }
-.container { max-width: 900px; margin: 0 auto; background: #fff; border: 1px solid #ccc; border-top: 4px solid #1b4332; padding: 25px; }
+body { margin: 0; background: #f1f5f9; font-family: 'Inter', system-ui, sans-serif; color: #0f172a; }
+.vpl-main { max-width: 1100px; margin: 0 auto; padding: 2rem; }
 
-/* Cabecera */
-.header-actions { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
-.header-title h2 { margin: 0; font-size: 22px; color: #1b4332; font-weight: normal; }
-.header-title p { margin: 5px 0 0 0; color: #555; font-size: 14px; font-weight: bold; }
+.vpl-banner { position: relative; overflow: hidden; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
+    background: linear-gradient(135deg, #032b1e 0%, #065f46 55%, #0f9f6e 100%); color: #fff; border-radius: 20px; padding: 1.8rem 2rem; margin-bottom: 1.2rem;
+    box-shadow: 0 10px 25px -10px rgba(6, 95, 70, .55); }
+.vpl-banner::after { content: ""; position: absolute; right: -60px; top: -60px; width: 220px; height: 220px; border-radius: 50%; background: rgba(255, 255, 255, .08); pointer-events: none; }
+.vpl-banner > * { position: relative; z-index: 1; }
+.vpl-eyebrow { display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, .15); padding: 4px 10px; border-radius: 50px; font-size: .75rem; font-weight: 700; margin-bottom: 8px; }
+.vpl-banner h2 { margin: 0 0 6px; font-size: 1.6rem; font-weight: 800; }
+.vpl-sub { color: #a7f3d0; font-size: .9rem; font-weight: 600; }
+.vpl-acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+.vpl-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 50px; font-size: .85rem; font-weight: 700; text-decoration: none; color: #fff; border: 1px solid rgba(255, 255, 255, .25); transition: .2s; }
+.vpl-pdf { background: #b91c1c; border-color: #b91c1c; }
+.vpl-pdf:hover { background: #991b1b; }
+.vpl-excel { background: #fff; color: #047857; border-color: #fff; }
+.vpl-excel:hover { background: #ecfdf5; }
+.vpl-volver { background: rgba(255, 255, 255, .16); }
+.vpl-volver:hover { background: rgba(255, 255, 255, .28); }
 
-.btn-group { display: flex; gap: 10px; }
-.back-btn { background: #e9ecef; color: #333; padding: 8px 15px; text-decoration: none; font-size: 13px; border: 1px solid #ccc; border-radius: 2px; }
-.back-btn:hover { background: #d3d9df; }
+.vpl-resumen { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 1rem; }
+.vpl-resumen > div { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; border-top: 4px solid #cbd5e1; }
+.vpl-resumen strong { font-size: 1.4rem; font-weight: 800; }
+.vpl-resumen span { font-size: .78rem; color: #64748b; font-weight: 600; }
+.vpl-resumen .r-ok { border-top-color: #16a34a; } .vpl-resumen .r-ok strong { color: #15803d; }
+.vpl-resumen .r-falta { border-top-color: #dc2626; } .vpl-resumen .r-falta strong { color: #b91c1c; }
+.vpl-resumen .r-just { border-top-color: #2563eb; } .vpl-resumen .r-just strong { color: #1d4ed8; }
 
-.export-btn { background: #1b4332; color: white; border: none; padding: 8px 15px; font-size: 13px; cursor: pointer; border-radius: 2px; font-weight: bold; display: flex; align-items: center; gap: 5px; }
-.export-btn:hover { background: #112d21; }
+.vpl-leyenda { font-size: .8rem; color: #64748b; margin: 0 0 10px; }
+.t-falta { color: #b91c1c; } .t-just { color: #1d4ed8; }
 
-/* Contenedor de la tabla responsivo */
-.preview-table-container { overflow-x: auto; width: 100%; margin-top: 10px; }
-table { border-collapse: collapse; width: 100%; min-width: 600px; font-family: Arial, sans-serif; font-size: 12px; }
+.vpl-tabla-wrap { overflow-x: auto; }
+.vpl-tabla { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+.vpl-tabla th { background: #f8fafc; text-align: left; padding: 12px 14px; font-size: .8rem; color: #64748b; border-bottom: 1px solid #e2e8f0; }
+.vpl-tabla td { padding: 11px 14px; border-bottom: 1px solid #f1f5f9; font-size: .88rem; vertical-align: middle; }
+.vpl-tabla tbody tr:hover { background: #f8fafc; }
+.vpl-tabla .c { text-align: center; }
+.vpl-tabla td.num { color: #94a3b8; font-weight: 700; width: 1%; }
+.vpl-tabla .td-alumno strong { display: block; font-size: .86rem; }
+.vpl-tabla .td-alumno span { font-size: .74rem; color: #64748b; }
+.vpl-tabla td.vacio { text-align: center; color: #64748b; padding: 30px; }
 
-/* MEDIA QUERIES PARA CELULARES (Responsividad) */
-@media (max-width: 600px) {
-    body { padding: 10px; }
-    .container { padding: 15px; }
-    .header-actions { flex-direction: column; align-items: flex-start; gap: 15px; }
-    .btn-group { width: 100%; flex-direction: column; }
-    .export-btn, .back-btn { width: 100%; justify-content: center; text-align: center; }
+.estatus { display: inline-block; padding: 3px 10px; border-radius: 50px; font-size: .75rem; font-weight: 700; background: #f1f5f9; color: #475569; }
+.marca { display: inline-grid; place-items: center; min-width: 34px; height: 30px; border-radius: 8px; font-weight: 800; font-size: .95rem; background: #f1f5f9; color: #0f172a; }
+.m-ok.estatus, .m-ok.marca { background: #dcfce7; color: #166534; }
+.m-retardo.estatus { background: #fef3c7; color: #92400e; } .m-retardo.marca { background: #dcfce7; color: #166534; }
+.m-falta.estatus, .m-falta.marca { background: #fee2e2; color: #b91c1c; }
+.m-just.estatus, .m-just.marca { background: #dbeafe; color: #1d4ed8; }
+.m-susp.estatus, .m-susp.marca, .m-sc.estatus, .m-sc.marca { background: #f1f5f9; color: #64748b; }
+
+@media (max-width: 768px) {
+    .vpl-main { padding: 1rem; }
+    .vpl-banner { padding: 1.3rem; }
+    .vpl-banner h2 { font-size: 1.3rem; }
+    .vpl-acciones, .vpl-btn { width: 100%; justify-content: center; }
+    .vpl-resumen { grid-template-columns: repeat(2, 1fr); }
+    table.tabla-tarjetas td.td-alumno { padding: 4px 0 8px !important; border-bottom: 1px solid #e2e8f0 !important; }
 }

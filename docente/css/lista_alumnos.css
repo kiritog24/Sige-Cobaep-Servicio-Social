@@ -1,35 +1,48 @@
-/* Estilos de docente/lista_alumnos.php (antes estaban dentro del PHP) */
-/* Diseño institucional, sobrio y sin aspecto "IA" */
-* { box-sizing: border-box; }
-body { background-color: #f0f2f5; font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #333; }
-.container { max-width: 1000px; margin: 0 auto; background: #fff; border: 1px solid #ccc; border-top: 4px solid #1b4332; padding: 25px; }
+/* Estilos de docente/lista_alumnos.php — usa la base de ver_entregas.css (banner, tarjetas y tabla) */
 
-/* Cabecera */
-.header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
-.header h1 { margin: 0; font-size: 22px; color: #1b4332; font-weight: normal; }
-.header p { margin: 5px 0 0 0; color: #555; font-size: 14px; font-weight: bold; }
-.btn-volver { background: #e9ecef; color: #333; padding: 8px 15px; text-decoration: none; font-size: 13px; border: 1px solid #ccc; }
-.btn-volver:hover { background: #d3d9df; }
+/* Panel de periodo y exportación */
+.panel-filtros { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; margin-bottom: 1rem; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px 18px; box-shadow: 0 2px 8px rgba(15, 23, 42, .04); }
+.pf-titulo { flex-basis: 100%; font-weight: 800; color: var(--ink); font-size: .95rem; }
+.pf-titulo i { color: #16a05d; margin-right: 4px; }
+.pf-campos { display: flex; flex-wrap: wrap; gap: 12px; flex: 1; }
+.pf-campo { display: flex; flex-direction: column; gap: 5px; min-width: 170px; }
+.pf-campo[hidden] { display: none; }
+.pf-campo span { font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); }
+.pf-campo select, .pf-campo input { height: 42px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-family: 'Inter', sans-serif; font-size: .9rem; background: #fff; color: var(--ink); outline: none; }
+.pf-campo select:focus, .pf-campo input:focus { border-color: #16a05d; box-shadow: 0 0 0 3px rgba(22, 160, 93, .15); }
+.pf-botones { display: flex; gap: 10px; flex-wrap: wrap; }
+.pf-btn { height: 42px; padding: 0 18px; border: none; border-radius: 10px; font-family: 'Inter', sans-serif; font-weight: 700; font-size: .88rem; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: .2s; }
+.pf-actualizar { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.pf-actualizar:hover { background: #dbeafe; }
+.pf-excel { background: #047857; color: #fff; }
+.pf-excel:hover { background: #065f46; }
 
-/* Panel de Filtros para Excel */
-.filter-panel { background: #f8f9fa; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 20px; }
-.filter-panel h3 { margin: 0 0 10px 0; font-size: 14px; color: #333; }
-.form-row { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
-.form-group { display: flex; flex-direction: column; }
-.form-group label { font-size: 11px; font-weight: bold; color: #666; margin-bottom: 4px; text-transform: uppercase; }
-.form-control { padding: 6px 10px; border: 1px solid #aaa; border-radius: 2px; font-size: 13px; }
+/* Leyenda de colores */
+.leyenda-asist { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .78rem; color: var(--muted); margin: 0 0 10px; }
+.leyenda-asist i { font-size: .55rem; vertical-align: middle; margin-right: 3px; }
 
-.btn-excel { background: #1b4332; color: white; border: none; padding: 8px 20px; font-size: 13px; cursor: pointer; border-radius: 2px; font-weight: bold; display: flex; align-items: center; gap: 5px; }
-.btn-excel:hover { background: #112d21; }
+/* Tabla */
+.tabla-asistencia th.num, .tabla-asistencia td.num { text-align: center; width: 1%; white-space: nowrap; }
+.tabla-asistencia .td-alumno a { color: var(--ink); text-decoration: none; }
+.tabla-asistencia .td-alumno a:hover strong { color: #047857; text-decoration: underline; }
+.tabla-asistencia .td-alumno span { display: block; font-size: .75rem; color: var(--muted); margin-top: 2px; }
+.cifra { display: inline-grid; place-items: center; min-width: 34px; padding: 3px 8px; border-radius: 8px; font-weight: 800; font-size: .9rem; }
+.c-p { color: #15803d; } .cifra.c-p { background: #dcfce7; }
+.c-r { color: #b45309; } .cifra.c-r { background: #fef3c7; }
+.c-f { color: #b91c1c; } .cifra.c-f { background: #fee2e2; }
+.c-j { color: #1d4ed8; } .cifra.c-j { background: #dbeafe; }
+.pct { display: inline-block; min-width: 52px; padding: 4px 10px; border-radius: 50px; font-weight: 800; font-size: .85rem; text-align: center; }
+.pct-ok { background: #dcfce7; color: #166534; }
+.pct-medio { background: #fef3c7; color: #92400e; }
+.pct-bajo { background: #fee2e2; color: #991b1b; }
+.pct-na { background: #f1f5f9; color: #64748b; }
+.tabla-asistencia td.vacio { text-align: center !important; color: var(--muted); padding: 36px 16px !important; font-weight: 600; }
+.tabla-asistencia td.vacio i { display: block; font-size: 1.8rem; margin-bottom: 8px; color: #cbd5e1; }
 
-/* Tabla Estilo Clásico */
-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-th, td { border: 1px solid #ccc; padding: 10px; font-size: 13px; text-align: left; }
-th { background-color: #e9ecef; color: #333; font-size: 12px; font-weight: bold; }
-tr:nth-child(even) { background-color: #f8f9fa; }
-tr:hover { background-color: #f1f3f5; }
-
-.text-center { text-align: center; }
-.val-p { color: #198754; font-weight: bold; }
-.val-r { color: #d97706; font-weight: bold; }
-.val-f { color: #dc3545; font-weight: bold; }
+@media (max-width: 768px) {
+    .pf-campos, .pf-campo, .pf-botones, .pf-btn { width: 100%; }
+    .pf-btn { justify-content: center; }
+    .tabla-asistencia td.num { width: 100%; text-align: left; }
+}
+.tabla-asistencia tr.fila-aviso td { background: #eff6ff; color: #1e3a8a; font-size: .85rem; font-weight: 600; text-align: left !important; padding: 12px 14px !important; }
+.tabla-asistencia tr.fila-aviso td i { margin-right: 6px; }

@@ -30,7 +30,8 @@ try {
     
     $nombre_pila = htmlspecialchars($alumno['nombre']);
     $apellido_p = htmlspecialchars($alumno['apellido_paterno']);
-    $nombre_completo = $nombre_pila . ' ' . $apellido_p;
+    require_once __DIR__ . '/../includes/calendario.php';
+    $nombre_completo = htmlspecialchars(nombre_completo_alumno($alumno));
     $iniciales = mb_substr($nombre_pila, 0, 1) . mb_substr($apellido_p, 0, 1);
 
     $puntos_conducta = isset($alumno['puntos_conducta']) ? (int)$alumno['puntos_conducta'] : 100;
@@ -63,7 +64,7 @@ try {
 
     // 4. Aviso más reciente (generado con datos reales del sistema)
     require_once __DIR__ . '/includes/avisos_data.php';
-    $avisos_recientes = obtener_avisos_estudiante($pdo, (int)$id_alumno, 2);
+    $avisos_recientes = array_slice(avisos_visibles($pdo, (int)$id_alumno, obtener_avisos_estudiante($pdo, (int)$id_alumno, 50)), 0, 2);
 
     // 5. Clases de hoy según el horario que el docente capturó en su aula virtual
     $dia_hoy = (int)date('N'); // 1 = Lunes ... 7 = Domingo
@@ -146,7 +147,7 @@ try {
     
     <!-- Archivo base -->
     <link rel="stylesheet" href="style_dashboard_estud.css?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 <body>
 

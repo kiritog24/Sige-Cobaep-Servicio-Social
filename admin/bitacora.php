@@ -80,7 +80,7 @@ $colores_accion = ['eliminacion' => 'rojo', 'fallido' => 'rojo', 'baja_grupo' =>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link href="style_dashboard_admin.css" rel="stylesheet">
     <link href="style_sidebar.css" rel="stylesheet">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
     <link rel="stylesheet" href="css/bitacora.css?v=1">
 </head>
 <body>

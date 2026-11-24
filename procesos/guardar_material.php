@@ -59,10 +59,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         // Configuración del espacio de entrega propio de esta actividad
         $cfg = regula_config_desde_post();
+        regula_asegurar_columnas($pdo);
         $stmt = $pdo->prepare("INSERT INTO ACTIVIDADES_REGULARIZACION
-            (id_clase, id_bloque, titulo, descripcion, archivo_ruta, permite_entregas, fecha_limite, acepta_retardo, tipos_archivo, tamano_maximo_mb, escala_calificacion)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$id_clase, $id_bloque, $titulo, $descripcion, $ruta_archivo,
+            (id_clase, id_bloque, titulo, color_titulo, descripcion, archivo_ruta, permite_entregas, fecha_limite, acepta_retardo, tipos_archivo, tamano_maximo_mb, escala_calificacion)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$id_clase, $id_bloque, $titulo, regula_color_valido($_POST['color_titulo'] ?? ''), $descripcion, $ruta_archivo,
             $cfg['permite_entregas'], $cfg['fecha_limite'], $cfg['acepta_retardo'], $cfg['tipos_archivo'], $cfg['tamano_maximo_mb'], $cfg['escala_calificacion']]);
 
         $msg = $cfg['permite_entregas'] ? 'Actividad publicada con su propio espacio de entrega.' : 'Material publicado correctamente.';

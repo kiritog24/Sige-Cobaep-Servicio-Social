@@ -25,6 +25,7 @@ $dig = fn($k) => preg_replace('/\D/', '', $_POST[$k] ?? '');
 $correo    = trim($_POST['correo_personal'] ?? '');
 $telefono  = $dig('telefono');
 $fecha_nac = trim($_POST['fecha_nacimiento'] ?? '');
+// El sexo solo se registra la primera vez (si estaba vacío); para corregirlo, Control Escolar
 $sexo      = in_array($_POST['sexo'] ?? '', ['F', 'M'], true) ? $_POST['sexo'] : null;
 
 $dom = [
@@ -60,7 +61,7 @@ $nul = fn($v) => $v !== '' ? $v : null;
 try {
     $pdo->beginTransaction();
 
-    $pdo->prepare("UPDATE ALUMNOS SET correo_personal = ?, telefono = ?, fecha_nacimiento = ?, edad = ?, sexo = COALESCE(?, sexo) WHERE id_alumno = ?")
+    $pdo->prepare("UPDATE ALUMNOS SET correo_personal = ?, telefono = ?, fecha_nacimiento = ?, edad = ?, sexo = IF(sexo IN ('F','M'), sexo, ?) WHERE id_alumno = ?")
         ->execute([$nul($correo), $nul($telefono), $nul($fecha_nac), $edad, $sexo, $id_alumno]);
 
     // Domicilio (UNIQUE id_alumno)

@@ -60,7 +60,7 @@ if (PHP_SAPI !== 'cli' && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && pe
 /** Lista blanca de extensiones que se pueden subir (documentos, imágenes, comprimidos, audio y video). */
 function extension_permitida(string $ext): bool {
     static $ok = ['pdf', 'doc', 'docx', 'odt', 'rtf', 'txt', 'xls', 'xlsx', 'csv', 'ods', 'ppt', 'pptx', 'odp',
-                  'jpg', 'jpeg', 'png', 'gif', 'webp', 'zip', 'rar', '7z', 'mp3', 'mp4', 'm4a', 'wav'];
+                  'jpg', 'jpeg', 'png', 'gif', 'webp', 'zip', 'rar', '7z', 'mp3', 'mp4', 'm4a', 'wav', 'ogg'];
     return in_array(strtolower($ext), $ok, true);
 }
 

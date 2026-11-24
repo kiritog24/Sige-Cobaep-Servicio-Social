@@ -37,7 +37,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
     <link href="style_dashboard_admin.css?v=<?php echo time(); ?>" rel="stylesheet">
     <link href="style_sidebar.css?v=<?php echo time(); ?>" rel="stylesheet">
     <link href="style_agregar_usuario.css?v=<?php echo time(); ?>" rel="stylesheet">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 <body>
 

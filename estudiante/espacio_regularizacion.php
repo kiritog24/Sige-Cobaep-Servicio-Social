@@ -67,6 +67,7 @@ try {
     $stmt_bloques->execute([$id_clase]);
     $bloques = $stmt_bloques->fetchAll(PDO::FETCH_ASSOC);
 
+    regula_asegurar_columnas($pdo);
     $stmt_act = $pdo->prepare("SELECT * FROM ACTIVIDADES_REGULARIZACION WHERE id_clase = ? ORDER BY fecha_publicacion DESC");
     $stmt_act->execute([$id_clase]);
     $actividades = $stmt_act->fetchAll(PDO::FETCH_ASSOC);
@@ -112,8 +113,8 @@ if (!empty($clase['imagen_portada'])) {
     <!-- CSS Base unificado -->
     <link rel="stylesheet" href="style_dashboard_estud.css?v=<?php echo time(); ?>">
 
-    <link rel="stylesheet" href="css/espacio_regularizacion.css?v=1">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="css/espacio_regularizacion.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 <body>
 
@@ -246,12 +247,27 @@ $render_act = function (array $act) use ($mis_entregas, $clase_recibe, $id_clase
                                         <div class="mat-item" id="act-<?php echo $id_a; ?>">
                                             <div class="mat-icon"><i class="fas <?php echo $tiene_entrega ? 'fa-file-signature' : 'fa-file-pdf'; ?>"></i></div>
                                             <div class="mat-info">
-                                                <h4 class="mat-title"><?php echo htmlspecialchars($act['titulo']); ?></h4>
+                                                <h4 class="mat-title" style="color:<?php echo htmlspecialchars(regula_color_valido($act['color_titulo'] ?? '')); ?>;"><?php echo htmlspecialchars($act['titulo']); ?></h4>
                                                 <?php if (!empty($act['descripcion'])): ?>
-                                                    <p class="mat-desc"><?php echo nl2br(htmlspecialchars($act['descripcion'])); ?></p>
+                                                    <div class="mat-desc-box">
+                                                        <span class="mat-etiqueta"><i class="fas fa-list-check"></i> Instrucciones de la actividad</span>
+                                                        <p class="mat-desc"><?php echo nl2br(htmlspecialchars($act['descripcion'])); ?></p>
+                                                    </div>
                                                 <?php endif; ?>
-                                                <?php if ($nombre_archivo !== ''): ?>
-                                                    <a class="mat-filename" href="../<?php echo htmlspecialchars($act['archivo_ruta']); ?>" target="_blank"><i class="fas fa-paperclip"></i> <?php echo htmlspecialchars($nombre_archivo); ?> <i class="fas fa-download" style="margin-left:4px;"></i></a>
+                                                <?php if ($nombre_archivo !== ''):
+                                                    $ext_mat = strtolower(pathinfo($nombre_archivo, PATHINFO_EXTENSION));
+                                                    $ico_mat = ['pdf' => 'fa-file-pdf', 'doc' => 'fa-file-word', 'docx' => 'fa-file-word', 'xls' => 'fa-file-excel', 'xlsx' => 'fa-file-excel',
+                                                                'ppt' => 'fa-file-powerpoint', 'pptx' => 'fa-file-powerpoint', 'jpg' => 'fa-file-image', 'jpeg' => 'fa-file-image', 'png' => 'fa-file-image',
+                                                                'zip' => 'fa-file-zipper'][$ext_mat] ?? 'fa-file-lines'; ?>
+                                                    <a class="mat-apoyo" href="../<?php echo htmlspecialchars($act['archivo_ruta']); ?>" target="_blank" download="<?php echo htmlspecialchars($nombre_archivo); ?>">
+                                                        <span class="mat-apoyo-icono"><i class="fas <?php echo $ico_mat; ?>"></i></span>
+                                                        <span class="mat-apoyo-texto">
+                                                            <span class="mat-etiqueta"><i class="fas fa-book-open"></i> Material de apoyo</span>
+                                                            <strong><?php echo htmlspecialchars($nombre_archivo); ?></strong>
+                                                            <small>Tu docente lo preparó para ayudarte con esta actividad. Descárgalo y revísalo antes de entregar.</small>
+                                                        </span>
+                                                        <span class="mat-apoyo-btn"><i class="fas fa-download"></i> Descargar</span>
+                                                    </a>
                                                 <?php endif; ?>
 
                                                 <?php if ($tiene_entrega): ?>

@@ -62,7 +62,7 @@ $nombre_admin = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombre'
     <link rel="stylesheet" href="style_dashboard_admin.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="style-editar_usuario.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="style_sidebar.css">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>

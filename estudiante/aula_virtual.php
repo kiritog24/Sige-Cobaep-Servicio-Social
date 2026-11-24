@@ -84,7 +84,7 @@ try {
     function campo_archivos_entrega(array $act): void {
         $n = numero_archivos_valido($act['numero_archivos'] ?? 1);
         $mb = tamano_archivo_valido($act['tamano_maximo'] ?? 10);
-        $acc = tipos_archivo_accept($act['tipo_archivo'] ?? '*');
+        $acc = tipos_archivo_accept_input($act['tipo_archivo'] ?? '*');
         $lim = limites_servidor(); ?>
         <div class="selector-archivos" data-max-n="<?php echo $n; ?>" data-max-mb="<?php echo $mb; ?>" data-total-mb="<?php echo $lim['total_mb']; ?>">
             <label class="sel-boton">
@@ -135,8 +135,8 @@ $fecha_actual = new DateTime();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="style_dashboard_estud.css?v=<?php echo time(); ?>">
 
-    <link rel="stylesheet" href="css/aula_virtual.css?v=3">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="css/aula_virtual.css?v=4">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 <body>
 
@@ -275,7 +275,12 @@ $fecha_actual = new DateTime();
                                 
                                 <div class="act-content">
                                     <h4 class="act-title"><?php echo htmlspecialchars($act['titulo']); ?></h4>
-                                    <p class="act-desc"><?php echo nl2br(htmlspecialchars($act['descripcion'])); ?></p>
+                                    <?php if (trim((string)$act['descripcion']) !== ''): ?>
+                                        <div class="act-instrucciones">
+                                            <span class="act-instrucciones-tit"><i class="fas fa-list-check"></i> Instrucciones de la actividad</span>
+                                            <p class="act-desc"><?php echo nl2br(htmlspecialchars($act['descripcion'])); ?></p>
+                                        </div>
+                                    <?php endif; ?>
                                     
                                     <div class="act-meta">
                                         <span class="meta-tag"><i class="far fa-clock"></i> Publicado: <?php echo date('d/m/Y', strtotime($act['fecha_apertura'] ?: $act['fecha_publicacion'])); ?></span>

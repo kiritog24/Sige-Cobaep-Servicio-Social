@@ -46,3 +46,21 @@ function rango_fechas_texto(string $inicio, string $fin): string {
     $a = date('d/m/Y', strtotime($inicio));
     return $inicio === $fin ? $a : $a . ' al ' . date('d/m/Y', strtotime($fin));
 }
+
+/**
+ * Vigencia de la credencial del alumno: el semestre en curso (Ago–Ene o Feb–Jul).
+ * Se renueva sola cada semestre, en lugar de quedarse fija en el año de ingreso.
+ */
+function vigencia_credencial_alumno(?string $fecha = null): string {
+    $t = $fecha ? strtotime($fecha) : time();
+    $m = (int)date('n', $t);
+    $y = (int)date('Y', $t);
+    if ($m >= 8)  return "AGO $y – ENE " . ($y + 1);
+    if ($m === 1) return 'AGO ' . ($y - 1) . " – ENE $y";
+    return "FEB – JUL $y";
+}
+
+/** Nombre completo del alumno: nombre(s) y ambos apellidos. */
+function nombre_completo_alumno(array $a): string {
+    return trim(preg_replace('/\s+/', ' ', ($a['nombre'] ?? '') . ' ' . ($a['apellido_paterno'] ?? '') . ' ' . ($a['apellido_materno'] ?? '')));
+}

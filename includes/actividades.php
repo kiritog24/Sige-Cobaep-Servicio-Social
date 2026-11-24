@@ -8,19 +8,19 @@
  */
 
 /** Grupos de tipos de archivo: extensión => nombre para mostrar. */
+// Solo los formatos más usados. Sin video (pesa demasiado para el servidor) ni formatos poco comunes.
 const TIPOS_ARCHIVO = [
-    'Documentos'       => ['pdf' => 'PDF', 'doc' => 'Word (.doc)', 'docx' => 'Word (.docx)', 'odt' => 'OpenDocument (.odt)', 'rtf' => 'Texto enriquecido (.rtf)', 'txt' => 'Texto (.txt)'],
-    'Hojas de cálculo' => ['xls' => 'Excel (.xls)', 'xlsx' => 'Excel (.xlsx)', 'csv' => 'CSV', 'ods' => 'OpenDocument (.ods)'],
-    'Presentaciones'   => ['ppt' => 'PowerPoint (.ppt)', 'pptx' => 'PowerPoint (.pptx)', 'odp' => 'OpenDocument (.odp)'],
-    'Imágenes'         => ['jpg' => 'JPG', 'jpeg' => 'JPEG', 'png' => 'PNG', 'gif' => 'GIF', 'webp' => 'WEBP'],
-    'Audio'            => ['mp3' => 'MP3', 'm4a' => 'M4A', 'wav' => 'WAV'],
-    'Video'            => ['mp4' => 'MP4'],
-    'Comprimidos'      => ['zip' => 'ZIP', 'rar' => 'RAR', '7z' => '7Z'],
+    'Documentos'       => ['pdf' => 'PDF', 'doc' => 'Word (.doc)', 'docx' => 'Word (.docx)', 'txt' => 'Texto (.txt)'],
+    'Hojas de cálculo' => ['xls' => 'Excel (.xls)', 'xlsx' => 'Excel (.xlsx)', 'csv' => 'CSV'],
+    'Presentaciones'   => ['ppt' => 'PowerPoint (.ppt)', 'pptx' => 'PowerPoint (.pptx)'],
+    'Imágenes'         => ['jpg' => 'JPG', 'jpeg' => 'JPEG', 'png' => 'PNG', 'webp' => 'WEBP'],
+    'Audio'            => ['mp3' => 'MP3', 'm4a' => 'M4A (notas de voz de iPhone)', 'ogg' => 'OGG (notas de voz de WhatsApp)'],
+    'Comprimidos'      => ['zip' => 'ZIP', 'rar' => 'RAR'],
 ];
 
 const GRUPO_ICONO_ARCHIVO = [
     'Documentos' => 'fa-file-lines', 'Hojas de cálculo' => 'fa-file-excel', 'Presentaciones' => 'fa-file-powerpoint',
-    'Imágenes' => 'fa-file-image', 'Audio' => 'fa-file-audio', 'Video' => 'fa-file-video', 'Comprimidos' => 'fa-file-zipper',
+    'Imágenes' => 'fa-file-image', 'Audio' => 'fa-file-audio', 'Comprimidos' => 'fa-file-zipper',
 ];
 
 const TAMANOS_ARCHIVO_MB = [2, 5, 10, 20, 50];
@@ -203,6 +203,7 @@ function tipos_archivo_lista(?string $guardado): array {
         if (in_array($p, $todas, true)) $res[] = $p;
     }
     $res = array_values(array_unique($res));
+    if (!$res) return ['pdf'];   // solo tenía tipos que ya no se aceptan (video, gif...): se queda en PDF
     return count($res) >= count($todas) ? [] : $res;
 }
 
@@ -223,7 +224,7 @@ function tipos_archivo_accept(?string $guardado): string {
 /** Texto corto para mostrar: "PDF, Word (.docx)" o "Cualquier tipo". */
 function tipos_archivo_texto(?string $guardado): string {
     $l = tipos_archivo_lista($guardado);
-    if (!$l) return 'Cualquier tipo de archivo';
+    if (!$l) return 'Cualquier tipo de la lista';
     $nombres = [];
     foreach (TIPOS_ARCHIVO as $grupo => $exts) {
         $del_grupo = array_intersect(array_keys($exts), $l);
@@ -237,8 +238,13 @@ function tipos_archivo_texto(?string $guardado): string {
 function tipo_archivo_permitido(?string $guardado, string $ext): bool {
     $ext = strtolower($ext);
     if (!extension_permitida($ext)) return false;
-    $l = tipos_archivo_lista($guardado);
-    return !$l || in_array($ext, $l, true);
+    $l = tipos_archivo_lista($guardado) ?: tipos_archivo_todas();   // "cualquiera" = cualquiera de la lista (sin video)
+    return in_array($ext, $l, true);
+}
+
+/** Atributo accept del selector del alumno: con "cualquier tipo" también limita a la lista. */
+function tipos_archivo_accept_input(?string $guardado): string {
+    return '.' . implode(',.', tipos_archivo_lista($guardado) ?: tipos_archivo_todas());
 }
 
 function tamano_archivo_valido($mb): int {

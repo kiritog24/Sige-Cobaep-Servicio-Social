@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS `actividades_regularizacion` (
   `id_clase` int(11) NOT NULL,
   `id_bloque` int(11) DEFAULT NULL,
   `titulo` varchar(150) NOT NULL,
+  `color_titulo` varchar(7) DEFAULT NULL,
   `descripcion` text DEFAULT NULL,
   `archivo_ruta` varchar(255) DEFAULT NULL,
   `fecha_publicacion` datetime NOT NULL DEFAULT current_timestamp(),
@@ -382,6 +383,24 @@ CREATE TABLE IF NOT EXISTS `entregas_actividad_archivos` (
   PRIMARY KEY (`id_archivo`),
   KEY `idx_entrega` (`id_entrega`),
   CONSTRAINT `fk_archivo_entrega` FOREIGN KEY (`id_entrega`) REFERENCES `entregas_actividad` (`id_entrega`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `avisos_guardados` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id_alumno` int(11) NOT NULL,
+  `clave` varchar(80) NOT NULL,
+  `oculto` tinyint(1) NOT NULL DEFAULT 1,
+  `automatico` tinyint(1) NOT NULL DEFAULT 0,
+  `titulo` varchar(255) NOT NULL,
+  `texto` text DEFAULT NULL,
+  `icono` varchar(60) DEFAULT NULL,
+  `color` varchar(20) DEFAULT NULL,
+  `enlace` varchar(255) DEFAULT NULL,
+  `fecha_aviso` datetime DEFAULT NULL,
+  `fecha_guardado` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_alumno_clave` (`id_alumno`,`clave`),
+  KEY `idx_alumno_oculto` (`id_alumno`,`oculto`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;

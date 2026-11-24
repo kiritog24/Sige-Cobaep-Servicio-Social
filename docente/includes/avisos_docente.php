@@ -85,6 +85,36 @@ function docente_avisos(PDO $pdo, int $id_docente): array {
         }
 
         // ---------------------------------------------------
+        // JUSTIFICANTES DE PREFECTURA en mis clases (últimos 7 días)
+        // ---------------------------------------------------
+        $st = $pdo->prepare("
+            SELECT ac.id_clase, ac.fecha, m.nombre_materia, g.semestre, g.nombre_grupo,
+                   GROUP_CONCAT(DISTINCT CONCAT(al.apellido_paterno, ' ', al.nombre) ORDER BY al.apellido_paterno SEPARATOR ', ') AS alumnos,
+                   COUNT(DISTINCT ac.id_alumno) AS n,
+                   MAX(asi.motivo_justificacion) AS motivo
+            FROM ASISTENCIAS_CLASES ac
+            INNER JOIN CLASES_REGULARES c ON c.id_clase = ac.id_clase AND c.id_maestro = ?
+            INNER JOIN MATERIAS m ON m.id_materia = c.id_materia
+            INNER JOIN GRUPOS g ON g.id_grupo = c.id_grupo
+            INNER JOIN ALUMNOS al ON al.id_alumno = ac.id_alumno
+            INNER JOIN ASISTENCIAS asi ON asi.id_alumno = ac.id_alumno AND asi.tipo_registro = 'Entrada'
+                   AND DATE(asi.fecha_hora_escaneo) = ac.fecha AND asi.estatus = 'Falta Justificada'
+            WHERE ac.estatus = 'Justificada' AND ac.fecha >= CURDATE() - INTERVAL 7 DAY
+            GROUP BY ac.id_clase, ac.fecha, m.nombre_materia, g.semestre, g.nombre_grupo
+            ORDER BY ac.fecha DESC LIMIT 5
+        ");
+        $st->execute([$id_docente]);
+        foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            $n = (int)$r['n'];
+            agregar_aviso($avisos, 4, 'asistencia', 'fa-file-signature', 'Falta justificada por Prefectura',
+                ($n === 1 ? 'La falta de <strong>' . htmlspecialchars($r['alumnos']) . '</strong>' : "Las faltas de <strong>$n alumnos</strong> (" . htmlspecialchars(mb_strimwidth($r['alumnos'], 0, 120, '…')) . ')')
+                    . ' en «' . htmlspecialchars($r['nombre_materia']) . '» ' . $r['semestre'] . '° "' . htmlspecialchars($r['nombre_grupo']) . '" del ' . date('d/m/Y', strtotime($r['fecha']))
+                    . ' quedó justificada' . ($n === 1 ? '' : 's') . ' en tu lista.' . ($n === 1 && $r['motivo'] ? ' Motivo: ' . htmlspecialchars($r['motivo']) . '.' : ''),
+                hace(strtotime($r['fecha'] . ' 08:00:00'), $ahora) . ' • Prefectura',
+                'lista_alumnos.php?id_clase=' . (int)$r['id_clase'], 'Ver asistencia');
+        }
+
+        // ---------------------------------------------------
         // ENTREGAS POR REVISAR (aulas virtuales)
         // ---------------------------------------------------
         $st = $pdo->prepare("

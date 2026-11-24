@@ -122,6 +122,8 @@
         .badge.puntual { background: #ecfdf5; color: #059669; }
         .badge.retardo { background: #fff7ed; color: #ea580c; }
         .badge.falta { background: #fef2f2; color: #dc2626; }
+        .badge.justificada { background: #dbeafe; color: #1d4ed8; }
+        .obs-just b { color: #1d4ed8; }
         
         .observacion { font-size: 0.8rem; color: #64748b; display: flex; align-items: center; gap: 6px; }
         .observacion i { color: #059669; }

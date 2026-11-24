@@ -86,7 +86,7 @@ try {
     <link rel="stylesheet" href="../Prefectura/style_creacion_reportes.css">
     
     <link rel="stylesheet" href="css/creacion_reportes.css?v=1">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 <body>
     

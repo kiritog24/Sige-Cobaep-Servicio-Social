@@ -311,6 +311,15 @@ try {
                      WHERE e.estatus_entrega = 'Revisada'");
     if ($n) registrar("➕ $n entrega(s) marcadas como revisadas con el sistema nuevo");
 
+    // Regularización: color del título de cada actividad
+    agregar_columna($pdo, 'ACTIVIDADES_REGULARIZACION', 'color_titulo', 'VARCHAR(7) NULL DEFAULT NULL AFTER titulo');
+    // Avisos del alumno que se guardan (limpiar la vista sin borrar nada)
+    if (!tabla_existe($pdo, 'AVISOS_GUARDADOS')) {
+        require_once __DIR__ . '/../estudiante/includes/avisos_data.php';
+        avisos_tabla($pdo);
+        registrar("➕ Tabla AVISOS_GUARDADOS creada (avisos guardados del alumno)");
+    }
+
     // Instalación nueva: si no hay ningún administrador, se crea uno con contraseña provisional
     if (tabla_existe($pdo, 'ADMINISTRATIVOS') && (int)$pdo->query("SELECT COUNT(*) FROM ADMINISTRATIVOS")->fetchColumn() === 0) {
         $pass = generar_password_provisional();

@@ -17,7 +17,7 @@ $filtro_fecha = trim($_GET['fecha'] ?? '');
 // 1. SE AGREGÓ 'a.motivo_justificacion' A LA CONSULTA SQL
 $query = "
     SELECT a.id_asistencia, a.fecha_hora_escaneo, a.fecha_hora_salida, a.tipo_registro, 
-           al.matricula, al.nombre, al.apellido_paterno, a.estatus, a.motivo_justificacion,
+           al.matricula, al.nombre, al.apellido_paterno, al.apellido_materno, a.estatus, a.motivo_justificacion,
            g.semestre, g.nombre_grupo, g.turno 
     FROM asistencias a
     INNER JOIN alumnos al ON a.id_alumno = al.id_alumno
@@ -31,9 +31,26 @@ if (empty($filtro_matricula) && empty($filtro_fecha)) {
     $filtro_fecha = date('Y-m-d'); 
 }
 
-if (!empty($filtro_matricula)) {
-    $query .= " AND al.matricula LIKE :matricula";
-    $params[':matricula'] = '%' . $filtro_matricula . '%';
+// Búsqueda: si lo escrito es una matrícula que existe, solo ese alumno (27/2026B0001 no debe traer también 27/2026B0001V).
+// Si no existe exacta, busca parecidas por matrícula o por nombre.
+$busqueda_exacta = false;
+$sql_busqueda = '';
+$params_busqueda = [];
+if ($filtro_matricula !== '') {
+    $st_ex = $pdo->prepare("SELECT COUNT(*) FROM alumnos WHERE matricula = ?");
+    $st_ex->execute([$filtro_matricula]);
+    $busqueda_exacta = (int)$st_ex->fetchColumn() > 0;
+    if ($busqueda_exacta) {
+        $sql_busqueda = " AND al.matricula = :busq";
+        $params_busqueda = [':busq' => $filtro_matricula];
+    } else {
+        $sql_busqueda = " AND (al.matricula LIKE :busq1 OR CONCAT_WS(' ', al.nombre, al.apellido_paterno, al.apellido_materno) LIKE :busq2
+                              OR CONCAT_WS(' ', al.apellido_paterno, al.apellido_materno, al.nombre) LIKE :busq3)";
+        $like = '%' . preg_replace('/\s+/', '%', $filtro_matricula) . '%';
+        $params_busqueda = [':busq1' => $like, ':busq2' => $like, ':busq3' => $like];
+    }
+    $query .= $sql_busqueda;
+    $params += $params_busqueda;
 }
 
 if (!empty($filtro_fecha)) {
@@ -64,7 +81,7 @@ if (fecha_valida($filtro_fecha) && $filtro_fecha <= date('Y-m-d')) {
                    WHERE al.estatus = 'Alta'
                      AND NOT EXISTS (SELECT 1 FROM asistencias x WHERE x.id_alumno = al.id_alumno AND x.tipo_registro = 'Entrada' AND DATE(x.fecha_hora_escaneo) = :f3)";
         $p_sr = [':f1' => $filtro_fecha, ':f2' => $filtro_fecha, ':f3' => $filtro_fecha];
-        if ($filtro_matricula !== '') { $sql_sr .= " AND al.matricula LIKE :m"; $p_sr[':m'] = '%' . $filtro_matricula . '%'; }
+        if ($filtro_matricula !== '') { $sql_sr .= $sql_busqueda; $p_sr += $params_busqueda; }
         try {
             $st_sr = $pdo->prepare($sql_sr . " GROUP BY al.id_alumno ORDER BY g.semestre, g.nombre_grupo, al.apellido_paterno, al.nombre");
             $st_sr->execute($p_sr);
@@ -86,9 +103,9 @@ if (fecha_valida($filtro_fecha) && $filtro_fecha <= date('Y-m-d')) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="../admin/style_dashboard_admin.css">
     <link rel="stylesheet" href="../admin/style_sidebar.css">
-    <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css">
-    <link rel="stylesheet" href="../Prefectura/style_historial_asistencias.css">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css?v=2">
+    <link rel="stylesheet" href="../Prefectura/style_historial_asistencias.css?v=3">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 <body>
     
@@ -96,7 +113,8 @@ if (fecha_valida($filtro_fecha) && $filtro_fecha <= date('Y-m-d')) {
     $mostrar_modal = '';
     if (isset($_GET['msg']) && $_GET['msg'] === 'exito_justificante') {
         $n_cl = (int)($_GET['clases'] ?? 0);
-        $txt_ok = 'El justificante se ha guardado correctamente con su motivo.' . ($n_cl ? " También se justificaron $n_cl falta(s) que tenía en sus clases ese día." : '');
+        $txt_ok = 'El justificante se guardó con su motivo y ya aparece resaltado en la tabla.' . ($n_cl ? " También se justificaron $n_cl falta(s) que tenía en sus clases ese día." : '')
+            . ' Lo verán el alumno (en sus avisos y en Mis asistencias), sus docentes (en el pase de lista y en sus avisos) y Control Escolar (en reportes y en su ficha).';
         $mostrar_modal = "document.getElementById('modalExito').style.display = 'flex';
                           if(document.getElementById('exitoText')) document.getElementById('exitoText').innerText = " . json_encode($txt_ok, JSON_UNESCAPED_UNICODE) . ";";
     } elseif (isset($_GET['error'])) {
@@ -113,7 +131,10 @@ if (fecha_valida($filtro_fecha) && $filtro_fecha <= date('Y-m-d')) {
         echo "<script>
                 document.addEventListener('DOMContentLoaded', function() {
                     $mostrar_modal
-                    window.history.replaceState({}, document.title, window.location.pathname);
+                    const r = document.querySelector('.fila-resaltada');
+                    if (r) setTimeout(() => r.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300);
+                    const u = new URL(location.href); ['msg', 'clases', 'resaltar', 'error'].forEach(k => u.searchParams.delete(k));
+                    window.history.replaceState({}, document.title, u.pathname + u.search);
                 });
               </script>";
     }
@@ -135,8 +156,8 @@ if (fecha_valida($filtro_fecha) && $filtro_fecha <= date('Y-m-d')) {
 
         <form method="GET" class="filter-bar">
             <div class="filter-group">
-                <label>Buscar por Matrícula</label>
-                <input type="text" name="matricula" class="filter-input" placeholder="Ej. 27/2026B0001" value="<?php echo htmlspecialchars($filtro_matricula); ?>">
+                <label>Buscar por matrícula o nombre</label>
+                <input type="text" name="matricula" class="filter-input" placeholder="Ej. 27/2026B0001 o Aguilar" value="<?php echo htmlspecialchars($filtro_matricula); ?>">
             </div>
             <div class="filter-group">
                 <label>Filtrar por Fecha</label>
@@ -152,6 +173,9 @@ if (fecha_valida($filtro_fecha) && $filtro_fecha <= date('Y-m-d')) {
             </button>
         </form>
 
+        <?php if ($filtro_matricula !== '' && !$busqueda_exacta): ?>
+            <div class="aviso-busqueda"><i class="fas fa-circle-info"></i> No hay un alumno con la matrícula exacta «<?php echo htmlspecialchars($filtro_matricula); ?>». Se muestran los que se parecen por matrícula o nombre.</div>
+        <?php endif; ?>
         <section class="overview-card" style="padding: 0; overflow: hidden;">
             <div class="table-responsive" style="margin-top: 0;">
                 <table>
@@ -202,13 +226,13 @@ if (fecha_valida($filtro_fecha) && $filtro_fecha <= date('Y-m-d')) {
                                     $clase_fila = 'fila-suspendido'; 
                                     $texto_estatus = 'Suspendido';
                                 } elseif ($estado_str === 'retardo justificado') {
-                                    $clase_badge = 'status-puntual';
-                                    $texto_estatus = 'Puntual (Just.)';
+                                    $clase_badge = 'status-retardo-just';
+                                    $texto_estatus = 'Retardo justificado';
                                 } elseif ($estado_str === 'falta justificada') {
                                     $clase_badge = 'status-justificada';
                                 }
                         ?>
-                            <tr class="<?php echo $clase_fila; ?>">
+                            <tr class="<?php echo $clase_fila; ?><?php echo (int)($_GET['resaltar'] ?? 0) === (int)$row['id_asistencia'] ? ' fila-resaltada' : ''; ?>" id="asis-<?php echo (int)$row['id_asistencia']; ?>">
                                 <td><strong><?php echo $hora_entrada; ?></strong></td>
                                 
                                 <td>
@@ -222,7 +246,7 @@ if (fecha_valida($filtro_fecha) && $filtro_fecha <= date('Y-m-d')) {
                                 </td>
                                 
                                 <td><?php echo htmlspecialchars($row['matricula']); ?></td>
-                                <td><?php echo htmlspecialchars($row['apellido_paterno'] . ', ' . $row['nombre']); ?></td>
+                                <td><?php echo htmlspecialchars(trim($row['apellido_paterno'] . ' ' . $row['apellido_materno']) . (trim((string)$row['nombre']) !== '' ? ', ' . $row['nombre'] : '')); ?></td>
                                 <td>
                                     <?php 
                                         if (!empty($row['semestre']) && !empty($row['nombre_grupo'])) {
@@ -308,23 +332,42 @@ if (fecha_valida($filtro_fecha) && $filtro_fecha <= date('Y-m-d')) {
         <?php if ($sin_clases_fecha): ?>
             <div style="margin-top:16px; padding:12px 16px; border-radius:12px; background:#f1f5f9; color:#334155; font-weight:600; font-size:.88rem;"><i class="fas fa-school-circle-xmark"></i> Ese día no hubo clases (<?php echo htmlspecialchars($sin_clases_fecha); ?>): nadie tiene falta.</div>
         <?php elseif ($sin_registro): ?>
-        <details class="overview-card sin-registro" style="margin-top:16px; padding:0; overflow:hidden;">
-            <summary style="padding:14px 18px; cursor:pointer; font-weight:700; color:#0f172a; display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px;">
-                <i class="fas fa-user-clock" style="color:#b91c1c;"></i> <?php echo count($sin_registro); ?> alumno(s) sin registro de entrada el <?php echo date('d/m/Y', strtotime($filtro_fecha)); ?>
-                <small style="font-weight:500; color:var(--muted);"><?php echo $filtro_fecha === date('Y-m-d') ? '(aún no llegan o faltaron)' : '(cuentan como falta)'; ?> · clic para ver y justificar</small>
+        <?php
+            $grupos_sr = [];
+            foreach ($sin_registro as $sr) { $k = $sr['semestre'] . '° "' . $sr['nombre_grupo'] . '" - ' . $sr['turno']; $grupos_sr[$k] = ($grupos_sr[$k] ?? 0) + 1; }
+            $abrir_sr = $filtro_matricula !== '' || count($sin_registro) <= 15;
+        ?>
+        <details class="overview-card sin-registro" id="sinRegistro" style="margin-top:16px; padding:0; overflow:hidden;"<?php echo $abrir_sr ? ' open' : ''; ?>>
+            <summary class="sr-resumen">
+                <span class="sr-titulo"><i class="fas fa-user-clock"></i> <?php echo count($sin_registro); ?> alumno(s) sin registro de entrada el <?php echo date('d/m/Y', strtotime($filtro_fecha)); ?></span>
+                <small><?php echo $filtro_fecha === date('Y-m-d') ? 'Aún no llegan o faltaron' : 'Cuentan como falta'; ?> · puedes justificar desde aquí</small>
+                <span class="sr-toggle"><span class="sr-ver">Ver lista</span><span class="sr-ocultar">Ocultar lista</span> <i class="fas fa-chevron-down"></i></span>
             </summary>
+            <div class="sr-herramientas">
+                <div class="sr-buscar"><i class="fas fa-search"></i><input type="search" id="srBuscar" placeholder="Buscar por nombre o matrícula..." autocomplete="off"></div>
+                <select id="srGrupo" aria-label="Filtrar por grupo">
+                    <option value="">Todos los grupos (<?php echo count($sin_registro); ?>)</option>
+                    <?php foreach ($grupos_sr as $g => $n): ?>
+                        <option value="<?php echo htmlspecialchars($g); ?>"><?php echo htmlspecialchars($g); ?> (<?php echo $n; ?>)</option>
+                    <?php endforeach; ?>
+                </select>
+                <span class="sr-cuenta" id="srCuenta"><?php echo count($sin_registro); ?> en la lista</span>
+            </div>
             <div class="table-responsive" style="margin-top:0;">
-                <table>
+                <table id="srTabla">
                     <thead><tr><th>Matrícula</th><th>Alumno</th><th>Grado y Grupo</th><th>Acciones</th></tr></thead>
                     <tbody>
-                    <?php foreach ($sin_registro as $sr): $nom_sr = trim($sr['apellido_paterno'] . ' ' . $sr['apellido_materno'] . ' ' . $sr['nombre']); ?>
-                        <tr>
+                    <?php foreach ($sin_registro as $sr):
+                        $nom_sr = trim($sr['apellido_paterno'] . ' ' . $sr['apellido_materno'] . ' ' . $sr['nombre']);
+                        $grp_sr = $sr['semestre'] . '° "' . $sr['nombre_grupo'] . '" - ' . $sr['turno']; ?>
+                        <tr data-grupo="<?php echo htmlspecialchars($grp_sr); ?>" data-buscar="<?php echo htmlspecialchars(mb_strtolower($sr['matricula'] . ' ' . $nom_sr . ' ' . $sr['nombre'] . ' ' . $sr['apellido_paterno'], 'UTF-8')); ?>">
                             <td><?php echo htmlspecialchars($sr['matricula']); ?></td>
                             <td><?php echo htmlspecialchars($nom_sr); ?></td>
-                            <td><?php echo htmlspecialchars($sr['semestre'] . '° "' . $sr['nombre_grupo'] . '" - ' . $sr['turno']); ?></td>
+                            <td><?php echo htmlspecialchars($grp_sr); ?></td>
                             <td><button type="button" class="btn-justificar" onclick="abrirModalJustificar(0, <?php echo htmlspecialchars(json_encode($nom_sr, JSON_UNESCAPED_UNICODE), ENT_QUOTES); ?>, <?php echo (int)$sr['id_alumno']; ?>, '<?php echo htmlspecialchars($filtro_fecha); ?>')"><i class="fas fa-file-signature"></i> Justificar falta</button></td>
                         </tr>
                     <?php endforeach; ?>
+                    <tr id="srVacio" hidden><td colspan="4" style="text-align:center; color:var(--muted); padding:1.5rem;">Ningún alumno coincide con la búsqueda.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -400,6 +443,28 @@ if (fecha_valida($filtro_fecha) && $filtro_fecha <= date('Y-m-d')) {
     </div>
 
     
+    <script>
+        (function () {
+            const buscar = document.getElementById('srBuscar'), grupo = document.getElementById('srGrupo');
+            if (!buscar) return;
+            const norm = t => String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const filas = [...document.querySelectorAll('#srTabla tbody tr[data-buscar]')];
+            function filtrar() {
+                const partes = norm(buscar.value).trim().split(/\s+/).filter(Boolean), g = grupo.value;
+                let n = 0;
+                filas.forEach(tr => {
+                    const ok = (!g || tr.dataset.grupo === g) && partes.every(p => norm(tr.dataset.buscar).includes(p));
+                    tr.style.display = ok ? '' : 'none';
+                    if (ok) n++;
+                });
+                document.getElementById('srCuenta').textContent = n + ' en la lista';
+                document.getElementById('srVacio').hidden = n > 0;
+            }
+            buscar.addEventListener('input', filtrar);
+            grupo.addEventListener('change', filtrar);
+            buscar.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
+        })();
+    </script>
     <script src="../js/dashboard_prefectura.js"></script>
     <script src="../js/modal_justificacion.js"></script>
     <script src="../js/responsive.js?v=10"></script>

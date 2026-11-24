@@ -12,7 +12,8 @@ function estudiante_campana(PDO $pdo): void {
     try {
         $desde = date('Y-m-d H:i:s', strtotime('-3 days'));
         $ahora = date('Y-m-d H:i:s');
-        foreach (obtener_avisos_estudiante($pdo, (int)($_SESSION['id_usuario'] ?? 0), 50) as $a) {
+        $id_al = (int)($_SESSION['id_usuario'] ?? 0);
+        foreach (avisos_visibles($pdo, $id_al, obtener_avisos_estudiante($pdo, $id_al, 50)) as $a) {
             if ($a['fecha'] && $a['fecha'] >= $desde && $a['fecha'] <= $ahora) $nuevos++;
         }
     } catch (PDOException $e) {

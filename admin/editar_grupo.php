@@ -35,7 +35,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
     <link rel="stylesheet" href="style_dashboard_admin.css">
     <link rel="stylesheet" href="style-agregar-grupos.css?v=2">
     <link rel="stylesheet" href="style_sidebar.css">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>

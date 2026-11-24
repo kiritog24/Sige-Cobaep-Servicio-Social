@@ -30,7 +30,8 @@ try {
         exit();
     }
 
-    // Consulta de Actividades (Ya la tenías)
+    // Consulta de Actividades
+    regula_asegurar_columnas($pdo);
     $stmt_act = $pdo->prepare("SELECT ar.*,
                (SELECT COUNT(*) FROM ENTREGAS_REGULARIZACION e WHERE e.id_actividad = ar.id_actividad) AS total_entregas,
                (SELECT COUNT(*) FROM ENTREGAS_REGULARIZACION e WHERE e.id_actividad = ar.id_actividad AND e.calificacion IS NULL) AS sin_calificar
@@ -136,7 +137,7 @@ if (!empty($clase['imagen_portada'])) {
     
     <link rel="stylesheet" href="style_dashboard_docente.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="style_detalle_regularizacion.css?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 
 <body>
@@ -189,7 +190,7 @@ $render_material = function (array $act) use ($h, $id_clase) { ?>
                                         <div class="material-card">
                                             <div class="material-icon"><i class="fas fa-file-alt"></i></div>
                                             <div class="material-info">
-                                                <h4><?php echo $h($act['titulo']); ?></h4>
+                                                <h4 style="color:<?php echo $h(regula_color_valido($act['color_titulo'] ?? '')); ?>;"><?php echo $h($act['titulo']); ?></h4>
                                                 <?php if (!empty($act['descripcion'])): ?>
                                                     <p><?php echo nl2br($h($act['descripcion'])); ?></p>
                                                 <?php endif; ?>
@@ -225,6 +226,7 @@ $render_material = function (array $act) use ($h, $id_clase) { ?>
                                                 <button type="button" class="btn-mat-action edit js-editar-material" title="Editar material"
                                                     data-id="<?php echo (int)$act['id_actividad']; ?>"
                                                     data-titulo="<?php echo $h($act['titulo']); ?>"
+                                                    data-color="<?php echo $h(regula_color_valido($act['color_titulo'] ?? '')); ?>"
                                                     data-descripcion="<?php echo $h($act['descripcion']); ?>"
                                                     data-bloque="<?php echo (int)$act['id_bloque']; ?>"
                                                     data-permite="<?php echo (int)$act['permite_entregas']; ?>"
@@ -441,7 +443,11 @@ $render_material = function (array $act) use ($h, $id_clase) { ?>
                         <input type="text" name="titulo" id="titulo" class="input-modern" placeholder="Ej. Guía de Estudio Bloque 1" required>
                     </div>
                     <div class="form-group">
-                        <label for="descripcion_mat">Instrucciones (Opcional)</label>
+                        <label>Color del título (así lo verán los alumnos)</label>
+                        <?php regula_campo_color('nm'); ?>
+                    </div>
+                    <div class="form-group">
+                        <label for="descripcion_mat">Instrucciones de la actividad (opcional)</label>
                         <textarea name="descripcion" id="descripcion_mat" class="input-modern" rows="3" placeholder="Instrucciones para el alumno..."></textarea>
                     </div>
                     <div class="form-group">
@@ -517,7 +523,11 @@ $render_material = function (array $act) use ($h, $id_clase) { ?>
                         <input type="text" name="titulo" id="em_titulo" class="input-modern" required>
                     </div>
                     <div class="form-group">
-                        <label for="em_descripcion">Instrucciones</label>
+                        <label>Color del título (así lo verán los alumnos)</label>
+                        <?php regula_campo_color('em'); ?>
+                    </div>
+                    <div class="form-group">
+                        <label for="em_descripcion">Instrucciones de la actividad</label>
                         <textarea name="descripcion" id="em_descripcion" class="input-modern" rows="3"></textarea>
                     </div>
                     <div class="form-group">
@@ -860,6 +870,7 @@ $render_material = function (array $act) use ($h, $id_clase) { ?>
             document.getElementById('em_id').value = b.dataset.id;
             document.getElementById('em_titulo').value = b.dataset.titulo;
             document.getElementById('em_descripcion').value = b.dataset.descripcion;
+            ponerColorTitulo(document.querySelector('#modalEditarMaterial .color-titulo'), b.dataset.color);
             document.getElementById('em_bloque').value = b.dataset.bloque !== '0' ? b.dataset.bloque : '';
             document.getElementById('em_permite').checked = b.dataset.permite === '1';
             document.getElementById('em_fecha').value = b.dataset.fecha || '';
@@ -952,6 +963,33 @@ $render_material = function (array $act) use ($h, $id_clase) { ?>
                 toggle.disabled = false;
             }
         });
+    });
+
+    // Color del título: paleta + color libre, con vista previa
+    function ponerColorTitulo(box, color) {
+        if (!box) return;
+        color = (color || '#0f172a').toLowerCase();
+        const radio = [...box.querySelectorAll('input[type=radio]')].find(r => !r.classList.contains('color-libre-radio') && r.value === color);
+        if (radio) radio.checked = true;
+        else { const libre = box.querySelector('.color-libre-radio'); libre.value = color; libre.checked = true; box.querySelector('.color-libre-input').value = color; }
+        box.querySelector('.color-muestra').style.color = color;
+    }
+    function legible(hex) {
+        const c = [1, 3, 5].map(i => parseInt(hex.substr(i, 2), 16) / 255).map(v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+        return 1.05 / (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2] + 0.05) >= 3;
+    }
+    document.querySelectorAll('.color-titulo').forEach(box => {
+        const muestra = box.querySelector('.color-muestra');
+        box.addEventListener('change', e => {
+            if (e.target.matches('input[type=radio]')) muestra.style.color = e.target.value;
+        });
+        const libre = box.querySelector('.color-libre-input'), radioLibre = box.querySelector('.color-libre-radio');
+        libre.addEventListener('input', () => {
+            if (!legible(libre.value)) { muestra.textContent = 'Ese color es muy claro y no se leería bien'; muestra.style.color = '#b91c1c'; return; }
+            muestra.textContent = 'Así se verá el título';
+            radioLibre.value = libre.value; radioLibre.checked = true; muestra.style.color = libre.value;
+        });
+        libre.addEventListener('click', () => { radioLibre.checked = true; });
     });
     </script>
     <script src="../js/responsive.js?v=10"></script>

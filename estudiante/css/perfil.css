@@ -173,3 +173,8 @@ input[type="file"] { display: none; }
     .cred-body { flex-direction: column; text-align: center; }
     .actions-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* Nombre completo (dos nombres y dos apellidos): no queda debajo del botón "Cambiar foto" */
+.profile-name-badges { min-width: 0; padding-right: 140px; }
+.profile-name-badges h2 { overflow-wrap: anywhere; line-height: 1.2; }
+@media (max-width: 768px) { .profile-name-badges { padding-right: 0; } }

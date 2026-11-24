@@ -18,7 +18,7 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'prefectos') {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <link rel="stylesheet" href="css/escaner_qr.css?v=1">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 <body data-sin-inactividad>
 

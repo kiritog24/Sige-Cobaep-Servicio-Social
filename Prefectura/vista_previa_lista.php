@@ -35,6 +35,7 @@ $query = "
     SELECT 
         al.matricula, 
         al.apellido_paterno, 
+        al.apellido_materno,
         al.nombre, 
         MIN(a.fecha_hora_escaneo) as fecha_hora_escaneo,
         SUBSTRING_INDEX(GROUP_CONCAT(a.estatus ORDER BY a.fecha_hora_escaneo ASC), ',', 1) as estatus
@@ -44,8 +45,8 @@ $query = "
     WHERE ga.id_grupo = :id_grupo
       AND ga.fecha_asignacion <= :fecha2
       AND (ga.fecha_baja IS NULL OR ga.fecha_baja > :fecha3)
-    GROUP BY al.id_alumno, al.matricula, al.apellido_paterno, al.nombre
-    ORDER BY al.apellido_paterno ASC, al.nombre ASC
+    GROUP BY al.id_alumno, al.matricula, al.apellido_paterno, al.apellido_materno, al.nombre
+    ORDER BY al.apellido_paterno ASC, al.apellido_materno ASC, al.nombre ASC
 ";
 
 try {
@@ -77,7 +78,7 @@ if (in_array($formato, ['pdf', 'xlsx'], true)) {
         require_once __DIR__ . '/../includes/xlsx_simple.php';
         $filas_x = [];
         foreach ($lista_alumnos as $n => $al) {
-            $filas_x[] = [$n + 1, $al['matricula'], mb_strtoupper($al['apellido_paterno'] . ' ' . $al['nombre'], 'UTF-8'),
+            $filas_x[] = [$n + 1, $al['matricula'], mb_strtoupper(trim($al['apellido_paterno'] . ' ' . $al['apellido_materno'] . ' ' . $al['nombre']), 'UTF-8'),
                           $al['fecha_hora_escaneo'] ? date('h:i a', strtotime($al['fecha_hora_escaneo'])) : '', $al['estatus'] ?: ($sin_clases ? 'Sin clases' : 'Sin registro'), $marca($al['estatus'])];
         }
         xlsx_descargar($nombre_desc . '.xlsx', 'Lista', ['COBAEP Plantel 27 · ' . $titulo_lista, 'Fecha: ' . $fecha_legible . ($sin_clases ? ' · SIN CLASES (' . $sin_clases . ')' : '') . ' · 1 = asistió, 0 = falta, * = justificada, - = suspendido, SC = sin clases'],
@@ -89,7 +90,7 @@ if (in_array($formato, ['pdf', 'xlsx'], true)) {
     foreach ($lista_alumnos as $n => $al) {
         $m = $marca($al['estatus']);
         $color = $m === '0' ? '#b91c1c' : ($m === '*' ? '#1d4ed8' : '#0f172a');
-        $cuerpo .= '<tr><td class="c">' . ($n + 1) . '</td><td class="c">' . $e($al['matricula']) . '</td><td>' . $e(mb_strtoupper($al['apellido_paterno'] . ' ' . $al['nombre'], 'UTF-8')) . '</td>'
+        $cuerpo .= '<tr><td class="c">' . ($n + 1) . '</td><td class="c">' . $e($al['matricula']) . '</td><td>' . $e(mb_strtoupper(trim($al['apellido_paterno'] . ' ' . $al['apellido_materno'] . ' ' . $al['nombre']), 'UTF-8')) . '</td>'
             . '<td class="c">' . ($al['fecha_hora_escaneo'] ? date('h:i a', strtotime($al['fecha_hora_escaneo'])) : '—') . '</td><td class="c">' . $e($al['estatus'] ?: ($sin_clases ? 'Sin clases' : 'Sin registro')) . '</td>'
             . '<td class="c" style="font-weight:bold;color:' . $color . '">' . $m . '</td></tr>';
     }
@@ -99,6 +100,20 @@ if (in_array($formato, ['pdf', 'xlsx'], true)) {
     pdf_descargar($nombre_desc . '.pdf', $titulo_lista, 'Fecha: ' . $fecha_legible . ($sin_clases ? ' · Sin clases (' . $sin_clases . ')' : ''), $cuerpo, 'portrait');
 }
 ?>
+<?php
+// Marca y resumen de la lista para la vista en pantalla
+$marca_vista = function (?string $estatus) use ($sin_clases): array {
+    $e = mb_strtolower(trim((string)$estatus), 'UTF-8');
+    if (($e === '' || $e === 'falta') && $sin_clases) return ['SC', 'm-sc', 'Sin clases'];
+    if ($e === '' || $e === 'falta')                  return ['0', 'm-falta', $e === '' ? 'Sin registro' : 'Falta'];
+    if (strpos($e, 'justificad') !== false || strpos($e, 'permiso') !== false) return ['*', 'm-just', $estatus];
+    if ($e === 'suspendido')                          return ['-', 'm-susp', 'Suspendido'];
+    return ['1', strpos($e, 'retardo') !== false ? 'm-retardo' : 'm-ok', $estatus];
+};
+$conteo = ['1' => 0, '0' => 0, '*' => 0, '-' => 0, 'SC' => 0];
+foreach ($lista_alumnos as $al) $conteo[$marca_vista($al['estatus'])[0]]++;
+$qs_l = http_build_query(['fecha_lista' => $fecha_lista, 'id_grupo' => $id_grupo_seleccionado]);
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -106,108 +121,66 @@ if (in_array($formato, ['pdf', 'xlsx'], true)) {
     <link rel="icon" type="image/png" sizes="32x32" href="../img/icono-32.png">
     <link rel="icon" type="image/png" sizes="192x192" href="../img/icono-192.png">
     <link rel="apple-touch-icon" href="../img/icono-180.png">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Etiqueta crucial para responsividad -->
-    <title>Lista Provisoria Asistencia - SIGE COBAEP</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Asistencia · Prefectura</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    
-    <link rel="stylesheet" href="css/vista_previa_lista.css?v=1">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="css/vista_previa_lista.css?v=2">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
-
 <body>
-    <div class="container">
-        <div class="header-actions">
-            <div class="header-title">
-                <h2>Vista Previa de Lista</h2>
-                <p>Formato de Asistencia Provisional</p>
+    <main class="vpl-main">
+        <div class="vpl-banner">
+            <div class="vpl-banner-texto">
+                <span class="vpl-eyebrow"><i class="fas fa-users"></i> Grupo <?php echo htmlspecialchars($semestre_titulo . '° "' . $grupo_titulo . '"'); ?> · COBAEP Plantel 27</span>
+                <h2>Lista de asistencia</h2>
+                <span class="vpl-sub"><i class="far fa-calendar"></i> <?php echo $fecha_legible; ?><?php if ($sin_clases): ?> · <b>Sin clases (<?php echo htmlspecialchars($sin_clases); ?>)</b><?php endif; ?></span>
             </div>
-            <div class="btn-group">
-                <a href="monitoreo_grupos.php" class="back-btn"><i class="fas fa-arrow-left"></i> Regresar</a>
-                <?php $qs_l = http_build_query(['fecha_lista' => $fecha_lista, 'id_grupo' => $id_grupo_seleccionado]); ?>
-                <a href="?<?php echo htmlspecialchars($qs_l); ?>&amp;formato=xlsx" class="export-btn"><i class="fas fa-file-excel"></i> Descargar Excel</a>
-                <a href="?<?php echo htmlspecialchars($qs_l); ?>&amp;formato=pdf" class="export-btn" style="background:#b91c1c;"><i class="fas fa-file-pdf"></i> Descargar PDF</a>
+            <div class="vpl-acciones">
+                <a href="?<?php echo htmlspecialchars($qs_l); ?>&amp;formato=pdf" class="vpl-btn vpl-pdf"><i class="fas fa-file-pdf"></i> Descargar PDF</a>
+                <a href="?<?php echo htmlspecialchars($qs_l); ?>&amp;formato=xlsx" class="vpl-btn vpl-excel"><i class="fas fa-file-excel"></i> Descargar Excel</a>
+                <a href="monitoreo_grupos.php" class="vpl-btn vpl-volver"><i class="fas fa-arrow-left"></i> Regresar</a>
             </div>
         </div>
 
-        <div class="preview-table-container">
-            <?php $total_columnas = 4; ?>
-            <!-- Los estilos en línea se mantienen limpios para que el Excel salga formal -->
-            <table id="tablaAsistencia" border="1" style="font-family: Arial, sans-serif; border-collapse: collapse; font-size: 12px;">
+        <div class="vpl-resumen">
+            <div><strong><?php echo count($lista_alumnos); ?></strong><span>Alumnos</span></div>
+            <div class="r-ok"><strong><?php echo $conteo['1']; ?></strong><span>Asistieron</span></div>
+            <div class="r-falta"><strong><?php echo $conteo['0']; ?></strong><span>Faltas / sin registro</span></div>
+            <div class="r-just"><strong><?php echo $conteo['*'] + $conteo['-']; ?></strong><span>Justificados o suspendidos</span></div>
+        </div>
+
+        <p class="vpl-leyenda"><b>1</b> asistió · <b class="t-falta">0</b> falta · <b class="t-just">*</b> justificada · <b>-</b> suspendido · <b>SC</b> sin clases</p>
+
+        <div class="vpl-tabla-wrap">
+            <table class="vpl-tabla">
                 <thead>
                     <tr>
-                        <th colspan="<?php echo $total_columnas; ?>" style="text-align: left; font-size: 16px; color: #1b4332; font-weight: bold; padding: 5px; border-bottom: none; border: 1px solid #000;">
-                            COBAEP PLANTEL 27 ZARAGOZA, PUE.
-                        </th>
-                    </tr>
-                    
-                    <tr>
-                        <th colspan="<?php echo $total_columnas; ?>" style="text-align: left; font-size: 14px; font-weight: bold; padding: 5px; border: 1px solid #000;">
-                            LISTA DE ASISTENCIA - SEMESTRE: <?php echo htmlspecialchars($semestre_titulo); ?>° GRUPO: "<?php echo htmlspecialchars($grupo_titulo); ?>"
-                        </th>
-                    </tr>
-                    
-                    <tr>
-                        <th colspan="<?php echo $total_columnas; ?>" style="text-align: left; font-size: 12px; font-weight: normal; padding: 5px; color: #555; border: 1px solid #000;">
-                            FECHA DEL REPORTE: <?php echo $fecha_legible; ?><?php if ($sin_clases): ?> · <b style="color:#475569;">SIN CLASES (<?php echo htmlspecialchars(mb_strtoupper($sin_clases, 'UTF-8')); ?>)</b><?php endif; ?>
-                        </th>
-                    </tr>
-                    
-                    <tr>
-                        <th style="background-color: #e9ecef; border: 1px solid #000000; text-align: center; padding: 8px; width: 40px; font-weight: bold;">NO.</th>
-                        <th style="background-color: #e9ecef; border: 1px solid #000000; text-align: center; padding: 8px; width: 120px; font-weight: bold;">MATRÍCULA</th>
-                        <th style="background-color: #e9ecef; border: 1px solid #000000; text-align: left; padding: 8px; width: 350px; font-weight: bold;">NOMBRE DEL ALUMNO</th>
-                        <th style="background-color: #e9ecef; border: 1px solid #000000; text-align: center; padding: 8px; width: 100px; font-weight: bold;">ASIST.</th>
+                        <th class="c">No.</th>
+                        <th>Alumno</th>
+                        <th class="c">Entrada</th>
+                        <th>Estatus</th>
+                        <th class="c">Marca</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($lista_alumnos)): ?>
-                        <tr>
-                            <td colspan="4" style="border: 1px solid #000000; text-align: center; padding: 20px;">No hay alumnos registrados.</td>
-                        </tr>
-                    <?php else: ?>
-                        <?php 
-                        $contador = 1;
-                        foreach ($lista_alumnos as $alumno): 
-                            $estado_str = strtolower($alumno['estatus'] ?? '');
-                            $marca_asistencia = '0';
-                            $color_texto = '#000000';
-
-                            // LÓGICA DE MARCADORES (1, 0, *)
-                            if ((empty($estado_str) || $estado_str === 'falta') && $sin_clases) {
-                                $marca_asistencia = 'SC';
-                                $color_texto = '#6c757d'; // Día sin clases: no es falta
-                            } elseif (empty($estado_str) || $estado_str === 'falta') {
-                                $marca_asistencia = '0';
-                                $color_texto = '#dc3545'; // Rojo sobrio
-                            } elseif (strpos($estado_str, 'justificad') !== false || strpos($estado_str, 'permiso') !== false) {
-                                $marca_asistencia = '*'; 
-                                $color_texto = '#0d6efd'; // Azul sobrio
-                            } elseif ($estado_str === 'suspendido') {
-                                $marca_asistencia = '-'; 
-                                $color_texto = '#6c757d'; // Gris
-                            } else {
-                                $marca_asistencia = '1'; 
-                                $color_texto = '#000000'; // Negro normal
-                            }
-                            
-                            $nombre_completo = mb_strtoupper(htmlspecialchars($alumno['apellido_paterno'] . ' ' . $alumno['nombre']), 'UTF-8');
-                        ?>
-                        <tr>
-                            <td style="border: 1px solid #000000; text-align: center; padding: 5px;"><?php echo $contador++; ?></td>
-                            <td style="border: 1px solid #000000; text-align: center; padding: 5px;"><?php echo htmlspecialchars($alumno['matricula']); ?></td>
-                            <td style="border: 1px solid #000000; text-align: left; padding: 5px;"><?php echo $nombre_completo; ?></td>
-                            <td style="border: 1px solid #000000; text-align: center; padding: 5px; font-weight: bold; font-size: 14px; color: <?php echo $color_texto; ?>;">
-                                <?php echo $marca_asistencia; ?>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
+                        <tr><td colspan="5" class="vacio" data-label="">No hay alumnos registrados en este grupo para esa fecha.</td></tr>
                     <?php endif; ?>
+                    <?php foreach ($lista_alumnos as $n => $alumno):
+                        [$marca, $cls, $texto] = $marca_vista($alumno['estatus']); ?>
+                        <tr>
+                            <td class="c num" data-label="No."><?php echo $n + 1; ?></td>
+                            <td data-label="" class="td-alumno"><strong><?php echo htmlspecialchars(mb_strtoupper(trim($alumno['apellido_paterno'] . ' ' . $alumno['apellido_materno'] . ' ' . $alumno['nombre']), 'UTF-8')); ?></strong><span>Mat: <?php echo htmlspecialchars($alumno['matricula']); ?></span></td>
+                            <td class="c" data-label="Entrada"><?php echo $alumno['fecha_hora_escaneo'] && substr($alumno['fecha_hora_escaneo'], 11, 5) !== '00:00' ? date('h:i a', strtotime($alumno['fecha_hora_escaneo'])) : '—'; ?></td>
+                            <td data-label="Estatus"><span class="estatus <?php echo $cls; ?>"><?php echo htmlspecialchars($texto); ?></span></td>
+                            <td class="c" data-label="Marca"><span class="marca <?php echo $cls; ?>"><?php echo $marca; ?></span></td>
+                        </tr>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
-    </div>
-
-
+    </main>
     <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

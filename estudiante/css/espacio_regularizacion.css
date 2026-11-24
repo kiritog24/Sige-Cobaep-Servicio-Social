@@ -183,3 +183,27 @@ a.mat-filename { text-decoration: none; }
     .btn-download { width: 100%; }
 }
 @media (max-width: 400px) { .topbar-right { grid-template-columns: 1fr; } }
+
+/* Título con color del docente, descripción y material de apoyo */
+.mat-title { font-size: 1.12rem; font-weight: 800; margin-bottom: 10px; }
+.mat-etiqueta { display: inline-flex; align-items: center; gap: 6px; font-size: .7rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: #64748b; }
+.mat-desc-box { background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #94a3b8; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; }
+.mat-desc-box .mat-desc { margin: 4px 0 0; color: #334155; font-size: .88rem; }
+.mat-apoyo { display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%); border: 2px solid #a7f3d0; border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; text-decoration: none; color: inherit; transition: .2s; }
+.mat-apoyo:hover { border-color: #10b981; box-shadow: 0 6px 16px -8px rgba(16, 185, 129, .5); }
+.mat-apoyo-icono { flex: 0 0 52px; height: 52px; border-radius: 12px; background: #10b981; color: #fff; display: grid; place-items: center; font-size: 1.5rem; }
+.mat-apoyo-texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mat-apoyo-texto .mat-etiqueta { color: #047857; }
+.mat-apoyo-texto strong { font-size: .95rem; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mat-apoyo-texto small { font-size: .78rem; color: #475569; line-height: 1.4; }
+.mat-apoyo-btn { flex-shrink: 0; background: #047857; color: #fff; padding: 9px 14px; border-radius: 10px; font-weight: 700; font-size: .82rem; display: inline-flex; align-items: center; gap: 6px; }
+@media (max-width: 600px) {
+    .mat-apoyo { flex-wrap: wrap; }
+    .mat-apoyo-icono { flex-basis: 44px; height: 44px; font-size: 1.25rem; }
+    .mat-apoyo-btn { width: 100%; justify-content: center; }
+}
+.mat-info { min-width: 0; }
+@media (max-width: 768px) {
+    .mat-item .mat-info { width: 100%; max-width: 100%; }
+    .mat-info input[type="file"] { max-width: 100%; }
+}

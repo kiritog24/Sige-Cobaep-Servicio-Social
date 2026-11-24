@@ -38,7 +38,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombr
     <link rel="stylesheet" href="style-gestionar-grupos.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="style_sidebar.css">
     <link rel="stylesheet" href="css/ver_semestres.css?v=1">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>

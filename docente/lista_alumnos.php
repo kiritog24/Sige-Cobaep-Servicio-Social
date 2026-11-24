@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../config/database.php';
+require_once __DIR__ . '/includes/reporte_asistencia.php';
 
 if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'docente') {
     header("Location: ../login.php");
@@ -11,28 +12,25 @@ $id_clase = isset($_GET['id_clase']) ? (int)$_GET['id_clase'] : 0;
 if ($id_clase === 0) { header("Location: mis_grupos.php"); exit(); }
 
 try {
-    $stmt = $pdo->prepare("SELECT m.nombre_materia, g.nombre_grupo, g.semestre FROM clases_regulares c INNER JOIN materias m ON c.id_materia = m.id_materia LEFT JOIN grupos g ON c.id_grupo = g.id_grupo WHERE c.id_clase = ?");
-    $stmt->execute([$id_clase]);
+    $stmt = $pdo->prepare("SELECT m.nombre_materia, m.imagen_portada, g.nombre_grupo, g.semestre, g.turno
+                           FROM clases_regulares c INNER JOIN materias m ON c.id_materia = m.id_materia
+                           LEFT JOIN grupos g ON c.id_grupo = g.id_grupo
+                           WHERE c.id_clase = ? AND c.id_maestro = ?");
+    $stmt->execute([$id_clase, (int)$_SESSION['id_usuario']]);
     $clase = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$clase) { header("Location: mis_grupos.php?error=" . urlencode('Esa materia no es tuya.')); exit(); }
 
-    $stmtAlumnos = $pdo->prepare("
-        SELECT a.id_alumno, a.matricula, a.nombre, a.apellido_paterno,
-            SUM(CASE WHEN ac.estatus IN ('Presente', 'Asistencia') THEN 1 ELSE 0 END) as presentes,
-            SUM(CASE WHEN ac.estatus = 'Retardo' THEN 1 ELSE 0 END) as retardos,
-            SUM(CASE WHEN ac.estatus IN ('Falta', 'Ausente') THEN 1 ELSE 0 END) as faltas
-        FROM clase_regular_alumno cra
-        INNER JOIN alumnos a ON cra.id_alumno = a.id_alumno
-        LEFT JOIN asistencias_clases ac ON a.id_alumno = ac.id_alumno AND ac.id_clase = cra.id_clase
-        WHERE cra.id_clase = ?
-        GROUP BY a.id_alumno
-        ORDER BY a.apellido_paterno ASC
-    ");
-    $stmtAlumnos->execute([$id_clase]);
-    $alumnos = $stmtAlumnos->fetchAll(PDO::FETCH_ASSOC);
-
-} catch (PDOException $e) { 
-    die("Error al cargar reporte: " . $e->getMessage()); 
+    $periodo = reporte_asistencia_periodo($_GET);
+    $filas = reporte_asistencia_filas($pdo, $id_clase, $periodo);
+    $resumen = reporte_asistencia_resumen($filas);
+} catch (PDOException $e) {
+    error_log('lista_alumnos: ' . $e->getMessage());
+    header("Location: gestionar_aula.php?id_clase=$id_clase&error=" . urlencode('No se pudo cargar el reporte de asistencia.'));
+    exit();
 }
+$portada = (!empty($clase['imagen_portada']) && is_file(__DIR__ . '/../' . $clase['imagen_portada'])) ? '../' . $clase['imagen_portada'] : '';
+$meses = [1 => 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+$tipo = $_GET['tipo_filtro'] ?? 'semestre';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -42,139 +40,124 @@ try {
     <link rel="icon" type="image/png" sizes="192x192" href="../img/icono-192.png">
     <link rel="apple-touch-icon" href="../img/icono-180.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Asistencia - SIGE COBAEP</title>
-    <link rel="stylesheet" href="css/lista_alumnos.css?v=1">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <title>Reporte de Asistencia · Portal Docente</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="style_dashboard_docente.css">
+    <link rel="stylesheet" href="css/ver_entregas.css?v=4">
+    <link rel="stylesheet" href="css/lista_alumnos.css?v=2">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <div>
-                <h1>Reporte General de Asistencia</h1>
-                <p><?php echo htmlspecialchars($clase['nombre_materia']); ?> | Grupo: <?php echo htmlspecialchars($clase['semestre']) . '° "' . htmlspecialchars($clase['nombre_grupo']) . '"'; ?></p>
+<body class="pagina-entregas">
+    <main class="main-content entregas-main">
+        <div class="header-entregas<?php echo $portada ? ' con-portada' : ''; ?>"<?php if ($portada): ?> style="background-image: url('<?php echo htmlspecialchars($portada, ENT_QUOTES); ?>');"<?php endif; ?>>
+            <div class="he-texto">
+                <span class="he-eyebrow"><i class="fas fa-book"></i> <?php echo htmlspecialchars($clase['nombre_materia']); ?><?php if ($clase['nombre_grupo']): ?> · Grupo <?php echo htmlspecialchars($clase['semestre'] . '° "' . $clase['nombre_grupo'] . '"'); ?><?php endif; ?></span>
+                <h2>Reporte de asistencia</h2>
+                <span class="he-sub"><i class="fas fa-calendar-check"></i> <span id="textoPeriodo"><?php echo htmlspecialchars($periodo['texto']); ?></span></span>
             </div>
-            <a href="gestionar_aula.php?id_clase=<?php echo $id_clase; ?>" class="btn-volver">Regresar al Aula</a>
+            <a href="gestionar_aula.php?id_clase=<?php echo $id_clase; ?>" class="he-volver"><i class="fas fa-arrow-left"></i> Volver al aula</a>
         </div>
 
-        <div class="filter-panel">
-            <h3>Filtros y Exportación de Sábana (Excel)</h3>
-            <form id="form_filtros" action="procesos/descargar_asistencia_excel.php" method="GET" class="form-row">
-                <input type="hidden" name="id_clase" id="id_clase_input" value="<?php echo $id_clase; ?>">
-                
-                <div class="form-group">
-                    <label>Tipo de Corte</label>
-                    <select name="tipo_filtro" id="tipo_filtro" class="form-control" onchange="toggleFiltros()">
-                        <option value="semestre">Semestre Completo</option>
-                        <option value="parcial">Por Parcial (Fechas)</option>
-                        <option value="mes">Por Mes Específico</option>
-                    </select>
-                </div>
-
-                <!-- Filtro por Fechas -->
-                <div class="form-group" id="div_fechas" style="display: none;">
-                    <label>Desde - Hasta</label>
-                    <div style="display: flex; gap: 5px;">
-                        <input type="date" name="fecha_inicio" id="fecha_inicio" class="form-control">
-                        <input type="date" name="fecha_fin" id="fecha_fin" class="form-control">
-                    </div>
-                </div>
-
-                <!-- Filtro por Mes -->
-                <div class="form-group" id="div_mes" style="display: none;">
-                    <label>Mes</label>
-                    <select name="mes" id="mes" class="form-control">
-                        <option value="01">Enero</option>
-                        <option value="02">Febrero</option>
-                        <option value="03">Marzo</option>
-                        <option value="04">Abril</option>
-                        <option value="05">Mayo</option>
-                        <option value="06">Junio</option>
-                        <option value="07">Julio</option>
-                        <option value="08">Agosto</option>
-                        <option value="09">Septiembre</option>
-                        <option value="10">Octubre</option>
-                        <option value="11">Noviembre</option>
-                        <option value="12">Diciembre</option>
-                    </select>
-                </div>
-
-                <div class="form-group" style="display: flex; gap: 10px;">
-                    <!-- Botón para actualizar la vista previa en pantalla -->
-                    <button type="button" class="btn-excel" style="background: #0d6efd;" onclick="actualizarVistaPrevia()">
-                        <i class="fas fa-sync-alt"></i> Actualizar Tabla
-                    </button>
-                    <!-- Botón para descargar el Excel real -->
-                    <button type="submit" class="btn-excel">
-                        <i class="fas fa-file-excel"></i> Descargar XLS
-                    </button>
-                </div>
-            </form>
+        <div class="resumen-entregas" id="resumenAsistencia">
+            <div><strong data-r="alumnos"><?php echo $resumen['alumnos']; ?></strong><span>Alumnos</span></div>
+            <div><strong data-r="pases"><?php echo $resumen['pases']; ?></strong><span>Pases de lista</span></div>
+            <div><strong data-r="promedio"><?php echo $resumen['promedio'] !== null ? $resumen['promedio'] . '%' : '—'; ?></strong><span>Asistencia promedio</span></div>
+            <div><strong data-r="en_riesgo"><?php echo $resumen['en_riesgo']; ?></strong><span>Con menos de 80%</span></div>
         </div>
 
-        <table>
+        <form id="form_filtros" class="panel-filtros" action="procesos/descargar_asistencia_excel.php" method="GET">
+            <input type="hidden" name="id_clase" value="<?php echo $id_clase; ?>">
+            <div class="pf-titulo"><i class="fas fa-filter"></i> Periodo del reporte</div>
+            <div class="pf-campos">
+                <label class="pf-campo">
+                    <span>Tipo de corte</span>
+                    <select name="tipo_filtro" id="tipo_filtro">
+                        <option value="semestre" <?php echo $tipo === 'semestre' ? 'selected' : ''; ?>>Semestre completo</option>
+                        <option value="parcial" <?php echo $tipo === 'parcial' ? 'selected' : ''; ?>>Por parcial (fechas)</option>
+                        <option value="mes" <?php echo $tipo === 'mes' ? 'selected' : ''; ?>>Por mes</option>
+                    </select>
+                </label>
+                <label class="pf-campo" id="div_fechas_ini" hidden>
+                    <span>Desde</span>
+                    <input type="date" name="fecha_inicio" id="fecha_inicio" value="<?php echo htmlspecialchars($_GET['fecha_inicio'] ?? ''); ?>">
+                </label>
+                <label class="pf-campo" id="div_fechas_fin" hidden>
+                    <span>Hasta</span>
+                    <input type="date" name="fecha_fin" id="fecha_fin" value="<?php echo htmlspecialchars($_GET['fecha_fin'] ?? ''); ?>">
+                </label>
+                <label class="pf-campo" id="div_mes" hidden>
+                    <span>Mes</span>
+                    <select name="mes" id="mes">
+                        <?php foreach ($meses as $n => $nom): ?>
+                            <option value="<?php echo sprintf('%02d', $n); ?>" <?php echo (int)($_GET['mes'] ?? date('n')) === $n ? 'selected' : ''; ?>><?php echo $nom; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+            </div>
+            <div class="pf-botones">
+                <button type="button" class="pf-btn pf-actualizar" onclick="actualizarVistaPrevia()"><i class="fas fa-rotate"></i> Actualizar tabla</button>
+                <button type="submit" class="pf-btn pf-excel"><i class="fas fa-file-excel"></i> Descargar Excel</button>
+            </div>
+        </form>
+
+        <p class="leyenda-asist">
+            <span><i class="fas fa-circle c-p"></i> Asistencias</span>
+            <span><i class="fas fa-circle c-r"></i> Retardos</span>
+            <span><i class="fas fa-circle c-f"></i> Faltas</span>
+            <span><i class="fas fa-circle c-j"></i> Justificadas (con justificante de Prefectura)</span>
+            <span><b>%</b> = asistencias + retardos + justificadas entre los pases de lista</span>
+        </p>
+
+        <div class="tabla-wrap">
+        <table class="table-entregas tabla-asistencia">
             <thead>
                 <tr>
-                    <th style="width: 15%;">Matrícula</th>
-                    <th style="width: 55%;">Nombre del Alumno</th>
-                    <th class="text-center">Asist.</th>
-                    <th class="text-center">Retardos</th>
-                    <th class="text-center">Faltas</th>
-                    <th class="text-center" title="Faltas con justificante de Prefectura">Just.</th>
-                    <th class="text-center" title="Asistencia (presente + retardo + justificada)">%</th>
+                    <th>Alumno</th>
+                    <th class="num">Asist.</th>
+                    <th class="num">Retardos</th>
+                    <th class="num">Faltas</th>
+                    <th class="num" title="Faltas con justificante de Prefectura">Just.</th>
+                    <th class="num" title="Asistencia (presente + retardo + justificada)">%</th>
                 </tr>
             </thead>
             <tbody id="cuerpo_tabla">
-                <!-- Los datos se cargarán aquí por defecto o vía AJAX -->
-                <?php foreach($alumnos as $alum): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($alum['matricula']); ?></td>
-                        <td><a href="perfil_alumno.php?id=<?php echo (int)$alum['id_alumno']; ?>" style="color:inherit; font-weight:600;" title="Ver perfil"><?php echo htmlspecialchars($alum['apellido_paterno'] . ' ' . $alum['nombre']); ?></a></td>
-                        <td class="text-center val-p"><?php echo $alum['presentes']; ?></td>
-                        <td class="text-center val-r"><?php echo $alum['retardos']; ?></td>
-                        <td class="text-center val-f"><?php echo $alum['faltas']; ?></td>
-                    </tr>
-                <?php endforeach; ?>
+                <?php echo reporte_asistencia_tbody($filas, $periodo['texto']); ?>
             </tbody>
         </table>
-    </div>
-   <script>
-        // Función 1: Muestra u oculta los campos de fecha o mes según lo que elija el maestro
+        </div>
+    </main>
+
+    <script>
         function toggleFiltros() {
-            var tipo = document.getElementById("tipo_filtro").value;
-            document.getElementById("div_fechas").style.display = (tipo === 'parcial') ? 'block' : 'none';
-            document.getElementById("div_mes").style.display = (tipo === 'mes') ? 'block' : 'none';
-        }
-
-        // Función 2: Actualiza la tabla dinámicamente usando AJAX (sin recargar la página)
-        function actualizarVistaPrevia() {
-            const id_clase = document.getElementById('id_clase_input').value;
             const tipo = document.getElementById('tipo_filtro').value;
-            const mes = document.getElementById('mes').value;
-            const f_inicio = document.getElementById('fecha_inicio').value;
-            const f_fin = document.getElementById('fecha_fin').value;
-            
+            document.getElementById('div_fechas_ini').hidden = tipo !== 'parcial';
+            document.getElementById('div_fechas_fin').hidden = tipo !== 'parcial';
+            document.getElementById('div_mes').hidden = tipo !== 'mes';
+        }
+        document.getElementById('tipo_filtro').addEventListener('change', toggleFiltros);
+        toggleFiltros();
+
+        function actualizarVistaPrevia() {
+            const f = document.getElementById('form_filtros');
+            if (f.tipo_filtro.value === 'parcial' && (!f.fecha_inicio.value || !f.fecha_fin.value)) { alert('Elige la fecha de inicio y la de fin.'); return; }
             const tbody = document.getElementById('cuerpo_tabla');
-            tbody.innerHTML = "<tr><td colspan='7' class='text-center'><i class='fas fa-spinner fa-spin'></i> Calculando asistencias...</td></tr>";
-
-            // Construir la URL con los parámetros
-            const url = `procesos/obtener_tabla_asistencia_ajax.php?id_clase=${id_clase}&tipo_filtro=${tipo}&mes=${mes}&fecha_inicio=${f_inicio}&fecha_fin=${f_fin}`;
-
-            fetch(url)
-                .then(response => response.text())
-                .then(html => {
-                    tbody.innerHTML = html;
+            tbody.innerHTML = '<tr><td colspan="6" class="vacio" data-label=""><i class="fas fa-spinner fa-spin"></i> Calculando asistencias...</td></tr>';
+            const qs = new URLSearchParams(new FormData(f)).toString();
+            fetch('procesos/obtener_tabla_asistencia_ajax.php?' + qs)
+                .then(r => r.json())
+                .then(d => {
+                    tbody.innerHTML = d.tbody;
+                    document.getElementById('textoPeriodo').textContent = d.periodo;
+                    Object.entries(d.resumen).forEach(([k, v]) => {
+                        const el = document.querySelector(`[data-r="${k}"]`);
+                        if (el) el.textContent = (k === 'promedio') ? (v === null ? '—' : v + '%') : v;
+                    });
+                    history.replaceState(null, '', 'lista_alumnos.php?' + qs);
                 })
-                .catch(error => {
-                    tbody.innerHTML = "<tr><td colspan='7' class='text-center' style='color:red;'>Error al cargar los datos.</td></tr>";
-                });
+                .catch(() => { tbody.innerHTML = '<tr><td colspan="6" class="vacio" data-label="">No se pudieron cargar los datos. Intenta de nuevo.</td></tr>'; });
         }
     </script>
-</body>
-</html>
-</body>
-</html>
-
- 
     <script src="../js/responsive.js?v=10"></script>
 </body>
 </html>

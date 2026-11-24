@@ -43,7 +43,7 @@ if (!preg_match('#^https?://' . preg_quote($_SERVER['HTTP_HOST'] ?? 'localhost',
     <link rel="stylesheet" href="style_dashboard_docente.css?v=<?php echo time(); ?>">
 
     <link rel="stylesheet" href="css/perfil_alumno.css?v=1">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 <body>
     <script>if (localStorage.getItem('sidebarCollapsed') === 'true') document.body.classList.add('sidebar-collapsed', 'preload-transitions');</script>

@@ -99,9 +99,10 @@ if (preg_match('#^data:image/png;base64,([A-Za-z0-9+/=]+)$#', (string)($_POST['q
 $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
 $anio_ingreso = !empty($al['periodo_ingreso']) && preg_match('/(20\d{2})/', $al['periodo_ingreso'], $mm) ? (int)$mm[1] : (int)date('Y');
 $generacion = $anio_ingreso . ' - ' . ($anio_ingreso + 3);
-$vigencia = 'AGO ' . $anio_ingreso . ' - JUL ' . ($anio_ingreso + 3);
+require_once __DIR__ . '/../../includes/calendario.php';
+$vigencia = vigencia_credencial_alumno();   // semestre en curso; se renueva sola
 $carrera = !empty($al['capacitacion']) ? $al['capacitacion'] : 'Bachillerato General';
-$nombre = trim($al['nombre'] . ' ' . $al['apellido_paterno']);
+$nombre = nombre_completo_alumno($al);   // nombre(s) y ambos apellidos
 $iniciales = mb_strtoupper(mb_substr($al['nombre'], 0, 1) . mb_substr($al['apellido_paterno'], 0, 1));
 $foto = foto_credencial($al['fotografia'] ?? null);
 $logo = logo_pequeno('img/logo-blanco.png', 120);

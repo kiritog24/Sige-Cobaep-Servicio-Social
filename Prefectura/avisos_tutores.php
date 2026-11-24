@@ -163,7 +163,7 @@ $chips = ['enviado' => ['Enviado', 'ok'], 'pendiente' => ['Pendiente', 'pend'], 
     <link rel="stylesheet" href="../admin/style_dashboard_admin.css">
     <link rel="stylesheet" href="../admin/style_sidebar.css">
     <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
     <link rel="stylesheet" href="css/avisos_tutores.css?v=1">
 </head>
 <body>

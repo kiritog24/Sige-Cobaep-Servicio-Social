@@ -65,7 +65,7 @@ if (!empty($matricula_buscada)) {
     <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css">
     <link rel="stylesheet" href="../Prefectura/style_creacion_reportes.css">
     <link rel="stylesheet" href="css/expediente_alumnos.css?v=1">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 <body>
     

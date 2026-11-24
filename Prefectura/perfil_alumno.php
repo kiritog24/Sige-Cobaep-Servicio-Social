@@ -39,7 +39,7 @@ $al = $d['al'];
     <link rel="stylesheet" href="../admin/style_sidebar.css">
     <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css">
     <link rel="stylesheet" href="css/perfil_alumno.css?v=1">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 <body>
     <?php include __DIR__ . '/includes/sidebar_prefectura.php'; ?>

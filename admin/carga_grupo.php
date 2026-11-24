@@ -54,7 +54,7 @@ $nom = fn($a) => trim($a['apellido_paterno'] . ' ' . $a['apellido_materno'] . ' 
     <link rel="stylesheet" href="style-ver_grupo.css">
     <link rel="stylesheet" href="style_sidebar.css">
     <link rel="stylesheet" href="css/carga_grupo.css?v=2">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>

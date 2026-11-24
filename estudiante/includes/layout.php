@@ -63,8 +63,8 @@ function estudiante_layout_inicio(string $titulo, string $subtitulo, string $act
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="style_dashboard_estud.css">
     <link rel="stylesheet" href="css/layout.css?v=1">
-    <?php if ($css_archivo !== ''): ?><link rel="stylesheet" href="<?php echo htmlspecialchars($css_archivo, ENT_QUOTES, 'UTF-8'); ?>?v=1"><?php endif; ?>
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <?php if ($css_archivo !== ''): ?><link rel="stylesheet" href="<?php echo htmlspecialchars($css_archivo . (strpos($css_archivo, '?') === false ? '?v=1' : ''), ENT_QUOTES, 'UTF-8'); ?>"><?php endif; ?>
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 <body>
     <aside class="sidebar" id="sidebar">

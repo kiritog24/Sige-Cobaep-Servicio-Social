@@ -44,6 +44,11 @@ try {
     $st->execute([$id_clase]);
     $inscritos = array_flip(array_map('intval', $st->fetchAll(PDO::FETCH_COLUMN)));
 
+    // Si Prefectura justificó todo el día del alumno, una "Falta" en la clase se guarda como "Justificada"
+    $justificados_dia = array_keys(array_filter(entradas_plantel($pdo, array_keys($marcados), $fecha), fn($e) => $e['estatus'] === 'Falta Justificada'));
+    $justificados_dia = array_flip($justificados_dia);
+    $ajustados = 0;
+
     $pdo->beginTransaction();
     $ins = $pdo->prepare("INSERT INTO asistencias_clases (id_alumno, id_clase, fecha, estatus) VALUES (?, ?, ?, ?)
                           ON DUPLICATE KEY UPDATE estatus = VALUES(estatus)");
@@ -51,6 +56,7 @@ try {
     foreach ($marcados as $id_alumno => $estatus) {
         $id_alumno = (int)$id_alumno;
         if (!isset($inscritos[$id_alumno]) || !in_array($estatus, ESTATUS_CLASE, true)) continue;
+        if ($estatus === 'Falta' && isset($justificados_dia[$id_alumno])) { $estatus = 'Justificada'; $ajustados++; }
         $ins->execute([$id_alumno, $id_clase, $fecha, $estatus]);
         $cuenta[$estatus]++;
     }
@@ -65,7 +71,7 @@ try {
     bitacora($pdo, 'asistencia', 'pase_lista', 'Pasó lista de ' . $mat->fetchColumn() . ' del ' . date('d/m/Y', strtotime($fecha)) . ": {$cuenta['Presente']} presentes, {$cuenta['Retardo']} retardos, {$cuenta['Falta']} faltas, {$cuenta['Justificada']} justificadas");
 
     $pendientes = count($inscritos) - $total;
-    $ir('exito', 'Asistencia guardada: ' . $total . ' alumno(s)' . ($pendientes > 0 ? " · $pendientes sin marcar" : '') . '.');
+    $ir('exito', 'Asistencia guardada: ' . $total . ' alumno(s)' . ($pendientes > 0 ? " · $pendientes sin marcar" : '') . ($ajustados ? " · $ajustados falta(s) quedaron como justificadas porque Prefectura ya había justificado ese día" : '') . '.');
 } catch (PDOException $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
     error_log('docente_guardar_asistencia: ' . $e->getMessage());

@@ -47,7 +47,9 @@ try {
     // Formatear variables para la vista
     $nombre_pila = htmlspecialchars($alumno['nombre']);
     $apellido_p = htmlspecialchars($alumno['apellido_paterno']);
-    $nombre_completo = $nombre_pila . ' ' . $apellido_p;
+    require_once __DIR__ . '/../includes/calendario.php';
+    $nombre_completo = htmlspecialchars(nombre_completo_alumno($alumno));   // nombre(s) y ambos apellidos
+    $vigencia_cred = vigencia_credencial_alumno();                         // semestre en curso
     $iniciales = mb_substr($nombre_pila, 0, 1) . mb_substr($apellido_p, 0, 1);
     
     // Generación y Carrera
@@ -115,8 +117,8 @@ try {
     <link rel="stylesheet" href="style_dashboard_estud.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="style_perfil.css?v=<?php echo time(); ?>">
 
-    <link rel="stylesheet" href="css/perfil.css?v=1">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="css/perfil.css?v=2">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 <body>
 
@@ -265,7 +267,7 @@ try {
 
                     <div class="card">
                         <div class="card-header">
-                            <div class="header-title"><i class="fas fa-user"></i> Información de Contacto</div>
+                            <div class="header-title"><i class="fas fa-user"></i> Información personal y de contacto</div>
                             <button class="btn-outline-small" onclick="abrirModal('modalContacto')"><i class="fas fa-pen"></i> Completar / Editar datos</button>
                         </div>
 
@@ -339,7 +341,7 @@ try {
                                 </div>
                             </div>
                             <div class="cred-footer">
-                                Vigencia: AGO <?php echo (int)$anio_ingreso; ?> - JUL <?php echo (int)$anio_fin; ?>
+                                Vigencia: <?php echo htmlspecialchars($vigencia_cred); ?>
                             </div>
                         </div>
 
@@ -420,12 +422,18 @@ try {
                         <div class="form-group"><label>Apellido materno</label><input type="text" class="form-control" value="<?php echo htmlspecialchars($alumno['apellido_materno'] ?? ''); ?>" disabled></div>
                         <div class="form-group"><label>Matrícula</label><input type="text" class="form-control" value="<?php echo htmlspecialchars($alumno['matricula'] ?? ''); ?>" disabled></div>
                         <div class="form-group"><label>Fecha de nacimiento *</label><input type="date" name="fecha_nacimiento" class="form-control" value="<?php echo htmlspecialchars($alumno['fecha_nacimiento'] ?? ''); ?>" max="<?php echo date('Y-m-d'); ?>" required></div>
-                        <div class="form-group"><label>Sexo *</label>
-                            <select name="sexo" class="form-control" required>
-                                <option value="">Selecciona…</option>
-                                <option value="F" <?php echo ($alumno['sexo'] ?? '') === 'F' ? 'selected' : ''; ?>>Femenino</option>
-                                <option value="M" <?php echo ($alumno['sexo'] ?? '') === 'M' ? 'selected' : ''; ?>>Masculino</option>
-                            </select>
+                        <?php $sexo_reg = in_array($alumno['sexo'] ?? '', ['F', 'M'], true); ?>
+                        <div class="form-group"><label>Sexo<?php echo $sexo_reg ? '' : ' *'; ?></label>
+                            <?php if ($sexo_reg): ?>
+                                <input type="text" class="form-control" value="<?php echo $alumno['sexo'] === 'F' ? 'Femenino' : 'Masculino'; ?>" disabled title="Para corregirlo acude a control escolar">
+                            <?php else: ?>
+                                <select name="sexo" class="form-control" required>
+                                    <option value="">Selecciona…</option>
+                                    <option value="F">Femenino</option>
+                                    <option value="M">Masculino</option>
+                                </select>
+                                <small style="font-size:.72rem; color:#94a3b8;">Una vez guardado ya no se puede cambiar desde aquí.</small>
+                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -454,7 +462,7 @@ try {
                         <div class="form-group" style="grid-column: 1 / -1;"><label>Correo electrónico del tutor *</label><input type="email" name="correo_tutor" class="form-control" maxlength="150" placeholder="correo@ejemplo.com" value="<?php echo htmlspecialchars($tutor['correo_tutor'] ?? ''); ?>" required>
                             <small style="display:block; font-size:.75rem; color:#64748b; margin-top:4px;"><i class="fas fa-envelope"></i> La escuela le enviará avisos de faltas y reportes de conducta a este correo.</small></div>
                     </div>
-                    <p style="font-size: 0.75rem; color: #94a3b8; margin-top: 10px;"><i class="fas fa-info-circle"></i> Para corregir tu nombre, matrícula o correo institucional acude a control escolar. Los campos con * son obligatorios.</p>
+                    <p style="font-size: 0.75rem; color: #94a3b8; margin-top: 10px;"><i class="fas fa-info-circle"></i> Para corregir tu nombre, sexo, matrícula o correo institucional acude a control escolar. Los campos con * son obligatorios.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-cancel" onclick="cerrarModal('modalContacto')">Cancelar</button>

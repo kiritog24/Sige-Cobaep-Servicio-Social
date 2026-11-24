@@ -83,7 +83,7 @@ $dia_inicial = in_array($numero_dia_hoy, $dias_menu, true) ? $numero_dia_hoy : 1
     <link rel="stylesheet" href="style_dashboard_docente.css?v=<?php echo time(); ?>">
 
     <link rel="stylesheet" href="css/dashboard_docente.css?v=1">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 
 <body>

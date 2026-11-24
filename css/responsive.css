@@ -242,3 +242,18 @@ body.menu-open { overflow: hidden; }
     .sige-tabla-scroll { max-height: none !important; overflow: visible !important; }
     .sige-buscador { display: none !important; }
 }
+
+/* ---------- Campos para subir archivos (todo el sistema) ---------- */
+input[type="file"] {
+    max-width: 100%; box-sizing: border-box; font-family: inherit; font-size: .85rem; color: #475569;
+    background: #f8fafc; border: 1.5px dashed #94a3b8; border-radius: 12px; padding: 8px; cursor: pointer;
+    transition: border-color .2s, background .2s;
+}
+input[type="file"]:hover, input[type="file"]:focus-visible { border-color: #16a05d; background: #f0fdf4; outline: none; }
+input[type="file"]::file-selector-button {
+    font-family: inherit; font-weight: 700; font-size: .82rem; color: #fff; background: #16a05d;
+    border: none; border-radius: 8px; padding: 8px 14px; margin-right: 10px; cursor: pointer; transition: background .2s;
+}
+input[type="file"]::file-selector-button:hover { background: #0f7a45; }
+input[type="file"]:disabled { cursor: not-allowed; opacity: .7; }
+input[type="file"]:disabled::file-selector-button { background: #94a3b8; }

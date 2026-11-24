@@ -153,10 +153,11 @@ try {
             if (!empty($_POST['quitar_archivo']) && !$nuevo) { borrar_archivo($ruta); $ruta = null; }
 
             $cfg = regula_config_desde_post();
-            $pdo->prepare("UPDATE ACTIVIDADES_REGULARIZACION SET titulo = ?, descripcion = ?, id_bloque = ?, archivo_ruta = ?,
+            regula_asegurar_columnas($pdo);
+            $pdo->prepare("UPDATE ACTIVIDADES_REGULARIZACION SET titulo = ?, color_titulo = ?, descripcion = ?, id_bloque = ?, archivo_ruta = ?,
                                permite_entregas = ?, fecha_limite = ?, acepta_retardo = ?, tipos_archivo = ?, tamano_maximo_mb = ?, escala_calificacion = ?
                            WHERE id_actividad = ? AND id_clase = ?")
-                ->execute([$titulo, trim($_POST['descripcion'] ?? ''), $id_bloque, $ruta,
+                ->execute([$titulo, regula_color_valido($_POST['color_titulo'] ?? ''), trim($_POST['descripcion'] ?? ''), $id_bloque, $ruta,
                            $cfg['permite_entregas'], $cfg['fecha_limite'], $cfg['acepta_retardo'], $cfg['tipos_archivo'], $cfg['tamano_maximo_mb'], $cfg['escala_calificacion'],
                            $id_act, $id_clase]);
             volver($id_clase, 'exito', 'Actividad actualizada.');

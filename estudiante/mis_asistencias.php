@@ -108,7 +108,7 @@ $meses_texto = [
     <link rel="stylesheet" href="style_mis_asistencias.css?v=<?php echo time(); ?>">
 
     
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 <body>
 
@@ -285,16 +285,19 @@ $meses_texto = [
                                     
                                     if(stripos($estatus_min, 'puntual') !== false || stripos($estatus_min, 'retardo justificado') !== false) {
                                         $clase_badge = 'puntual';
-                                        if(stripos($estatus_min, 'justificado') !== false) $estatus = 'Puntual (Just.)';
+                                        if(stripos($estatus_min, 'justificado') !== false) $estatus = 'Retardo justificado';
                                     } elseif(stripos($estatus_min, 'retardo') !== false) {
                                         $clase_badge = 'retardo';
+                                    } elseif($estatus_min === 'falta justificada') {
+                                        $clase_badge = 'justificada';
+                                        $estatus = 'Falta justificada';
                                     }
 
                                     $observacion = '<span style="color:#cbd5e1;">-</span>';
                                     if (!empty($row['sin_registro'])) {
                                         $observacion = '<div class="observacion"><i class="fas fa-door-closed"></i> No registraste entrada al plantel</div>';
                                     } elseif(!empty($row['motivo_justificacion'])) {
-                                        $observacion = '<div class="observacion"><i class="fas fa-info-circle"></i> ' . htmlspecialchars($row['motivo_justificacion']) . '</div>';
+                                        $observacion = '<div class="observacion obs-just"><i class="fas fa-file-signature"></i> <b>Justificante de Prefectura:</b> ' . htmlspecialchars($row['motivo_justificacion']) . '</div>';
                                     }
                                 ?>
                                 <tr>

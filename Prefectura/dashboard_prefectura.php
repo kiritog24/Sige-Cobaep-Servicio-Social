@@ -80,10 +80,10 @@ $nombre_usuario = isset($_SESSION['nombre'])
     
     <link rel="stylesheet" href="../admin/style_dashboard_admin.css">
     <link rel="stylesheet" href="../admin/style_sidebar.css">
-    <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css">
+    <link rel="stylesheet" href="../Prefectura/style_dashboard_prefectura.css?v=2">
 
     <link rel="stylesheet" href="css/dashboard_prefectura.css?v=3">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 <body>
 
@@ -206,8 +206,8 @@ $nombre_usuario = isset($_SESSION['nombre'])
                                        $clase_badge = 'status-suspendido'; 
                                        $texto_estatus = 'Suspendido'; 
                                     } elseif ($estatus_min === 'retardo justificado') {
-                                       $clase_badge = 'status-puntual'; 
-                                       $texto_estatus = 'Puntual (Justificado)'; 
+                                       $clase_badge = 'status-retardo-just'; 
+                                       $texto_estatus = 'Retardo justificado'; 
                                     } elseif ($estatus_min === 'falta justificada') {
                                        $clase_badge = 'status-justificada';
                                     }

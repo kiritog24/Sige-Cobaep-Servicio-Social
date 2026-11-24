@@ -45,7 +45,7 @@ try {
     <!-- CSS global del maestro y el específico para esta vista -->
     <link rel="stylesheet" href="style_dashboard_docente.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="style_regularizaciones.css?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 
 <body>

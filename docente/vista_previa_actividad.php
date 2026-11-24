@@ -52,7 +52,7 @@ if (!$requiere_entrega) {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="css/vista_previa_actividad.css?v=1">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 <body>
     <div class="preview-banner"><i class="fas fa-eye"></i> MODO VISTA PREVIA DEL ALUMNO</div>
@@ -92,7 +92,7 @@ if (!$requiere_entrega) {
                   <?php $n_arch = numero_archivos_valido($actividad['numero_archivos'] ?? 1); echo $n_arch > 1 ? "Hasta $n_arch archivos" : '1 archivo'; ?> · <?php echo htmlspecialchars(tipos_archivo_texto($actividad['tipo_archivo'] ?? '*')); ?> · máx. <?php echo tamano_archivo_valido($actividad['tamano_maximo'] ?? 10); ?> MB c/u
                   </p>
                  <input type="file" <?php echo numero_archivos_valido($actividad['numero_archivos'] ?? 1) > 1 ? 'multiple' : ''; ?>
-                 accept="<?php echo htmlspecialchars(tipos_archivo_accept($actividad['tipo_archivo'] ?? '*')); ?>" 
+                 accept="<?php echo htmlspecialchars(tipos_archivo_accept_input($actividad['tipo_archivo'] ?? '*')); ?>" 
                    disabled title="Bloqueado en Vista Previa" 
                        style="display: block; margin: 0 auto 15px auto; border: 1px solid #cbd5e1; padding: 8px; border-radius: 8px; background: white; cursor: not-allowed; opacity: 0.8; font-size: 0.85rem;"> 
                 <!-- BOTÓN ACTUALIZADO PARA LLAMAR AL NUEVO MODAL EN LUGAR DE alert() -->

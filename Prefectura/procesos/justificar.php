@@ -20,6 +20,8 @@ $volver_fecha = $_POST['volver_fecha'] ?? '';
 $volver_mat = trim((string)($_POST['volver_matricula'] ?? ''));
 $ir = function (string $param) use ($volver_fecha, $volver_mat) {
     $q = array_filter(['fecha' => fecha_valida($volver_fecha) ? $volver_fecha : null, 'matricula' => $volver_mat !== '' ? $volver_mat : null]);
+    // Tras justificar se regresa al día justificado para que el registro se vea en la tabla
+    if (strpos($param, 'resaltar=') !== false && !empty($GLOBALS['fecha'])) $q['fecha'] = $GLOBALS['fecha'];
     header('Location: ../historial_asistencias.php?' . http_build_query($q) . ($q ? '&' : '') . $param);
     exit();
 };
@@ -60,12 +62,13 @@ try {
                        VALUES (?, ?, 'Entrada', 'Falta Justificada', ?, ?)")
             ->execute([$id_alumno, $fecha . ' 00:00:00', (int)$_SESSION['id_usuario'], $motivo_final]);
         $nuevo = 'Falta Justificada';
+        $id_asistencia = (int)$pdo->lastInsertId();
     }
 
     $clases = $nuevo === 'Falta Justificada' ? justificar_clases_del_dia($pdo, $id_alumno, $fecha) : 0;
     bitacora($pdo, 'asistencia', 'justificacion', "Justificó ($nuevo) el " . date('d/m/Y', strtotime($fecha)) . ' a ' . bitacora_quien($pdo, 'alumnos', $id_alumno)
         . ': ' . mb_substr($motivo_final, 0, 150) . ($clases ? " · $clases falta(s) a clases justificadas" : ''), 'alumno', $id_alumno);
-    $ir('msg=exito_justificante&clases=' . $clases);
+    $ir('msg=exito_justificante&clases=' . $clases . '&resaltar=' . $id_asistencia);
 } catch (PDOException $e) {
     error_log('Error al justificar asistencia: ' . $e->getMessage());
     $ir('error=error_bd');

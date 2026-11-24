@@ -34,7 +34,6 @@ function pdf_descargar(string $nombre, string $titulo, string $subtitulo, string
         header .t1 { font-size: 13px; font-weight: bold; color: #063f2b; padding-top: 1mm; }
         header .t2 { font-size: 9px; color: #475569; }
         footer { position: fixed; bottom: -11mm; left: 0; right: 0; height: 8mm; font-size: 8px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 2px; }
-        footer .pag:after { content: counter(page) " / " counter(pages); }
         h1 { font-size: 14px; color: #063f2b; margin: 0 0 2px; }
         .sub { color: #475569; margin: 0 0 10px; font-size: 10px; }
         table { width: 100%; border-collapse: collapse; }
@@ -48,7 +47,7 @@ function pdf_descargar(string $nombre, string $titulo, string $subtitulo, string
         .nota { margin-top: 10px; font-size: 8px; color: #64748b; }
     </style></head><body>
         <header>' . ($logo ? '<img src="' . $logo . '">' : '') . '<div class="t1">COBAEP Plantel 27 · SIGE</div><div class="t2">Sistema de Información y Gestión Educativa · Zaragoza, Puebla</div></header>
-        <footer><span style="float:right" class="pag">Página </span>Generado el ' . $fecha . '</footer>
+        <footer>Generado el ' . $fecha . '</footer>
         <h1>' . htmlspecialchars($titulo) . '</h1><p class="sub">' . htmlspecialchars($subtitulo) . '</p>' . $cuerpo . '
     </body></html>';
 
@@ -60,6 +59,12 @@ function pdf_descargar(string $nombre, string $titulo, string $subtitulo, string
     $dompdf->loadHtml($html, 'UTF-8');
     $dompdf->setPaper('A4', $orientacion);
     $dompdf->render();
+    // "Página X de Y" en el pie (CSS counter(pages) no funciona en Dompdf)
+    $canvas = $dompdf->getCanvas();
+    $fuente = $dompdf->getFontMetrics()->getFont('DejaVu Sans');
+    $mm = 72 / 25.4;
+    $ancho_txt = $dompdf->getFontMetrics()->getTextWidth('Página 99 de 99', $fuente, 6);
+    $canvas->page_text($canvas->get_width() - 12 * $mm - $ancho_txt, $canvas->get_height() - 13.1 * $mm, 'Página {PAGE_NUM} de {PAGE_COUNT}', $fuente, 6, [0.39, 0.45, 0.55]);
     // Nombre de archivo sin acentos ni ñ (Español -> Espanol) para que se vea bien en cualquier equipo
     $nombre = strtr($nombre, ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n',
                               'Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U', 'Ü' => 'U', 'Ñ' => 'N', ' ' => '_']);

@@ -34,11 +34,19 @@ function ficha_alumno_cargar(PDO $pdo, int $id_alumno): ?array {
     $d['dom'] = $st->fetch(PDO::FETCH_ASSOC) ?: [];
 
     $st = $pdo->prepare("SELECT SUM(estatus = 'Puntual') AS puntuales,
-                                SUM(estatus IN ('Retardo', 'Retardo Justificado')) AS retardos,
-                                SUM(estatus = 'Falta') AS faltas, SUM(estatus = 'Falta Justificada') AS justificadas
+                                SUM(estatus = 'Retardo') AS retardos,
+                                SUM(estatus = 'Falta') AS faltas, SUM(estatus IN ('Falta Justificada', 'Retardo Justificado')) AS justificadas
                          FROM ASISTENCIAS WHERE id_alumno = ? AND tipo_registro = 'Entrada'");
     $st->execute([$id_alumno]);
     $d['asis'] = $st->fetch(PDO::FETCH_ASSOC);
+
+    // Justificantes de Prefectura (los más recientes)
+    $st = $pdo->prepare("SELECT DATE(fecha_hora_escaneo) AS dia, estatus, motivo_justificacion
+                         FROM ASISTENCIAS WHERE id_alumno = ? AND tipo_registro = 'Entrada'
+                           AND estatus IN ('Falta Justificada', 'Retardo Justificado')
+                         ORDER BY fecha_hora_escaneo DESC LIMIT 8");
+    $st->execute([$id_alumno]);
+    $d['justificantes'] = $st->fetchAll(PDO::FETCH_ASSOC);
 
     // Faltas de días completos sin registro (desde que está en su grupo actual) y asistencia a clases
     require_once __DIR__ . '/asistencia.php';
@@ -165,6 +173,19 @@ function ficha_alumno_render(array $d, array $opt = []): void {
                 <div><strong><?php echo (int)$asis['faltas']; ?></strong><span>Faltas<?php echo (int)$asis['justificadas'] ? ' · ' . (int)$asis['justificadas'] . ' just.' : ''; ?></span></div>
                 <div><strong><span class="pill <?php echo $pts >= 75 ? 'ok' : ($pts >= 60 ? 'warn' : 'bad'); ?>"><?php echo $pts; ?></span></strong><span>Puntos conducta</span></div>
             </div>
+            <h3 style="margin:16px 0 8px; font-size:.85rem; color:#334155;"><i class="fas fa-file-signature"></i> Justificantes de Prefectura</h3>
+            <?php if (empty($d['justificantes'])): ?>
+                <p class="pa-empty">No tiene faltas ni retardos justificados.</p>
+            <?php else: ?>
+                <ul style="list-style:none; margin:0 0 6px; padding:0; display:flex; flex-direction:column; gap:6px;">
+                    <?php foreach ($d['justificantes'] as $j): $es_f = $j['estatus'] === 'Falta Justificada'; ?>
+                        <li style="display:flex; gap:10px; align-items:flex-start; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:8px 10px; font-size:.82rem;">
+                            <span class="pill" style="flex-shrink:0; background:<?php echo $es_f ? '#dbeafe' : '#ccfbf1'; ?>; color:<?php echo $es_f ? '#1d4ed8' : '#0f766e'; ?>;"><?php echo $es_f ? 'Falta' : 'Retardo'; ?></span>
+                            <span><b><?php echo date('d/m/Y', strtotime($j['dia'])); ?></b> · <?php echo htmlspecialchars($j['motivo_justificacion'] ?: 'Sin motivo registrado'); ?></span>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php endif; ?>
             <h3 style="margin:16px 0 8px; font-size:.85rem; color:#334155;"><i class="fas fa-chalkboard-user"></i> Asistencia a clases (pase de lista de los docentes)</h3>
             <?php if (empty($d['clases'])): ?>
                 <p class="pa-empty">Los docentes aún no registran pase de lista para este alumno.</p>

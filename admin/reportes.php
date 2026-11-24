@@ -30,8 +30,8 @@ try {
         $st = $pdo->prepare("
             SELECT a.id_alumno, a.matricula, a.nombre, a.apellido_paterno, a.apellido_materno, a.estatus, a.puntos_conducta,
                    SUM(asi.estatus = 'Puntual') AS puntuales,
-                   SUM(asi.estatus IN ('Retardo', 'Retardo Justificado')) AS retardos,
-                   SUM(asi.estatus = 'Falta Justificada') AS justificadas
+                   SUM(asi.estatus = 'Retardo') AS retardos,
+                   SUM(asi.estatus IN ('Falta Justificada', 'Retardo Justificado')) AS justificadas
             FROM GRUPO_ALUMNO ga
             INNER JOIN ALUMNOS a ON a.id_alumno = ga.id_alumno
             LEFT JOIN ASISTENCIAS asi ON asi.id_alumno = a.id_alumno AND DATE(asi.fecha_hora_escaneo) BETWEEN ? AND ?
@@ -68,22 +68,38 @@ try {
         }
         require_once __DIR__ . '/../includes/pdf_documento.php';
         $e = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
-        $cuerpo = '<table><thead><tr><th>No.</th><th>Matrícula</th><th>Alumno</th><th>Estatus</th><th>Puntos</th><th>Puntuales</th><th>Retardos</th><th>Faltas</th><th>Just.</th><th>Faltas a clases</th><th>Días con pinta</th></tr></thead><tbody>';
+        $tot = ['puntuales' => 0, 'retardos' => 0, 'faltas' => 0, 'justificadas' => 0, 'faltas_clase' => 0, 'dias_pinta' => 0];
+        foreach ($alumnos as $a) foreach ($tot as $k => $v) $tot[$k] += (int)$a[$k];
+        $cuerpo = '<table class="resumen"><tr>'
+            . '<td><b>' . count($alumnos) . '</b>Alumnos</td><td><b>' . $tot['puntuales'] . '</b>Entradas puntuales</td><td><b>' . $tot['retardos'] . '</b>Retardos</td>'
+            . '<td><b>' . $tot['faltas'] . '</b>Faltas</td><td><b>' . $tot['justificadas'] . '</b>Justificadas</td><td><b>' . $tot['faltas_clase'] . '</b>Faltas a clases</td><td><b>' . $tot['dias_pinta'] . '</b>Días con pinta</td>'
+            . '</tr></table><br>';
+        $cuerpo .= '<table><thead><tr><th style="width:4%">No.</th><th style="width:12%">Matrícula</th><th>Alumno</th><th style="width:7%">Estatus</th><th style="width:7%">Conducta</th>'
+            . '<th style="width:7%">Puntuales</th><th style="width:7%">Retardos</th><th style="width:6%">Faltas</th><th style="width:6%">Just.</th><th style="width:8%">Faltas a clases</th><th style="width:8%">Días con pinta</th></tr></thead><tbody>';
         foreach ($alumnos as $i => $a) {
-            $cuerpo .= '<tr><td class="c">' . ($i + 1) . '</td><td class="c">' . $e($a['matricula']) . '</td><td>' . $e(trim($a['apellido_paterno'] . ' ' . $a['apellido_materno'] . ' ' . $a['nombre'])) . '</td>'
-                . '<td class="c">' . $e($a['estatus']) . '</td><td class="c">' . (int)$a['puntos_conducta'] . '</td><td class="c">' . (int)$a['puntuales'] . '</td><td class="c">' . (int)$a['retardos'] . '</td><td class="c">' . (int)$a['faltas'] . '</td><td class="c">' . (int)$a['justificadas'] . '</td><td class="c">' . (int)$a['faltas_clase'] . '</td><td class="c">' . (int)$a['dias_pinta'] . '</td></tr>';
+            $pc = (int)$a['puntos_conducta'];
+            $cls_pc = $pc >= 80 ? 'ok' : ($pc >= 60 ? 'medio' : 'bajo');
+            $cuerpo .= '<tr><td class="c">' . ($i + 1) . '</td><td class="c">' . $e($a['matricula']) . '</td><td>' . $e(mb_strtoupper(trim($a['apellido_paterno'] . ' ' . $a['apellido_materno'] . ' ' . $a['nombre']), 'UTF-8')) . '</td>'
+                . '<td class="c">' . $e($a['estatus']) . '</td><td class="c ' . $cls_pc . '">' . $pc . '</td><td class="c">' . (int)$a['puntuales'] . '</td><td class="c">' . (int)$a['retardos'] . '</td>'
+                . '<td class="c' . ((int)$a['faltas'] ? ' bajo' : '') . '">' . (int)$a['faltas'] . '</td><td class="c">' . (int)$a['justificadas'] . '</td>'
+                . '<td class="c' . ((int)$a['faltas_clase'] ? ' bajo' : '') . '">' . (int)$a['faltas_clase'] . '</td><td class="c' . ((int)$a['dias_pinta'] ? ' medio' : '') . '">' . (int)$a['dias_pinta'] . '</td></tr>';
         }
         if (!$alumnos) $cuerpo .= '<tr><td colspan="11" class="c">Este grupo no tiene alumnos inscritos.</td></tr>';
-        $cuerpo .= '</tbody></table>';
-        pdf_descargar($archivo_rep . '.pdf', $titulo_rep, $periodo_rep . ' · ' . count($alumnos) . ' alumnos', $cuerpo, 'portrait');
+        $cuerpo .= '</tbody></table>'
+            . '<p class="nota">Conducta: puntos de 100 que le quedan al alumno. Faltas: días de clase sin entrada al plantel. Just.: faltas o retardos con justificante de Prefectura. '
+            . 'Faltas a clases: faltas sin justificar en el pase de lista de los docentes. Días con pinta: días que entró al plantel y faltó a alguna clase.</p>'
+            . '<br><br><table style="width:70%;margin:0 auto"><tr><td style="border:none;border-top:1px solid #333;text-align:center;padding-top:4px;width:45%">Control Escolar · Firma</td><td style="border:none;width:10%"></td>'
+            . '<td style="border:none;border-top:1px solid #333;text-align:center;padding-top:4px;width:45%">Dirección · Sello</td></tr></table>';
+        // ver=1: se abre en el navegador para imprimir; si no, se descarga
+        pdf_descargar($archivo_rep . '.pdf', $titulo_rep, $periodo_rep . ' · ' . count($alumnos) . ' alumnos', $cuerpo, 'landscape', !empty($_GET['ver']));
     }
 
     // Resumen general de asistencia por grupo en el periodo
     $st = $pdo->prepare("
         SELECT g.id_grupo, g.semestre, g.nombre_grupo, g.turno,
                COUNT(DISTINCT ga.id_alumno) AS alumnos,
-               SUM(asi.estatus = 'Puntual') AS puntuales,
-               SUM(asi.estatus IN ('Retardo', 'Retardo Justificado')) AS retardos
+               SUM(asi.estatus IN ('Puntual', 'Retardo Justificado')) AS puntuales,
+               SUM(asi.estatus = 'Retardo') AS retardos
         FROM GRUPOS g
         LEFT JOIN GRUPO_ALUMNO ga ON ga.id_grupo = g.id_grupo AND ga.fecha_baja IS NULL
         LEFT JOIN ASISTENCIAS asi ON asi.id_alumno = ga.id_alumno AND DATE(asi.fecha_hora_escaneo) BETWEEN ? AND ?
@@ -149,7 +165,7 @@ $qs_periodo = 'desde=' . urlencode($fecha_desde) . '&hasta=' . urlencode($fecha_
     <link rel="stylesheet" href="style-ver_grupo.css">
     <link rel="stylesheet" href="style_sidebar.css">
     <link rel="stylesheet" href="css/reportes.css?v=1">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -217,7 +233,7 @@ $qs_periodo = 'desde=' . urlencode($fecha_desde) . '&hasta=' . urlencode($fecha_
                     <div class="rep-actions no-print">
                         <a class="rep-btn light" href="?id_grupo=<?php echo $id_grupo; ?>&<?php echo $qs_periodo; ?>&exportar=xlsx"><i class="fas fa-file-excel"></i> Descargar Excel</a>
                         <a class="rep-btn light" style="background:#fef2f2; color:#b91c1c;" href="?id_grupo=<?php echo $id_grupo; ?>&<?php echo $qs_periodo; ?>&exportar=pdf"><i class="fas fa-file-pdf"></i> Descargar PDF</a>
-                        <button type="button" class="rep-btn gray" onclick="imprimirLista()"><i class="fas fa-print"></i> Imprimir</button>
+                        <a class="rep-btn gray" href="?id_grupo=<?php echo $id_grupo; ?>&<?php echo $qs_periodo; ?>&exportar=pdf&ver=1" target="_blank" rel="noopener" title="Abre el PDF en otra pestaña, listo para imprimir"><i class="fas fa-print"></i> Imprimir</a>
                         <a class="rep-btn gray" href="ver_grupo.php?id=<?php echo $id_grupo; ?>"><i class="fas fa-users-cog"></i> Gestionar grupo</a>
                     </div>
                     <?php if (empty($alumnos)): ?>
@@ -225,7 +241,7 @@ $qs_periodo = 'desde=' . urlencode($fecha_desde) . '&hasta=' . urlencode($fecha_
                     <?php else: ?>
                         <div class="rep-wrap">
                             <table class="rep-table">
-                                <thead><tr><th>No.</th><th>Matrícula</th><th>Alumno</th><th>Estatus</th><th class="num">Conducta</th><th class="num">Puntuales</th><th class="num">Retardos</th><th class="num">Faltas</th><th class="num" title="Faltas con justificante de Prefectura">Just.</th><th class="num" title="Faltas sin justificar en el pase de lista de los docentes">Faltas a clases</th><th class="num" title="Días que entró al plantel y faltó a alguna clase">Días con pinta</th></tr></thead>
+                                <thead><tr><th>No.</th><th>Matrícula</th><th>Alumno</th><th>Estatus</th><th class="num">Conducta</th><th class="num">Puntuales</th><th class="num">Retardos</th><th class="num">Faltas</th><th class="num" title="Faltas o retardos con justificante de Prefectura">Just.</th><th class="num" title="Faltas sin justificar en el pase de lista de los docentes">Faltas a clases</th><th class="num" title="Días que entró al plantel y faltó a alguna clase">Días con pinta</th></tr></thead>
                                 <tbody>
                                 <?php foreach ($alumnos as $i => $a):
                                     $pts = (int)$a['puntos_conducta'];
@@ -312,11 +328,6 @@ $qs_periodo = 'desde=' . urlencode($fecha_desde) . '&hasta=' . urlencode($fecha_
         </section>
     </main>
     <script>
-        function imprimirLista() {
-            document.body.classList.add('imprimir-lista');
-            window.print();
-            setTimeout(() => document.body.classList.remove('imprimir-lista'), 500);
-        }
         document.addEventListener('DOMContentLoaded', () => {
             const sidebar = document.getElementById('sidebar'), overlay = document.getElementById('sidebarOverlay'), mobileMenu = document.getElementById('mobileMenu'), collapseToggle = document.getElementById('collapseToggle'), body = document.body;
             if (localStorage.getItem('sidebarCollapsed') === 'true') body.classList.add('sidebar-collapsed');

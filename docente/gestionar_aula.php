@@ -115,7 +115,7 @@ function campo_tipos_archivo(string $id, string $valor): void {
 
     <link rel="stylesheet" href="css/gestionar_aula.css?v=3">
     <link rel="stylesheet" href="../css/asistencia.css?v=2">
-    <link rel="stylesheet" href="../css/responsive.css?v=5">
+    <link rel="stylesheet" href="../css/responsive.css?v=6">
 </head>
 
 <body>
@@ -344,7 +344,7 @@ function campo_tipos_archivo(string $id, string $valor): void {
                                 <input type="text" name="titulo" class="form-control" placeholder="Ej. Ensayo sobre la Revolución" required>
                             </div>
                             <div class="form-group">
-                                <label>Instrucciones detalladas</label>
+                                <label>Instrucciones de la actividad</label>
                                 <textarea name="descripcion" class="form-control" placeholder="Escribe aquí las instrucciones..."></textarea>
                             </div>
                             
@@ -970,7 +970,7 @@ function campo_tipos_archivo(string $id, string $valor): void {
             <button type="button" class="btn-close" onclick="cancelarTiposArchivo()"><i class="fas fa-times"></i></button>
         </div>
         <p class="vis-ayuda">Marca los tipos de archivo que tus alumnos podrán subir en esta actividad. El sistema rechaza cualquier otro.</p>
-        <label class="tipo-todos"><input type="checkbox" id="tipoCualquiera"> <span><b>Cualquier tipo de archivo</b> (todos los de la lista)</span></label>
+        <label class="tipo-todos"><input type="checkbox" id="tipoCualquiera"> <span><b>Cualquier tipo de la lista</b> (no se aceptan videos)</span></label>
         <div class="tipos-grid">
             <?php foreach (TIPOS_ARCHIVO as $grupo => $exts): $gid = 'g' . substr(md5($grupo), 0, 6); ?>
                 <fieldset class="tipo-grupo">
@@ -1073,7 +1073,7 @@ function campo_tipos_archivo(string $id, string $valor): void {
         document.getElementById('edit_numero_archivos').value = a.num || 1;
         const campo = document.getElementById('tipos_editar');
         campo.querySelector('.tipos-valor').value = a.tipo || '*';
-        campo.querySelector('.tipos-texto').textContent = a.tipo_texto || 'Cualquier tipo de archivo';
+        campo.querySelector('.tipos-texto').textContent = a.tipo_texto || 'Cualquier tipo de la lista';
         document.getElementById('modalEditar').classList.add('active');
     }
 
@@ -1105,7 +1105,7 @@ function campo_tipos_archivo(string $id, string $valor): void {
     }
     function textoTipos(sel) {
         const checks = tiposChecks();
-        if (!sel.length || sel.length === checks.length) return 'Cualquier tipo de archivo';
+        if (!sel.length || sel.length === checks.length) return 'Cualquier tipo de la lista';
         const partes = [], grupos = {};
         checks.forEach(c => { (grupos[c.dataset.grupoNombre] = grupos[c.dataset.grupoNombre] || []).push(c); });
         Object.entries(grupos).forEach(([g, cs]) => {
@@ -1126,7 +1126,7 @@ function campo_tipos_archivo(string $id, string $valor): void {
     function cancelarTiposArchivo() { document.getElementById('modalTiposArchivo').classList.remove('active'); campoTipos = null; }
     function confirmarTiposArchivo() {
         const checks = tiposChecks(), sel = checks.filter(c => c.checked).map(c => c.value);
-        if (!sel.length) { alert('Marca al menos un tipo de archivo, o "Cualquier tipo de archivo".'); return; }
+        if (!sel.length) { alert('Marca al menos un tipo de archivo, o "Cualquier tipo de la lista".'); return; }
         campoTipos.querySelector('.tipos-valor').value = sel.length === checks.length ? '*' : sel.join(',');
         campoTipos.querySelector('.tipos-texto').textContent = textoTipos(sel);
         cancelarTiposArchivo();

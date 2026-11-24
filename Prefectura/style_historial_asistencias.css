@@ -42,3 +42,35 @@ html {
 
 .fila-falta { background-color: #fff1f2; }
 .fila-falta td { background-color: #fff1f2 !important; border-bottom: 1px solid #fecdd3; }
+/* Aviso cuando la matrícula buscada no existe exacta */
+.aviso-busqueda { margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; font-size: .85rem; font-weight: 600; }
+
+/* Alumnos sin registro de entrada: contraído, con buscador y filtro por grupo */
+.sin-registro .sr-resumen { list-style: none; padding: 14px 18px; cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.sin-registro .sr-resumen::-webkit-details-marker { display: none; }
+.sr-titulo { font-weight: 800; color: #0f172a; font-size: 1rem; }
+.sr-titulo i { color: #b91c1c; margin-right: 4px; }
+.sr-resumen small { color: var(--muted); font-weight: 500; }
+.sr-toggle { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; padding: 7px 14px; border-radius: 50px; font-size: .82rem; font-weight: 700; }
+.sr-toggle i { transition: transform .2s; }
+.sin-registro[open] .sr-toggle i { transform: rotate(180deg); }
+.sr-ocultar { display: none; }
+.sin-registro[open] .sr-ver { display: none; }
+.sin-registro[open] .sr-ocultar { display: inline; }
+.sr-herramientas { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 0 18px 14px; border-bottom: 1px solid var(--line); }
+.sr-buscar { flex: 1; min-width: 220px; display: flex; align-items: center; gap: 8px; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0 12px; background: #fff; }
+.sr-buscar:focus-within { border-color: #16a05d; box-shadow: 0 0 0 3px rgba(22, 160, 93, .12); }
+.sr-buscar i { color: #94a3b8; }
+.sr-buscar input { border: none; outline: none; height: 40px; width: 100%; font-family: inherit; font-size: .9rem; background: transparent; }
+#srGrupo { height: 42px; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0 12px; font-family: inherit; font-size: .88rem; background: #fff; min-width: 200px; }
+.sr-cuenta { font-size: .8rem; color: var(--muted); font-weight: 700; }
+@media (max-width: 768px) {
+    .sr-toggle { margin-left: 0; width: 100%; justify-content: center; }
+    #srGrupo, .sr-buscar { width: 100%; min-width: 0; }
+}
+.status-retardo-just { background-color: #ccfbf1; color: #0f766e; }
+
+/* Registro recién justificado */
+@keyframes resaltar-fila { 0%, 60% { background: #fef9c3; } 100% { background: transparent; } }
+.fila-resaltada td { animation: resaltar-fila 4s ease-out; }
+.fila-resaltada td:first-child { box-shadow: inset 4px 0 0 #16a05d; }
