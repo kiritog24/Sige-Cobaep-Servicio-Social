@@ -12,12 +12,13 @@
  */
 
 $es_cli = (PHP_SAPI === 'cli');
-if (!$es_cli && !in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'], true)) {
+require_once __DIR__ . '/../config/database.php';
+// Solo desde la PC del servidor. Por un túnel (ngrok, Cloudflare...) la conexión también parece local,
+// por eso se revisa que no traiga encabezados de proxy.
+if (!$es_cli && !peticion_desde_esta_pc()) {
     http_response_code(403);
     exit('Solo se puede ejecutar desde el equipo local.');
 }
-
-require_once __DIR__ . '/../config/database.php';
 
 $log = [];
 function registrar(string $msg) { global $log; $log[] = $msg; }

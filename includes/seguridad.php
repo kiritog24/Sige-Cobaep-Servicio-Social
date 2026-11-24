@@ -17,6 +17,56 @@ if (!headers_sent() && PHP_SAPI !== 'cli') {
     header_remove('X-Powered-By');
 }
 
+/* ---------- IP real del usuario ----------
+ * Si el sistema se comparte con un túnel o proxy (ngrok, Cloudflare Tunnel, un proxy de Apache/Nginx...),
+ * Apache ve la conexión del túnel (127.0.0.1 / ::1) y la IP real llega en un encabezado.
+ * Solo se confía en esos encabezados cuando la conexión viene de la misma PC o de la red local
+ * (donde corre el túnel); si alguien se conecta directo desde internet, se usa su IP tal cual,
+ * así nadie puede inventarse una IP mandando el encabezado.
+ */
+function ip_es_local(string $ip): bool {
+    if ($ip === '') return true;
+    return !filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+}
+
+/** ¿La petición llegó a través de un túnel o proxy? */
+function peticion_por_proxy(): bool {
+    foreach (['HTTP_CF_CONNECTING_IP', 'HTTP_TRUE_CLIENT_IP', 'HTTP_X_REAL_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_FORWARDED'] as $h) {
+        if (!empty($_SERVER[$h])) return true;
+    }
+    return false;
+}
+
+/** IP del usuario (la real, aunque entre por un túnel). */
+function ip_cliente(): string {
+    static $ip = null;
+    if ($ip !== null) return $ip;
+    $remota = (string)($_SERVER['REMOTE_ADDR'] ?? '');
+    $ip = $remota;
+    if (!ip_es_local($remota)) return $ip;   // conexión directa desde internet: no se confía en encabezados
+
+    $candidatas = [];
+    foreach (['HTTP_CF_CONNECTING_IP', 'HTTP_TRUE_CLIENT_IP', 'HTTP_X_REAL_IP'] as $h) {
+        if (!empty($_SERVER[$h])) $candidatas[] = trim($_SERVER[$h]);
+    }
+    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        foreach (explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']) as $x) $candidatas[] = trim($x);   // la primera es el usuario
+    }
+    if (!empty($_SERVER['HTTP_FORWARDED']) && preg_match_all('/for="?\[?([^\]";,]+)/i', $_SERVER['HTTP_FORWARDED'], $m)) {
+        foreach ($m[1] as $x) $candidatas[] = trim($x);
+    }
+    foreach ($candidatas as $c) {
+        $c = preg_replace('/:\d+$/', '', $c) ?: $c;          // quita el puerto en "1.2.3.4:5678"
+        if (filter_var($c, FILTER_VALIDATE_IP)) { $ip = $c; break; }
+    }
+    return $ip;
+}
+
+/** ¿La petición viene de verdad desde la misma PC del servidor (no por un túnel)? */
+function peticion_desde_esta_pc(): bool {
+    return in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'], true) && !peticion_por_proxy();
+}
+
 /** Host de una URL (o null). */
 function seguridad_host(?string $url): ?string {
     if (!$url) return null;
@@ -65,7 +115,10 @@ function extension_permitida(string $ext): bool {
 }
 
 /* ---------- Bloqueo de fuerza bruta en el inicio de sesión ---------- */
-const LOGIN_MAX_INTENTOS = 5;      // intentos fallidos permitidos…
+const LOGIN_MAX_INTENTOS = 5;      // intentos fallidos permitidos por cuenta…
+// Por IP solo se frena un ataque contra muchas cuentas: en la escuela (o en una misma casa) muchos usuarios
+// comparten la misma IP, así que unos cuantos errores de otros no deben bloquear a nadie.
+const LOGIN_MAX_INTENTOS_IP = 40;
 const LOGIN_VENTANA_MIN  = 15;     // …dentro de esta ventana (minutos)
 
 function login_tabla(PDO $pdo): void {
@@ -89,18 +142,25 @@ function login_bloqueado(PDO $pdo, string $usuario): int {
         // El tiempo restante lo calcula MySQL para no depender de la zona horaria de PHP
         $st = $pdo->prepare("SELECT COUNT(*), TIMESTAMPDIFF(SECOND, NOW(), MIN(fecha) + INTERVAL " . LOGIN_VENTANA_MIN . " MINUTE)
                              FROM INTENTOS_LOGIN
-                             WHERE (usuario = ? OR ip = ?) AND fecha >= NOW() - INTERVAL " . LOGIN_VENTANA_MIN . " MINUTE");
-        $st->execute([mb_strtolower($usuario), $_SERVER['REMOTE_ADDR'] ?? '']);
+                             WHERE usuario = ? AND fecha >= NOW() - INTERVAL " . LOGIN_VENTANA_MIN . " MINUTE");
+        $st->execute([mb_strtolower($usuario)]);
         [$n, $segundos] = $st->fetch(PDO::FETCH_NUM);
-        if ((int)$n < LOGIN_MAX_INTENTOS) return 0;
-        return max(1, (int)ceil(((int)$segundos) / 60));
+        if ((int)$n >= LOGIN_MAX_INTENTOS) return max(1, (int)ceil(((int)$segundos) / 60));
+
+        // Muchos intentos fallidos desde la misma IP contra distintas cuentas (posible ataque)
+        $st = $pdo->prepare("SELECT COUNT(*), TIMESTAMPDIFF(SECOND, NOW(), MIN(fecha) + INTERVAL " . LOGIN_VENTANA_MIN . " MINUTE)
+                             FROM INTENTOS_LOGIN WHERE ip = ? AND fecha >= NOW() - INTERVAL " . LOGIN_VENTANA_MIN . " MINUTE");
+        $st->execute([ip_cliente()]);
+        [$n, $segundos] = $st->fetch(PDO::FETCH_NUM);
+        if ((int)$n >= LOGIN_MAX_INTENTOS_IP) return max(1, (int)ceil(((int)$segundos) / 60));
+        return 0;
     } catch (PDOException $e) { error_log('login_bloqueado: ' . $e->getMessage()); return 0; }
 }
 
 function login_registrar_fallo(PDO $pdo, string $usuario): void {
     try {
         login_tabla($pdo);
-        $pdo->prepare("INSERT INTO INTENTOS_LOGIN (usuario, ip) VALUES (?, ?)")->execute([mb_strtolower($usuario), $_SERVER['REMOTE_ADDR'] ?? '']);
+        $pdo->prepare("INSERT INTO INTENTOS_LOGIN (usuario, ip) VALUES (?, ?)")->execute([mb_strtolower($usuario), ip_cliente()]);
         $pdo->exec("DELETE FROM INTENTOS_LOGIN WHERE fecha < NOW() - INTERVAL 1 DAY");
     } catch (PDOException $e) { error_log('login_registrar_fallo: ' . $e->getMessage()); }
 }

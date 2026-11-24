@@ -40,7 +40,7 @@ function bitacora(PDO $pdo, string $modulo, string $accion, string $descripcion,
                 $entidad,
                 $id_entidad,
                 $detalle ? json_encode($detalle, JSON_UNESCAPED_UNICODE) : null,
-                mb_substr((string)($_SERVER['REMOTE_ADDR'] ?? ''), 0, 45),
+                mb_substr(ip_cliente(), 0, 45),   // IP real aunque entre por un túnel o proxy
             ]);
     } catch (Throwable $e) {
         error_log('bitacora: ' . $e->getMessage());
